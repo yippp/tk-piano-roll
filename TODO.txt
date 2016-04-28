@@ -1,0 +1,7 @@
+NEXT
+- do something about notes being drawn on top one another
+- keep viewing area still while zooming
+
+
+SOLVED
+- with 1/16th snap bar lines are always being drawn at canvas(x)
