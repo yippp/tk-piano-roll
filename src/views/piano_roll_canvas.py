@@ -1,4 +1,5 @@
 import math
+from sets import Set
 from Tkinter import *
 from ..const import SNAP_DICT, DEFAULT_BAR_WIDTH_IN_PX
 from include.custom_canvas import CustomCanvas
@@ -22,7 +23,11 @@ class PianoRollCanvas(CustomCanvas):
     SELECT_OUTLINE_COLOR = "#FF0000"
     NORMAL_FILL_COLOR = "#FF0000"
     SELECT_FILL_COLOR = "#990000"
+
     CTRL_MASK = 0x0004
+
+    SELECTED = -1
+    ALL = -2
 
     def __init__(self, parent, **kwargs):
         CustomCanvas.__init__(self, parent, width=640, height=480, bg='white', **kwargs)
@@ -42,13 +47,17 @@ class PianoRollCanvas(CustomCanvas):
             'length': DEFAULT_BAR_WIDTH_IN_PX
         }
         self._drag_data = {
-            'x': 0,
-            'y': 0,
+            'mousex': 0,
+            'mousey': 0,
             'dx': 0,
             'dy': 0,
+            'left': 0,
+            'top': 0,
+            'right': 0,
+            'bottom': 0,
             'anchors': {}
         }
-        self._selected = []
+        self._selected = Set()
         self._clicked_on_selected_rect = False
 
         scrollregion_height = (PianoRollCanvas.GRID_HEIGHT_IN_CELLS *
@@ -62,56 +71,58 @@ class PianoRollCanvas(CustomCanvas):
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
         self.bind('<B1-Motion>', self._on_bttnone_motion)
         self.bind('<Control-1>', self._on_bttnone_ctrl)
-        self.bind('<Configure>', self._update_visibleregion)
-        self.bind('<Delete>', self._on_delete)
+        self.bind('<Configure>', self._update_regions)
 
     def _on_bttnone_press(self, event):
         if self._tool == PianoRollCanvas.SELECT_TOOL:
             self._select(event)
         if self._tool == PianoRollCanvas.PEN_TOOL:
-            self._deselect_rects(*self._selected)
+            self.deselect_rects(*self._selected)
             self._add_rect(event)
         if self._tool == PianoRollCanvas.ERASER_TOOL:
-            self._deselect_rects(*self._selected)
+            self.deselect_rects(*self._selected)
             self._delete(event)
 
-        self._drag_data['x'] = event.x
-        self._drag_data['y'] = event.y
+        self._drag_data['mousex'] = event.x
+        self._drag_data['mousey'] = event.y
         self._drag_data['dx'] = 0
         self._drag_data['dy'] = 0
-        self._update_drag_anchors()
+        self._update_drag_data()
 
-        self.focus_set()
+        self.parent.focus_set()
 
     def _on_bttnone_ctrl(self, event):
         if self._tool == PianoRollCanvas.SELECT_TOOL:
             id = self._rect_at(event.x, event.y)
             # clicked on selected rect
             if id != None and id in self._selected:
-                self._deselect_rects(id)
+                self.deselect_rects(id)
             # clicked on unselected rect
             elif id != None and id not in self._selected:
-                self._select_rects(id)
+                self.select_rects(id)
 
-        self._update_drag_anchors()
+        self._update_drag_data()
         self._clicked_on_selected_rect = False
 
     def _on_bttnone_release(self, event):
         dragged = self._drag_data['dx'] != 0 or self._drag_data['dy'] != 0
         if len(self._selected) > 1 and self._clicked_on_selected_rect and not dragged:
-            self._deselect_rects(*self._selected)
-            self._select_rects(self._rect_at(event.x, event.y))
+            self.deselect_rects(*self._selected)
+            self.select_rects(self._rect_at(event.x, event.y))
 
     def _on_bttnone_motion(self, event):
         ctrl_pressed = event.state & PianoRollCanvas.CTRL_MASK == PianoRollCanvas.CTRL_MASK
-
-        if (self._tool == PianoRollCanvas.SELECT_TOOL and not ctrl_pressed):
+        if (self._tool == PianoRollCanvas.SELECT_TOOL and
+            len(self._selected) > 0 and not ctrl_pressed):
             subdiv = self._grid_data['subdiv']
             zoomx = self._grid_data['zoomx']
             zoomy = self._grid_data['zoomy']
+            length = self._grid_data['length']
 
-            drag_x = self._drag_data['x']
-            drag_y = self._drag_data['y']
+            scrollregion_height = self._scrollregion[3]
+
+            drag_x = self._drag_data['mousex']
+            drag_y = self._drag_data['mousey']
 
             cell_width = self._calc_cell_width(subdiv)
             cell_height = self._calc_cell_height()
@@ -120,6 +131,18 @@ class PianoRollCanvas(CustomCanvas):
 
             dx = cell_width * round(float(event.x - drag_x) / cell_width_z)
             dy = cell_height * round(float(event.y - drag_y) / cell_height_z)
+
+            grid_rect = Rect(0, 0, length, scrollregion_height)
+
+            if self._drag_data['left'] + dx < grid_rect.left:
+                dx = grid_rect.left - self._drag_data['left']
+            elif self._drag_data['right'] + dx >= grid_rect.right:
+                dx = grid_rect.right - self._drag_data['right']
+
+            if self._drag_data['top'] + dy < grid_rect.top:
+                dy = grid_rect.top - self._drag_data['top']
+            elif self._drag_data['bottom'] + dy >= grid_rect.bottom:
+                dy = grid_rect.bottom - self._drag_data['bottom']
 
             for id, coords in self._drag_data['anchors'].items():
                 self._rects[id].left = coords.left
@@ -131,10 +154,6 @@ class PianoRollCanvas(CustomCanvas):
 
             self.delete(*self.find_withtags('rect'))
             self._draw_rects()
-
-    def _on_delete(self, event):
-        self._delete_rects(*self._selected)
-        self._selected = []
 
     def _draw(self):
         self._draw_rects()
@@ -156,8 +175,8 @@ class PianoRollCanvas(CustomCanvas):
                     outline=PianoRollCanvas.SELECT_OUTLINE_COLOR,
                     fill=PianoRollCanvas.SELECT_FILL_COLOR,
                     tags='rect')
-                self._selected.remove(id)
-                self._selected.append(new_id)
+                self.deselect_rects(id)
+                self.select_rects(new_id)
             else:
                 new_id = self.add_to_layer(0, self.create_rectangle, coords,
                     outline=PianoRollCanvas.NORMAL_OUTLINE_COLOR,
@@ -198,7 +217,7 @@ class PianoRollCanvas(CustomCanvas):
         visibleregion_width = self._visibleregion[2]
         visibleregion_height = self._visibleregion[3]
 
-        max_subdiv = self._calc_max_subdiv()
+        max_subdiv = self._calc_max_subdiv(zoomx)
         cell_width = self._calc_cell_width(min(subdiv, max_subdiv), zoomx)
 
         n = int(min(length * zoomx, visibleregion_width) / cell_width) + 1
@@ -207,10 +226,7 @@ class PianoRollCanvas(CustomCanvas):
         y2 = self.canvasy(visibleregion_height)
         xorigin = self.canvasx(0)
 
-        if length >= visibleregion_width:
-            offset = cell_width * math.ceil(xorigin / cell_width)
-        else:
-            offset = 0
+        offset = cell_width * math.ceil(xorigin / cell_width)
 
         for i in range(n):
             x = i * cell_width + offset
@@ -222,13 +238,12 @@ class PianoRollCanvas(CustomCanvas):
             self.add_to_layer(1, self.create_line, (x, y1, x, y2),
                 fill=color, tags=('line', 'vertical'))
 
-    def _calc_max_subdiv(self):
-        zoomx = self._grid_data['zoomx']
+    def _calc_max_subdiv(self, zoomx):
         n_snap_opts = len(SNAP_DICT)
 
-        for i in range(n_snap_opts - 1):
-            cell_width = self._calc_cell_width(n_snap_opts - i, zoomx)
-            if (cell_width >= PianoRollCanvas.MIN_CELL_WIDTH_IN_PX):
+        for i in range(n_snap_opts - 1, -1, -1):
+            cell_width = self._calc_cell_width(i, zoomx)
+            if cell_width >= PianoRollCanvas.MIN_CELL_WIDTH_IN_PX:
                 return i
 
     def _calc_cell_width(self, subdiv, zoomx=1.0):
@@ -236,6 +251,10 @@ class PianoRollCanvas(CustomCanvas):
 
     def _calc_cell_height(self, zoomy=1.0):
         return PianoRollCanvas.DEFAULT_CELL_HEIGHT_IN_PX * zoomy
+
+    def _update_regions(self, event):
+        self._update_visibleregion()
+        self._update_scrollregion()
 
     def _update_scrollregion(self):
         zoomx = self._grid_data['zoomx']
@@ -249,23 +268,30 @@ class PianoRollCanvas(CustomCanvas):
         scrollregion_height = (PianoRollCanvas.GRID_HEIGHT_IN_CELLS * cell_height)
         self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
-    def _update_visibleregion(self, event):
+    def _update_visibleregion(self):
         self._visibleregion[2] = self.winfo_width() - 2
         self._visibleregion[3] = self.winfo_height() - 2
 
         self.delete(*self.find_withtags('line'))
         self._draw_lines()
 
-    def _update_drag_anchors(self):
+    def _update_drag_data(self):
         self._drag_data['anchors'].clear()
         for id in self._selected:
             self._drag_data['anchors'][id] = self._rects[id].copy()
 
+        if len(self._selected) > 0:
+            selected_rects = [self._rects[id] for id in self._selected]
+            self._drag_data['left'] = sorted(selected_rects, key=lambda r: r.left)[0].left
+            self._drag_data['top'] = sorted(selected_rects, key=lambda r: r.top)[0].top
+            self._drag_data['right'] = sorted(selected_rects, key=lambda r: r.right, reverse=True)[0].right
+            self._drag_data['bottom'] = sorted(selected_rects, key=lambda r: r.bottom, reverse=True)[0].bottom
+
     def _add_rect(self, event):
         zoomx = self._grid_data['zoomx']
         length = self._grid_data['length']
-        visibleregion_height = self._visibleregion[3]
-        grid_rect = Rect(0, 0, length * zoomx, visibleregion_height)
+        scrollregion_height = self._scrollregion[3]
+        grid_rect = Rect(0, 0, length * zoomx, scrollregion_height)
 
         canvasx = self.canvasx(event.x)
         canvasy = self.canvasy(event.y)
@@ -288,44 +314,8 @@ class PianoRollCanvas(CustomCanvas):
             id = self.add_to_layer(0, self.create_rectangle, coords,
                 outline=PianoRollCanvas.SELECT_OUTLINE_COLOR,
                 fill=PianoRollCanvas.SELECT_FILL_COLOR, tags='rect')
-            self._selected.append(id)
+            self._selected.add(id)
             self._rects[id] = Rect(rect_x, rect_y, cell_width, cell_height)
-
-    def _select(self, event):
-        id = self._rect_at(event.x, event.y)
-        # clicked on empty area of the grid
-        if not id:
-            self._deselect_rects(*self._selected)
-            self._clicked_on_selected_rect = False
-        elif id in self._selected:
-            self._clicked_on_selected_rect = True
-        # clicked on unselected rect
-        else:
-            self._deselect_rects(*self._selected)
-            self._select_rects(id)
-            self._clicked_on_selected_rect = False
-
-    def _select_rects(self, *ids):
-        for id in ids:
-            self.itemconfig(id, fill=PianoRollCanvas.SELECT_FILL_COLOR,
-                outline=PianoRollCanvas.SELECT_FILL_COLOR)
-            self._selected.append(id)
-
-    def _deselect_rects(self, *ids):
-        for id in ids:
-            self.itemconfig(id, fill=PianoRollCanvas.NORMAL_FILL_COLOR,
-                outline=PianoRollCanvas.NORMAL_OUTLINE_COLOR)
-            self._selected.remove(id)
-
-    def _delete(self, event):
-        id = self._rect_at(event.x, event.y)
-        if id != None:
-            self._delete_rects(id)
-
-    def _delete_rects(self, *ids):
-        for id in ids:
-            del self._rects[id]
-            self.delete(id)
 
     def _rect_at(self, mousex, mousey):
         ids = self.find_withtags('rect')
@@ -343,6 +333,71 @@ class PianoRollCanvas(CustomCanvas):
                 return id
 
         return None
+
+    def _select(self, event):
+        id = self._rect_at(event.x, event.y)
+        # clicked on empty area of the grid
+        if not id:
+            self.deselect_rects(*self._selected)
+            self._clicked_on_selected_rect = False
+        elif id in self._selected:
+            self._clicked_on_selected_rect = True
+        # clicked on unselected rect
+        else:
+            self.deselect_rects(*self._selected)
+            self.select_rects(id)
+            self._clicked_on_selected_rect = False
+
+    def select_rects(self, *args):
+        argc = len(args)
+        if argc == 0:
+            return
+        if argc == 1 and args[0] == PianoRollCanvas.SELECTED:
+            return
+        elif argc == 1 and args[0] == PianoRollCanvas.ALL:
+            ids = self._rects.keys()
+        else:
+            ids = args
+
+        for id in ids:
+            self.itemconfig(id, fill=PianoRollCanvas.SELECT_FILL_COLOR,
+                outline=PianoRollCanvas.SELECT_FILL_COLOR)
+            self._selected.add(id)
+
+    def deselect_rects(self, *args):
+        argc = len(args)
+        if argc == 0:
+            return
+        if (argc == 1 and args[0] == PianoRollCanvas.ALL or
+            args[0] == PianoRollCanvas.SELECTED):
+            ids = self._selected
+        else:
+            ids = args
+
+        for id in ids:
+            self.itemconfig(id, fill=PianoRollCanvas.NORMAL_FILL_COLOR,
+                outline=PianoRollCanvas.NORMAL_OUTLINE_COLOR)
+            self._selected.remove(id)
+
+    def _delete(self, event):
+        id = self._rect_at(event.x, event.y)
+        if id != None:
+            self.delete_rects(id)
+
+    def delete_rects(self, *args):
+        argc = len(args)
+        if argc == 0:
+            return
+        if argc == 1 and args[0] == PianoRollCanvas.SELECTED:
+            ids = self._selected
+        elif argc == 1 and args[0] == PianoRollCanvas.ALL:
+            ids = self._rects.keys()
+        else:
+            ids = args
+
+        for id in ids:
+            del self._rects[id]
+            self.delete(id)
 
     def set_subdiv(self, value):
         self._grid_data['subdiv'] = value

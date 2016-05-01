@@ -20,3 +20,6 @@ class Toolbar(Frame):
         self._toolbox.pack(side=LEFT)
         self._zoom_frame.pack(side=RIGHT)
 
+    def set_tool(self, value):
+        self._toolbox.set(value)
+

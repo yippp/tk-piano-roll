@@ -16,7 +16,7 @@ class PianoRoll(Frame):
             'snap': self.set_snap,
             'zoomx': self.set_zoomx,
             'zoomy': self.set_zoomy,
-            'tool': self.set_tool
+            'tool': self.set_canvas_tool
         }
 
         self._toolbar = Toolbar(self, callbacks)
@@ -41,5 +41,8 @@ class PianoRoll(Frame):
         from ..helper import to_ticks
         self._piano_roll_frame.set_length(to_ticks(bar, beat, tick))
 
-    def set_tool(self, tool):
+    def set_canvas_tool(self, tool):
         self._piano_roll_frame.set_tool(tool)
+
+    def set_toolbox_tool(self, value):
+        self._toolbar.set_tool(value)

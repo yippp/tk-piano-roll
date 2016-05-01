@@ -10,6 +10,7 @@ class PianoRollFrame(Frame):
         self.parent = parent
 
         self._init_ui()
+        self._bind_event_handlers()
 
     def _init_ui(self):
         self._hbar = AutoScrollbar(self, orient=HORIZONTAL)
@@ -26,7 +27,18 @@ class PianoRollFrame(Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self._canvas.focus_set()
+        self.focus_set()
+
+    def _bind_event_handlers(self):
+        self.bind('<Control-a>', self._on_ctrl_a)
+        self.bind('<Delete>', self._on_delete)
+
+    def _on_ctrl_a(self, event):
+        self._canvas.select_rects(PianoRollCanvas.ALL)
+        self.parent.set_toolbox_tool(PianoRollCanvas.SELECT_TOOL)
+
+    def _on_delete(self, event):
+        self._canvas.delete_rects(PianoRollCanvas.SELECTED)
 
     def set_subdiv(self, value):
         self._canvas.set_subdiv(value)

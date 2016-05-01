@@ -4,8 +4,9 @@ NEXT
 + keep viewing area still while zooming
 + draw only rects intersecting or contained in the visible area
 + use absolute snapping as default (relative snapping optional)
-
++ lines being drawn incorrectly, see visibleregion and max_subdiv
 
 SOLVED
 
 - with 1/16th snap bar lines are always being drawn at canvas(x)
+= rects get dragged out of grid area with subdiv values lower than 4

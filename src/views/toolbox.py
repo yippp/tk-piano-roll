@@ -36,3 +36,6 @@ class Toolbox(Frame):
         self._cursor_bttn.pack(side=LEFT)
         self._pen_bttn.pack(side=LEFT)
         self._eraser_bttn.pack(side=LEFT)
+
+    def set(self, value):
+        self._var.set(value)
