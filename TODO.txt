@@ -1,7 +1,11 @@
 NEXT
-- do something about notes being drawn on top one another
-- keep viewing area still while zooming
+
++ do something about notes being drawn on top of one another
++ keep viewing area still while zooming
++ draw only rects intersecting or contained in the visible area
++ use absolute snapping as default (relative snapping optional)
 
 
 SOLVED
+
 - with 1/16th snap bar lines are always being drawn at canvas(x)

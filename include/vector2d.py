@@ -19,21 +19,8 @@ class Vector2d:
     def __mul__(self, factor):
         return Vector2d(self.x * factor, self.y * factor)
 
-    @property
-    def x(self):
-        return self.__x
-
-    @x.setter
-    def x(self, x):
-        self.__x = x
-
-    @property
-    def y(self):
-        return self.__y
-
-    @y.setter
-    def y(self, y):
-        self.__y = y
+    def copy(self):
+        return Vector2d(self.x, self.y)
 
     def length(self):
         return math.sqrt(self.x**2 + self.y**2)

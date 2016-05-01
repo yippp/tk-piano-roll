@@ -1,5 +1,7 @@
 from Tkinter import *
 
+from src.paths import *
+
 
 class Toolbox(Frame):
 
@@ -17,9 +19,9 @@ class Toolbox(Frame):
         self._var = IntVar()
 
         self._bttn_images = {
-            'cursor': PhotoImage(file='./images/cursor.gif'),
-            'eraser': PhotoImage(file='./images/eraser.gif'),
-            'pen':    PhotoImage(file='./images/pen.gif')
+            'cursor': PhotoImage(file=CURSOR_TOOL_IMG_PATH),
+            'eraser': PhotoImage(file=ERASER_TOOL_IMG_PATH),
+            'pen':    PhotoImage(file=PEN_TOOL_IMG_PATH)
         }
 
         self._cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
