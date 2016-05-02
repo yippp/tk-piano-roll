@@ -1,5 +1,6 @@
 from Tkinter import *
 
+
 class LengthFrame(Frame):
 
     SPINBOX_WIDTH = 5

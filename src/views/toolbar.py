@@ -3,6 +3,7 @@ from snap_frame import SnapFrame
 from zoom_frame import ZoomFrame
 from toolbox import Toolbox
 
+
 class Toolbar(Frame):
 
     def __init__(self, parent, callbacks):
@@ -22,4 +23,3 @@ class Toolbar(Frame):
 
     def set_tool(self, value):
         self._toolbox.set(value)
-

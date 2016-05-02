@@ -27,13 +27,13 @@ class CustomCanvas(Canvas):
             self.lift(layer)
 
     def find_withtags(self, *args):
-        intersection = self.find_withtag(ALL)
+        itrsec = self.find_withtag(ALL)
 
         if all(isinstance(arg, basestring) for arg in args):
             for tag in args:
                 matches = self.find_withtag(tag)
-                intersection = list(set(intersection).intersection(matches))
+                itrsec = list(set(itrsec).intersection(matches))
         else:
             raise TypeError
 
-        return intersection
+        return itrsec

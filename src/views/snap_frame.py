@@ -2,6 +2,7 @@ from Tkinter import *
 from ttk import Combobox
 from ..const import SNAP_DICT
 
+
 class SnapFrame(Frame):
 
     def __init__(self, parent, cb=lambda: None):

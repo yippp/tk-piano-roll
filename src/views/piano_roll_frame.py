@@ -32,13 +32,21 @@ class PianoRollFrame(Frame):
     def _bind_event_handlers(self):
         self.bind('<Control-a>', self._on_ctrl_a)
         self.bind('<Delete>', self._on_delete)
+        self.bind('1', self._on_ctrl_num)
+        self.bind('2', self._on_ctrl_num)
+        self.bind('3', self._on_ctrl_num)
 
     def _on_ctrl_a(self, event):
         self._canvas.select_rects(PianoRollCanvas.ALL)
-        self.parent.set_toolbox_tool(PianoRollCanvas.SELECT_TOOL)
+        self.parent.set_toolbox_tool(PianoRollCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
-        self._canvas.delete_rects(PianoRollCanvas.SELECTED)
+        self._canvas.remove_rects(PianoRollCanvas.SELECTED)
+
+    def _on_ctrl_num(self, event):
+        ctrl_pressed = event.state & PianoRollCanvas.CTRL_MASK == PianoRollCanvas.CTRL_MASK
+        if ctrl_pressed:
+            self.parent.set_toolbox_tool(int(event.keysym) - 1)
 
     def set_subdiv(self, value):
         self._canvas.set_subdiv(value)

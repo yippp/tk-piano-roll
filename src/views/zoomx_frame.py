@@ -2,6 +2,7 @@ import math
 from Tkinter import *
 from ..const import ZOOM_VALUES
 
+
 class ZoomXFrame(Frame):
 
     def __init__(self, parent, cb=lambda: None):

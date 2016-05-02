@@ -1,6 +1,7 @@
 from Tkinter import *
 from length_frame import LengthFrame
 
+
 class BottomBar(Frame):
 
     def __init__(self, parent, len_cb):
