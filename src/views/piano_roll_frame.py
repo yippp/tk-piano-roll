@@ -5,6 +5,8 @@ from include.auto_scrollbar import AutoScrollbar
 
 class PianoRollFrame(Frame):
 
+    CTRL_MASK = 0x0004
+
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.parent = parent
@@ -37,14 +39,14 @@ class PianoRollFrame(Frame):
         self.bind('3', self._on_ctrl_num)
 
     def _on_ctrl_a(self, event):
-        self._canvas.select_rects(PianoRollCanvas.ALL)
+        self._canvas.select_notes(PianoRollCanvas.ALL)
         self.parent.set_toolbox_tool(PianoRollCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
         self._canvas.remove_rects(PianoRollCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
-        ctrl_pressed = event.state & PianoRollCanvas.CTRL_MASK == PianoRollCanvas.CTRL_MASK
+        ctrl_pressed = event.state & PianoRollFrame.CTRL_MASK == PianoRollFrame.CTRL_MASK
         if ctrl_pressed:
             self.parent.set_toolbox_tool(int(event.keysym) - 1)
 

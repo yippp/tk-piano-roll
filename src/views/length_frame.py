@@ -1,12 +1,12 @@
 from Tkinter import *
 
 
-class LengthFrame(Frame):
+class LengthFrame(LabelFrame):
 
     SPINBOX_WIDTH = 5
 
     def __init__(self, parent, cb):
-        Frame.__init__(self, parent)
+        LabelFrame.__init__(self, parent, text="Length", padx=4, pady=4)
         self.parent = parent
         self.cb = cb
 
