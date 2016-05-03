@@ -1,6 +1,7 @@
 import math
 from sets import Set
 from Tkinter import *
+from ..grid import Grid
 from ..const import SNAP_DICT, DEFAULT_BAR_WIDTH_IN_PX
 from include.custom_canvas import CustomCanvas
 from include.rect import Rect
@@ -81,9 +82,7 @@ class _NoteList(object):
 
 class PianoRollCanvas(CustomCanvas):
 
-    DEFAULT_CELL_HEIGHT_IN_PX = 10
-    MIN_CELL_WIDTH_IN_PX = 20
-    GRID_HEIGHT_IN_CELLS = 128
+    NO_ID = -1
 
     SELECTED = -1
     ALL = -2
@@ -126,15 +125,9 @@ class PianoRollCanvas(CustomCanvas):
         self._click_type = PianoRollCanvas.CLICKED_ON_EMPTY_AREA
 
         self._tool = 0
-        self._grid_data = {
-            'subdiv': SNAP_DICT.values()[0],
-            'zoomx': 1,
-            'zoomy': 1,
-            'length': DEFAULT_BAR_WIDTH_IN_PX
-        }
+        self._grid = Grid()
 
-        scrollregion_height = (PianoRollCanvas.GRID_HEIGHT_IN_CELLS *
-            PianoRollCanvas.DEFAULT_CELL_HEIGHT_IN_PX)
+        scrollregion_height = self._grid.height()
         self._scrollregion = [0, 0, 640, scrollregion_height]
         self._visibleregion = [0, 0, 640, 480]
         self.config(scrollregion=self._scrollregion)
@@ -162,7 +155,12 @@ class PianoRollCanvas(CustomCanvas):
 
         elif self._tool == PianoRollCanvas.PEN_TOOL:
             self.deselect_notes(*self._notes.selected_ids())
-            self._add_rect(event)
+            canvasx = self.canvasx(event.x)
+            canvasy = self.canvasy(event.y)
+            if self._grid.contains(canvasx, canvasy):
+                rect = self._add_notes(canvasx, canvasy)
+                self._notes.add(_Note(PianoRollCanvas.NO_ID, rect, True))
+                self.delete(*self._draw_notes())
 
         elif self._tool == PianoRollCanvas.ERASER_TOOL:
             self.deselect_notes(*self._notes.selected_ids())
@@ -214,15 +212,14 @@ class PianoRollCanvas(CustomCanvas):
         if self._tool == PianoRollCanvas.SEL_TOOL:
             if (len(self._notes.selected()) > 0 and self._click_type !=
                 PianoRollCanvas.CLICKED_ON_EMPTY_AREA):
-                self._drag_rects(event.x, event.y)
-                self.delete(*self.find_withtags('rect'))
-                self._draw_rects()
+                self._drag_notes(event.x, event.y)
+                self.delete(*self._draw_notes())
             elif self._click_type == PianoRollCanvas.CLICKED_ON_EMPTY_AREA:
                 self.delete(*self.find_withtags('selection_region'))
                 self._draw_selection_region(event.x, event.y)
 
     def _draw(self):
-        self._draw_rects()
+        self._draw_notes()
         self._draw_lines()
 
     def _draw_lines(self):
@@ -230,15 +227,11 @@ class PianoRollCanvas(CustomCanvas):
         self._draw_vertical_lines()
 
     def _draw_horizontal_lines(self):
-        zoomx = self._grid_data['zoomx']
-        zoomy = self._grid_data['zoomy']
-        length = self._grid_data['length']
-
-        cell_height = self._calc_cell_height(zoomy)
+        cell_height = self._grid.cell_height()
         n = int(self._visibleregion[3] / cell_height) + 1
 
         x1 = self.canvasx(0)
-        x2 = min(self.canvasx(self._visibleregion[2]), length * zoomx)
+        x2 = min(self.canvasx(self._visibleregion[2]), self._grid.width())
 
         yorigin = self.canvasy(0)
         offset = cell_height * math.ceil(yorigin / cell_height)
@@ -251,16 +244,12 @@ class PianoRollCanvas(CustomCanvas):
                 fill=color, tags=('line', 'horizontal'))
 
     def _draw_vertical_lines(self):
-        subdiv = self._grid_data['subdiv']
-        zoomx = self._grid_data['zoomx']
-        length = self._grid_data['length']
         visibleregion_width = self._visibleregion[2]
         visibleregion_height = self._visibleregion[3]
 
-        max_subdiv = self._calc_max_subdiv(zoomx)
-        cell_width = self._calc_cell_width(min(subdiv, max_subdiv), zoomx)
+        cell_width = self._grid.max_cell_width()
 
-        n = int(min(length * zoomx, visibleregion_width) / cell_width) + 1
+        n = int(min(self._grid.width(), visibleregion_width) / cell_width) + 1
 
         y1 = self.canvasy(0)
         y2 = self.canvasy(visibleregion_height)
@@ -270,7 +259,7 @@ class PianoRollCanvas(CustomCanvas):
 
         for i in range(n):
             x = i * cell_width + offset
-            if x % (DEFAULT_BAR_WIDTH_IN_PX * zoomx) == 0:
+            if x % self._grid.bar_width() == 0:
                 color = PianoRollCanvas.BAR_LINE_COLOR
             else:
                 color = PianoRollCanvas.NORMAL_LINE_COLOR
@@ -279,15 +268,14 @@ class PianoRollCanvas(CustomCanvas):
                 self.create_line, (x, y1, x, y2),
                 fill=color, tags=('line', 'vertical'))
 
-    def _draw_rects(self):
-        zoomx = self._grid_data['zoomx']
-        zoomy = self._grid_data['zoomy']
+    def _draw_notes(self):
+        old_ids = []
 
         for note in self._notes:
-            x1 = note.rect[0] * zoomx
-            y1 = note.rect[1] * zoomy
-            x2 = x1 + note.rect[2] * zoomx
-            y2 = y1 + note.rect[3] * zoomy
+            x1 = self._grid.gridx(note.rect[0])
+            y1 = self._grid.gridy(note.rect[1])
+            x2 = x1 + self._grid.gridx(note.rect[2])
+            y2 = y1 + self._grid.gridy(note.rect[3])
             coords = (x1, y1, x2, y2)
 
             outline_color = (PianoRollCanvas.SEL_OUTLINE_COLOR if note.selected else
@@ -299,10 +287,13 @@ class PianoRollCanvas(CustomCanvas):
                 coords, outline=outline_color, fill=fill_color, tags='rect')
             old_id = note.id
 
-            if old_id in self._notes.selected_ids():
+            if old_id in self._notes_on_click:
                 self._notes_on_click.from_id(old_id).id = new_id
 
             note.id = new_id
+            old_ids.append(old_id)
+
+        return old_ids
 
     def _draw_selection_region(self, mousex, mousey):
         x1 = self.canvasx(self._click_pos[0])
@@ -315,19 +306,22 @@ class PianoRollCanvas(CustomCanvas):
             self.create_rectangle, coords, fill='blue', outline='blue',
             stipple='gray12', tags='selection_region')
 
-    def _calc_max_subdiv(self, zoomx):
-        n_snap_opts = len(SNAP_DICT)
+    def _update_regions(self, event):
+        self._update_visibleregion()
+        self._update_scrollregion()
 
-        for i in range(n_snap_opts - 1, -1, -1):
-            cell_width = self._calc_cell_width(i, zoomx)
-            if cell_width >= PianoRollCanvas.MIN_CELL_WIDTH_IN_PX:
-                return i
+    def _update_scrollregion(self):
+        visibleregion_width = self._visibleregion[2]
+        scrollregion_width = max(self._grid.bar_width(), visibleregion_width)
+        scrollregion_height = self._grid.height()
+        self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
-    def _calc_cell_width(self, subdiv, zoomx=1.0):
-        return DEFAULT_BAR_WIDTH_IN_PX * zoomx / 2**subdiv
+    def _update_visibleregion(self):
+        self._visibleregion[2] = self.winfo_width() - 2
+        self._visibleregion[3] = self.winfo_height() - 2
 
-    def _calc_cell_height(self, zoomy=1.0):
-        return PianoRollCanvas.DEFAULT_CELL_HEIGHT_IN_PX * zoomy
+        self.delete(*self.find_withtags('line'))
+        self._draw_lines()
 
     def _calc_bounding_rect(self, *ids):
         if not ids: return
@@ -346,79 +340,27 @@ class PianoRollCanvas(CustomCanvas):
 
         return (left, top, right, bottom)
 
-    def _update_regions(self, event):
-        self._update_visibleregion()
-        self._update_scrollregion()
+    def _add_notes(self, canvasx, canvasy):
+        cell_width = self._grid.cell_width(False)
+        cell_height = self._grid.cell_height(False)
+        cell_width_z = self._grid.cell_width()
+        cell_height_z = self._grid.cell_height()
 
-    def _update_scrollregion(self):
-        zoomx = self._grid_data['zoomx']
-        zoomy = self._grid_data['zoomy']
-        length = self._grid_data['length']
-        visibleregion_width = self._visibleregion[2]
+        rect_x = cell_width * int(canvasx / cell_width_z)
+        rect_y = cell_height * int(canvasy / cell_height_z)
 
-        cell_height = self._calc_cell_height(zoomy)
+        return [rect_x, rect_y, cell_width, cell_height]
 
-        scrollregion_width = max(length * zoomx, visibleregion_width)
-        scrollregion_height = (PianoRollCanvas.GRID_HEIGHT_IN_CELLS * cell_height)
-        self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
-
-    def _update_visibleregion(self):
-        self._visibleregion[2] = self.winfo_width() - 2
-        self._visibleregion[3] = self.winfo_height() - 2
-
-        self.delete(*self.find_withtags('line'))
-        self._draw_lines()
-
-    def _add_rect(self, event):
-        zoomx = self._grid_data['zoomx']
-        zoomy = self._grid_data['zoomy']
-        length = self._grid_data['length']
-        scrollregion_height = self._scrollregion[3]
-        grid_rect = Rect(0, 0, length * zoomx, scrollregion_height * zoomy)
-
-        canvasx = self.canvasx(event.x)
-        canvasy = self.canvasy(event.y)
-
-        if (grid_rect.collide_point(canvasx, canvasy)):
-            zoomy = self._grid_data['zoomy']
-            subdiv = self._grid_data['subdiv']
-
-            cell_width = self._calc_cell_width(subdiv)
-            cell_height = self._calc_cell_height()
-            cell_width_z = cell_width * zoomx
-            cell_height_z = cell_height * zoomy
-
-            rect_x = cell_width * int(canvasx / cell_width_z)
-            rect_y = cell_height * int(canvasy / cell_height_z)
-            rect_x_z = rect_x * zoomx
-            rect_y_z = rect_y * zoomy
-
-            coords = (rect_x_z, rect_y_z, rect_x_z + cell_width_z, rect_y_z + cell_height_z)
-            id = self.add_to_layer(PianoRollCanvas.RECT_LAYER,
-                self.create_rectangle, coords,
-                outline=PianoRollCanvas.SEL_OUTLINE_COLOR,
-                fill=PianoRollCanvas.SEL_FILL_COLOR, tags='rect')
-
-            rect = [rect_x, rect_y, cell_width, cell_height]
-            self._notes.add(_Note(id, rect, True))
-
-    def _drag_rects(self, mousex, mousey):
-        subdiv = self._grid_data['subdiv']
-        zoomx = self._grid_data['zoomx']
-        zoomy = self._grid_data['zoomy']
-        length = self._grid_data['length']
-
-        scrollregion_height = self._scrollregion[3]
-
-        cell_width = self._calc_cell_width(subdiv)
-        cell_height = self._calc_cell_height()
-        cell_width_z = cell_width * zoomx
-        cell_height_z = cell_height * zoomy
+    def _drag_notes(self, mousex, mousey):
+        cell_width = self._grid.cell_width(False)
+        cell_height = self._grid.cell_height(False)
+        cell_width_z = self._grid.cell_width()
+        cell_height_z = self._grid.cell_height()
 
         dx = cell_width * round(float(mousex - self._click_pos[0]) / cell_width_z)
         dy = cell_height * round(float(mousey - self._click_pos[1]) / cell_height_z)
 
-        grid_rect = Rect(0, 0, length, scrollregion_height)
+        grid_rect = Rect(0, 0, self._grid.width(False), self._grid.height(False))
 
         if self._selection_bounds[0] + dx < grid_rect.left:
             dx = grid_rect.left - self._selection_bounds[0]
@@ -499,13 +441,13 @@ class PianoRollCanvas(CustomCanvas):
             self.delete(note.id)
 
     def set_subdiv(self, value):
-        self._grid_data['subdiv'] = value
+        self._grid.subdiv = value
         self.delete(*self.find_withtags('line', 'vertical'))
         self._draw_lines()
         self._adjust_layers()
 
     def set_zoomx(self, value):
-        self._grid_data['zoomx'] = value
+        self._grid.zoomx = value
 
         self._update_scrollregion()
         self.delete(ALL)
@@ -513,7 +455,7 @@ class PianoRollCanvas(CustomCanvas):
         self._adjust_layers()
 
     def set_zoomy(self, value):
-        self._grid_data['zoomy'] = value
+        self._grid.zoomy = value
 
         self._update_scrollregion()
         self.delete(ALL)
@@ -521,7 +463,7 @@ class PianoRollCanvas(CustomCanvas):
         self._adjust_layers()
 
     def set_length(self, value):
-        self._grid_data['length'] = value
+        self._grid.length = value
 
         self._update_scrollregion()
         self.delete(*self.find_withtags('line'))
