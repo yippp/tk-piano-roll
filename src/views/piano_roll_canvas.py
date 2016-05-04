@@ -1,83 +1,10 @@
 import math
-from sets import Set
 from Tkinter import *
 from ..grid import Grid
-from ..const import SNAP_DICT, DEFAULT_BAR_WIDTH_IN_PX
 from include.custom_canvas import CustomCanvas
 from include.rect import Rect
-
-__all__ = ['PianoRollCanvas']
-
-
-class _Note(object):
-
-    def __init__(self, id, rect, selected=False):
-        self.id = id
-        self.rect = rect
-        self.selected = selected
-
-    def __eq__(self, other):
-        return self.id == other.id and self.rect == other.rect
-
-    def copy(self):
-        return _Note(self.id, list(self.rect), self.selected)
-
-
-class _NoteList(object):
-
-    def __init__(self, notes=()):
-        self.notes = list(notes)
-
-    def __iter__(self):
-        for note in self.notes:
-            yield note
-
-    def __contains__(self, arg):
-        if isinstance(arg, _Note):
-            return arg in self.notes
-        elif isinstance(arg, (int, long)):
-            return self.from_id(arg) != None
-
-    def copy(self):
-        return _NoteList([note.copy() for note in self.notes])
-
-    def copy_selected(self):
-        return _NoteList([note.copy() for note in self.selected()])
-
-    def select(self, *ids):
-        for id in ids:
-            note = self.from_id(id)
-            note.selected = True
-
-    def deselect(self, *ids):
-        for id in ids:
-            note = self.from_id(id)
-            note.selected = False
-
-    def selected(self):
-        return filter(lambda note: note.selected, self.notes)
-
-    def ids(self):
-        return [note.id for note in self.notes]
-
-    def selected_ids(self):
-        return list(Set(self.ids()).intersection([note.id for note in self.selected()]))
-
-    def from_id(self, id):
-        for note in self.notes:
-            if note.id == id:
-                return note
-
-        return None
-
-    def add(self, note):
-        if not isinstance(note, _Note):
-            raise ValueError
-
-        self.notes.append(note)
-
-    def remove(self, note):
-        self.notes.remove(note)
+from ..note import Note
+from ..note_list import NoteList
 
 
 class PianoRollCanvas(CustomCanvas):
@@ -117,8 +44,8 @@ class PianoRollCanvas(CustomCanvas):
         self._draw_lines()
 
     def _init_data(self):
-        self._notes = _NoteList()
-        self._notes_on_click = _NoteList()
+        self._notes = NoteList()
+        self._notes_on_click = NoteList()
         self._selection_bounds = None
 
         self._click_pos = None
@@ -159,7 +86,7 @@ class PianoRollCanvas(CustomCanvas):
             canvasy = self.canvasy(event.y)
             if self._grid.contains(canvasx, canvasy):
                 rect = self._add_notes(canvasx, canvasy)
-                self._notes.add(_Note(PianoRollCanvas.NO_ID, rect, True))
+                self._notes.add(Note(PianoRollCanvas.NO_ID, rect, True))
                 self.delete(*self._draw_notes())
 
         elif self._tool == PianoRollCanvas.ERASER_TOOL:
@@ -360,17 +287,15 @@ class PianoRollCanvas(CustomCanvas):
         dx = cell_width * round(float(mousex - self._click_pos[0]) / cell_width_z)
         dy = cell_height * round(float(mousey - self._click_pos[1]) / cell_height_z)
 
-        grid_rect = Rect(0, 0, self._grid.width(False), self._grid.height(False))
+        if self._selection_bounds[0] + dx < 0:
+            dx = -self._selection_bounds[0]
+        elif self._selection_bounds[2] + dx >= self._grid.width():
+            dx = self._grid.width() - self._selection_bounds[2]
 
-        if self._selection_bounds[0] + dx < grid_rect.left:
-            dx = grid_rect.left - self._selection_bounds[0]
-        elif self._selection_bounds[2] + dx >= grid_rect.right:
-            dx = grid_rect.right - self._selection_bounds[2]
-
-        if self._selection_bounds[1] + dy < grid_rect.top:
-            dy = grid_rect.top - self._selection_bounds[1]
-        elif self._selection_bounds[3] + dy >= grid_rect.bottom:
-            dy = grid_rect.bottom - self._selection_bounds[3]
+        if self._selection_bounds[1] + dy < 0:
+            dy = -self._selection_bounds[1]
+        elif self._selection_bounds[3] + dy >= self._grid.height():
+            dy = self._grid.height() - self._selection_bounds[3]
 
         for before in self._notes_on_click:
             note = self._notes.from_id(before.id)
