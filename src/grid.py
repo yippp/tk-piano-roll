@@ -3,7 +3,7 @@ from const import SNAP_DICT, DEFAULT_BAR_WIDTH_IN_PX
 class Grid(object):
 
     DEFAULT_CELL_HEIGHT_IN_PX = 8
-    MIN_CELL_WIDTH_IN_PX = 20
+    MIN_CELL_WIDTH_IN_PX = 32
     GRID_HEIGHT_IN_CELLS = 128
 
     def __init__(self, subdiv=0, zoomx=1, zoomy=1,
@@ -66,10 +66,7 @@ class Grid(object):
             return self.length
 
     def height(self, zoom=True):
-        if zoom:
-            return Grid.GRID_HEIGHT_IN_CELLS * self.cell_height()
-        else:
-            return Grid.GRID_HEIGHT_IN_CELLS * self.cell_height(False)
+        return Grid.GRID_HEIGHT_IN_CELLS * self.cell_height(zoom)
 
     def bar_width(self):
         return DEFAULT_BAR_WIDTH_IN_PX * self.zoomx
@@ -90,17 +87,11 @@ class Grid(object):
         max_subdiv = self._calc_max_subdiv(self.zoomx)
         return self._calc_cell_width(min(self.subdiv, max_subdiv), self.zoomx)
 
-    def gridx(self, x):
-        return x * self.zoomx
+    def row(self, x, zoom):
+        return int(x / self.cell_width(zoom))
 
-    def gridy(self, y):
-        return y * self.zoomy
-
-    def row(self, x):
-        return int(x / self.cell_width())
-
-    def col(self, y):
-        return int(y / self.cell_height())
+    def col(self, y, zoom):
+        return int(y / self.cell_height(False))
 
     def contains(self, x, y):
         return (x >= 0 and y >= 0 and x <= self.width() and y <= self.height())

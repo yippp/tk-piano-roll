@@ -36,7 +36,7 @@ class PianoRollCanvas(CustomCanvas):
     SEL_FILL_COLOR = "#990000"
 
     def __init__(self, parent, **kwargs):
-        CustomCanvas.__init__(self, parent, width=640, height=480, bg='white', **kwargs)
+        CustomCanvas.__init__(self, parent, width=512, height=384, bg='white', **kwargs)
         self.parent = parent
 
         self._init_data()
@@ -46,7 +46,6 @@ class PianoRollCanvas(CustomCanvas):
     def _init_data(self):
         self._notes = NoteList()
         self._notes_on_click = NoteList()
-        self._new_note = None
         self._selection_bounds = None
 
         self._click_pos = None
@@ -56,8 +55,8 @@ class PianoRollCanvas(CustomCanvas):
         self._grid = Grid()
 
         scrollregion_height = self._grid.height()
-        self._scrollregion = [0, 0, 640, scrollregion_height]
-        self._visibleregion = [0, 0, 640, 480]
+        self._scrollregion = [0, 0, 512, scrollregion_height]
+        self._visibleregion = [0, 0, 512, 384]
         self.config(scrollregion=self._scrollregion)
 
     def _bind_event_handlers(self):
@@ -72,33 +71,33 @@ class PianoRollCanvas(CustomCanvas):
 
         if self._tool == PianoRollCanvas.SEL_TOOL:
             if id == None:
-                self.deselect_notes(*self._notes.selected_ids())
+                self.deselect_notes(PianoRollCanvas.SELECTED)
                 self._click_type = PianoRollCanvas.CLICKED_ON_EMPTY_AREA
             elif id not in self._notes.selected_ids():
-                self.deselect_notes(*self._notes.selected_ids())
+                self.deselect_notes(PianoRollCanvas.SELECTED)
                 self.select_notes(id)
                 self._click_type = PianoRollCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
                 self._click_type = PianoRollCanvas.CLICKED_ON_SELECTED_RECT
 
         elif self._tool == PianoRollCanvas.PEN_TOOL:
-            self.deselect_notes(*self._notes.selected_ids())
+            self.deselect_notes(PianoRollCanvas.SELECTED)
             canvasx = self.canvasx(event.x)
             canvasy = self.canvasy(event.y)
             if self._grid.contains(canvasx, canvasy):
-                rect = self._add_note(canvasx, canvasy)
+                rect = self._calc_note_rect(canvasx, canvasy)
                 new_note = Note(PianoRollCanvas.NO_ID, rect, True)
                 new_note.id = self._draw_notes(new_note)[0][1]
                 self._notes.add(new_note)
                 self._notes_on_click.add(new_note)
 
         elif self._tool == PianoRollCanvas.ERASER_TOOL:
-            self.deselect_notes(*self._notes.selected_ids())
+            self.deselect_notes(PianoRollCanvas.SELECTED)
             if id != None: self.remove_notes(id)
 
         self._click_pos = (event.x, event.y)
         self._notes_on_click = self._notes.copy_selected()
-        self._selection_bounds = self._calc_selection_rect()
+        self._selection_bounds = self._calc_selection_bounds()
 
         self.parent.focus_set()
 
@@ -111,12 +110,12 @@ class PianoRollCanvas(CustomCanvas):
             elif id not in self._notes.selected_ids():
                 self.select_notes(id)
                 self._notes_on_click = self._notes.copy_selected()
-                self._selection_bounds = self._calc_selection_rect()
+                self._selection_bounds = self._calc_selection_bounds()
                 self._click_type = PianoRollCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
                 self.deselect_notes(id)
                 self._notes_on_click = self._notes.copy_selected()
-                self._selection_bounds = self._calc_selection_rect()
+                self._selection_bounds = self._calc_selection_bounds()
                 self._click_type = PianoRollCanvas.CLICKED_CTRL_ON_SELECTED_RECT
 
             self._click_pos = (event.x, event.y)
@@ -125,7 +124,7 @@ class PianoRollCanvas(CustomCanvas):
         dragged = (self._click_pos[0] - event.x != 0 or self._click_pos[1] - event.y != 0)
         if (len(self._notes.selected()) > 1 and self._click_type ==
             PianoRollCanvas.CLICKED_ON_SELECTED_RECT and not dragged):
-            self.deselect_notes(*self._notes.selected_ids())
+            self.deselect_notes(PianoRollCanvas.SELECTED)
             self.select_notes(self._rect_at(event.x, event.y))
 
         elif (self._tool == PianoRollCanvas.SEL_TOOL == 0 and self._click_type ==
@@ -207,10 +206,10 @@ class PianoRollCanvas(CustomCanvas):
         new_ids = []
 
         for note in notes:
-            x1 = self._grid.gridx(note.rect[0])
-            y1 = self._grid.gridy(note.rect[1])
-            x2 = x1 + self._grid.gridx(note.rect[2])
-            y2 = y1 + self._grid.gridy(note.rect[3])
+            x1 = note.rect[0] * self._grid.zoomx
+            y1 = note.rect[1] * self._grid.zoomy
+            x2 = x1 + note.rect[2] * self._grid.zoomx
+            y2 = y1 + note.rect[3] * self._grid.zoomy
             coords = (x1, y1, x2, y2)
 
             outline_color = (PianoRollCanvas.SEL_OUTLINE_COLOR if note.selected else
@@ -220,9 +219,8 @@ class PianoRollCanvas(CustomCanvas):
 
             new_id = self.add_to_layer(PianoRollCanvas.RECT_LAYER, self.create_rectangle,
                 coords, outline=outline_color, fill=fill_color, tags='rect')
-            old_id = note.id
 
-            old_ids.append(old_id)
+            old_ids.append(note.id)
             new_ids.append(new_id)
 
         return zip(old_ids, new_ids)
@@ -268,7 +266,18 @@ class PianoRollCanvas(CustomCanvas):
         note_rect = Rect(*note.rect).xscale(self._grid.zoomx).yscale(self._grid.zoomy)
         return visibleregion_rect.collide_rect(note_rect)
 
-    def _calc_selection_rect(self):
+    def _calc_note_rect(self, canvasx, canvasy):
+        cell_width = self._grid.cell_width(False)
+        cell_height = self._grid.cell_height(False)
+        cell_width_z = self._grid.cell_width()
+        cell_height_z = self._grid.cell_height()
+
+        rect_x = cell_width * int(canvasx / cell_width_z)
+        rect_y = cell_height * int(canvasy / cell_height_z)
+
+        return [rect_x, rect_y, cell_width, cell_height]
+
+    def _calc_selection_bounds(self):
         selected_notes = self._notes.selected()
         if not selected_notes:
             return None
@@ -286,6 +295,36 @@ class PianoRollCanvas(CustomCanvas):
 
         return (left, top, right, bottom)
 
+    def _drag_notes(self, mousex, mousey):
+        cell_width = self._grid.cell_width(False)
+        cell_height = self._grid.cell_height(False)
+        cell_width_z = self._grid.cell_width()
+        cell_height_z = self._grid.cell_height()
+
+        dx = cell_width * round(float(mousex - self._click_pos[0]) / cell_width_z)
+        dy = cell_height * round(float(mousey - self._click_pos[1]) / cell_height_z)
+
+        if self._selection_bounds[0] + dx < 0:
+            dx = -self._selection_bounds[0]
+        elif self._selection_bounds[2] + dx >= self._grid.width(False):
+            grid_right = self._grid.width(False)
+            sel_right = self._selection_bounds[2]
+            row = self._grid.row(grid_right - sel_right, False)
+            dx = cell_width * row
+
+        if self._selection_bounds[1] + dy < 0:
+            dy = -self._selection_bounds[1]
+        elif self._selection_bounds[3] + dy >= self._grid.height(False):
+            grid_bottom  = self._grid.height(False)
+            sel_bottom = self._selection_bounds[3]
+            col = self._grid.col(grid_bottom - sel_bottom, False)
+            dy = cell_height * col
+
+        for before in self._notes_on_click:
+            note = self._notes.from_id(before.id)
+            note.rect[0] = before.rect[0] + dx
+            note.rect[1] = before.rect[1] + dy
+
     def _rect_at(self, mousex, mousey):
         ids = self.find_withtags('rect')
         for id in ids:
@@ -302,41 +341,6 @@ class PianoRollCanvas(CustomCanvas):
                 return id
 
         return None
-
-    def _add_note(self, canvasx, canvasy):
-        cell_width = self._grid.cell_width(False)
-        cell_height = self._grid.cell_height(False)
-        cell_width_z = self._grid.cell_width()
-        cell_height_z = self._grid.cell_height()
-
-        rect_x = cell_width * int(canvasx / cell_width_z)
-        rect_y = cell_height * int(canvasy / cell_height_z)
-
-        return [rect_x, rect_y, cell_width, cell_height]
-
-    def _drag_notes(self, mousex, mousey):
-        cell_width = self._grid.cell_width(False)
-        cell_height = self._grid.cell_height(False)
-        cell_width_z = self._grid.cell_width()
-        cell_height_z = self._grid.cell_height()
-
-        dx = cell_width * round(float(mousex - self._click_pos[0]) / cell_width_z)
-        dy = cell_height * round(float(mousey - self._click_pos[1]) / cell_height_z)
-
-        if self._selection_bounds[0] + dx < 0:
-            dx = -self._selection_bounds[0]
-        elif self._selection_bounds[2] + dx >= self._grid.width(False):
-            dx = self._grid.width(False) - self._selection_bounds[2]
-
-        if self._selection_bounds[1] + dy < 0:
-            dy = -self._selection_bounds[1]
-        elif self._selection_bounds[3] + dy >= self._grid.height(False):
-            dy = self._grid.height(False) - self._selection_bounds[3]
-
-        for before in self._notes_on_click:
-            note = self._notes.from_id(before.id)
-            note.rect[0] = before.rect[0] + dx
-            note.rect[1] = before.rect[1] + dy
 
     def select_notes(self, *args):
         argc = len(args)
