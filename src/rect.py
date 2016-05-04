@@ -105,9 +105,9 @@ class Rect(object):
         return Rect(self.coords, self.width, self.height)
 
     def move(self, *args):
-        if (len(args) == 1 and isinstance(args[0], Vector2d)):
+        if len(args) == 1 and isinstance(args[0], Vector2d):
             coords = self.coords + args[0]
-        elif(len(args) == 2 and isinstance(args[0], (int, long, float)) and
+        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
             isinstance(args[1], (int, long, float))):
             x = self.coords.x + args[0]
             y = self.coords.y + args[1]
@@ -118,26 +118,34 @@ class Rect(object):
         return Rect(coords, self.width, self.height)
 
     def move_ip(self, *args):
-        if (len(args) == 1 and isinstance(args[0], Vector2d)):
+        if len(args) == 1 and isinstance(args[0], Vector2d):
             self.coords += args[0]
-        elif(len(args) == 2 and isinstance(args[0], (int, long, float)) and
+        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
             isinstance(args[1], (int, long, float))):
             self.left += args[0]
             self.top += args[1]
 
     def scale(self, factor):
-        if (factor > 0):
-            return Rect(self.coords * factor, self.width * factor, self.height * factor)
-        else:
-            raise ValueError
+        return Rect(self.coords * factor, self.width * factor, self.height * factor)
 
     def scale_ip(self, factor):
-        if (factor > 0):
-            self.coords *= factor
-            self.width *= factor
-            self.height *= factor
-        else:
-            raise ValueError
+        self.coords *= factor
+        self.width *= factor
+        self.height *= factor
+
+    def xscale(self, xfactor):
+        return Rect(self.left * xfactor, self.top, self.width * xfactor, self.height)
+
+    def xscale_ip(self, xfactor):
+        self.left *= xfactor
+        self.width *= xfactor
+
+    def yscale(self, yfactor):
+        return Rect(self.left, self.top * yfactor, self.width, self.height * yfactor)
+
+    def yscale_ip(self, yfactor):
+        self.top *= yfactor
+        self.height *= yfactor
 
     def collide_point(self, *args):
         if (len(args) == 1 and isinstance(args[0], Vector2d)):
@@ -150,3 +158,7 @@ class Rect(object):
 
         return (p1.x >= self.left and p1.y >= self.top and
             p1.x <= self.right and p1.y <= self.bottom)
+
+    def collide_rect(self, rect):
+        return (self.right >= rect.left and rect.right >= self.left and
+            self.bottom >= rect.top and rect.bottom >= self.top)

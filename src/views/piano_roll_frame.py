@@ -43,7 +43,7 @@ class PianoRollFrame(Frame):
         self.parent.set_toolbox_tool(PianoRollCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
-        self._canvas.remove_rects(PianoRollCanvas.SELECTED)
+        self._canvas.remove_notes(PianoRollCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = event.state & PianoRollFrame.CTRL_MASK == PianoRollFrame.CTRL_MASK
