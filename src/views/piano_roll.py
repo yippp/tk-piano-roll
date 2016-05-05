@@ -12,16 +12,21 @@ class PianoRoll(Frame):
         self._init_ui()
 
     def _init_ui(self):
-        callbacks = {
+        toolbar_callbacks = {
             'snap': self.set_snap,
             'zoomx': self.set_zoomx,
             'zoomy': self.set_zoomy,
             'tool': self.set_canvas_tool
         }
 
-        self._toolbar = Toolbar(self, callbacks)
+        bottombar_callbacks = {
+            'length': self.set_length,
+            'timesig': self.set_timesig
+        }
+
+        self._toolbar = Toolbar(self, toolbar_callbacks)
         self._piano_roll_frame = PianoRollFrame(self)
-        self._bottombar = BottomBar(self, self.set_length)
+        self._bottombar = BottomBar(self, bottombar_callbacks)
 
         self._toolbar.pack(side=TOP, fill=X)
         self._piano_roll_frame.pack(fill=BOTH, expand=True)
@@ -37,12 +42,14 @@ class PianoRoll(Frame):
     def set_zoomy(self, value):
         self._piano_roll_frame.set_zoomy(value)
 
-    def set_length(self, bar, beat, tick):
-        from ..helper import to_ticks
-        self._piano_roll_frame.set_length(to_ticks(bar, beat, tick))
+    def set_length(self, length):
+        self._piano_roll_frame.set_length(length)
 
     def set_canvas_tool(self, tool):
         self._piano_roll_frame.set_tool(tool)
 
     def set_toolbox_tool(self, value):
         self._toolbar.set_tool(value)
+
+    def set_timesig(self, beat_count, beat_unit):
+        self._piano_roll_frame.set_timesig(beat_count, beat_unit)

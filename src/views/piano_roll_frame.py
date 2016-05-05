@@ -59,8 +59,11 @@ class PianoRollFrame(Frame):
     def set_zoomy(self, value):
         self._canvas.set_zoomy(value)
 
-    def set_length(self, value):
-        self._canvas.set_length(value)
+    def set_length(self, length):
+        self._canvas.set_length(length)
 
     def set_tool(self, value):
         self._canvas.set_tool(value)
+
+    def set_timesig(self, beat_count, beat_unit):
+        self._canvas.set_timesig(beat_count, beat_unit)

@@ -16,7 +16,7 @@ class LengthFrame(LabelFrame):
         bar = int(self._bar_var.get())
         beat = int(self._beat_var.get())
         tick = int(self._tick_var.get())
-        self.cb(bar, beat, tick)
+        self.cb((bar, beat, tick))
 
     def _init_ui(self):
         self._bar_var = StringVar()
@@ -27,7 +27,7 @@ class LengthFrame(LabelFrame):
             textvariable=self._bar_var, width=LengthFrame.SPINBOX_WIDTH)
         self._beat_spinbox = Spinbox(self, from_=1, to=4,
             textvariable=self._beat_var, width=LengthFrame.SPINBOX_WIDTH)
-        self._tick_spinbox = Spinbox(self, from_=0, to=63,
+        self._tick_spinbox = Spinbox(self, from_=0, to=127,
             textvariable=self._tick_var, width=LengthFrame.SPINBOX_WIDTH)
         self._bar_var.set('2')
 

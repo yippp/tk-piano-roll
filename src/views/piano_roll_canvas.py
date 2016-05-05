@@ -177,29 +177,35 @@ class PianoRollCanvas(CustomCanvas):
                 fill=color, tags=('line', 'horizontal'))
 
     def _draw_vertical_lines(self):
-        visibleregion_width = self._visibleregion[2]
         visibleregion_height = self._visibleregion[3]
-
-        cell_width = self._grid.max_cell_width()
-
-        n = int(min(self._grid.width(), visibleregion_width) / cell_width) + 1
-
         y1 = self.canvasy(0)
         y2 = self.canvasy(visibleregion_height)
-        xorigin = self.canvasx(0)
+        grid_width = self._grid.width()
+        bar_width = self._grid.bar_width()
+        cell_width = self._grid.max_cell_width()
 
-        offset = cell_width * math.ceil(xorigin / cell_width)
+        bars = int(math.ceil((grid_width + bar_width) / bar_width) - 1)
+
+        for n in range(bars):
+            bar_x = bar_width * n
+            lines_per_bar = int(min(bar_width, grid_width - bar_x) / cell_width)
+            for i in range(lines_per_bar):
+                x = i * cell_width + bar_x + cell_width
+                self.add_to_layer(PianoRollCanvas.VL_LAYER,
+                    self.create_line, (x, y1, x, y2),
+                    fill=PianoRollCanvas.NORMAL_LINE_COLOR,
+                    tags=('line', 'vertical'))
+
+        xorigin = self.canvasx(0)
+        offset = bar_width * math.ceil(xorigin / bar_width)
+        n = int(self._grid.width() / self._grid.bar_width()) + 1
 
         for i in range(n):
-            x = i * cell_width + offset
-            if x % self._grid.bar_width() == 0:
-                color = PianoRollCanvas.BAR_LINE_COLOR
-            else:
-                color = PianoRollCanvas.NORMAL_LINE_COLOR
-
+            x = i * self._grid.bar_width() + offset
             self.add_to_layer(PianoRollCanvas.VL_LAYER,
                 self.create_line, (x, y1, x, y2),
-                fill=color, tags=('line', 'vertical'))
+                fill=PianoRollCanvas.BAR_LINE_COLOR,
+                tags=('line', 'vertical'))
 
     def _draw_notes(self, *notes):
         old_ids = []
@@ -410,8 +416,8 @@ class PianoRollCanvas(CustomCanvas):
         self._draw()
         self._adjust_layers()
 
-    def set_length(self, value):
-        self._grid.length = value
+    def set_length(self, length):
+        self._grid.length = length
 
         self._update_scrollregion()
         self.delete(*self.find_withtags('line'))
@@ -420,6 +426,15 @@ class PianoRollCanvas(CustomCanvas):
 
     def set_tool(self, value):
         self._tool = value
+
+    def set_timesig(self, beat_count, beat_unit):
+        self._grid.beat_count = beat_count
+        self._grid.beat_unit = beat_unit
+
+        self._update_scrollregion()
+        self.delete(*self.find_withtags('line'))
+        self._draw_lines()
+        self._adjust_layers()
 
     def xview(self, *args):
         self.delete(*self.find_withtags('line'))
