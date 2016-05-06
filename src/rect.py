@@ -3,7 +3,7 @@ from vector2d import Vector2d
 
 class Rect(object):
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         if (len(args) == 2 and isinstance(args[0], Vector2d) and
             isinstance(args[1], Vector2d)):
                 self.coords = args[0].copy()
@@ -20,7 +20,14 @@ class Rect(object):
             self.width = args[2]
             self.height = args[3]
         else:
-            raise TypeError
+            self.coords = Vector2d(0, 0)
+            if 'x' in kwargs: self.coords.x = kwargs.pop('x')
+            if 'y' in kwargs: self.coords.y = kwargs.pop('y')
+            self.width = kwargs['width'] if 'width' in kwargs else 1
+            self.height = kwargs['height'] if 'height' in kwargs else 1
+
+            for key in kwargs.keys():
+                self.__setattr__(key, kwargs[key])
 
     def __eq__(self, rect):
         return (rect.coords == self.coords and
