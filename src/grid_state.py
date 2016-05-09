@@ -1,15 +1,14 @@
 import math
-from const import SNAP_DICT
+from const import SNAP_DICT, NUM_OF_KEYS
 
 TMP_LENGTH = (2, 1, 0)
 
 
 class GridState(object):
 
-    DEFAULT_CELL_HEIGHT_IN_PX = 12
+    DEFAULT_CELL_HEIGHT_IN_PX = 16
     SIXTEENTH_UNIT_WIDTH = 32
     MIN_CELL_WIDTH_IN_PX = 16
-    GRID_HEIGHT_IN_CELLS = 128
     
     def __init__(self, beat_count=4, beat_unit=4, subdiv=0, zoomx=1,
         zoomy=1, length=TMP_LENGTH):
@@ -49,13 +48,30 @@ class GridState(object):
     def copy(self):
         return GridState(self.beat_count, self.beat_unit, self.subdiv,
             self.zoomx, self.zoomy, self.length)
+
+    def diff(self, other):
+        diff = []
+        if self.beat_count != other.beat_count:
+            diff.append('beat_count')
+        if self.beat_unit != other.beat_unit:
+            diff.append('beat unit')
+        if self.subdiv != other.subdiv:
+            diff.append('subdiv')
+        if self.zoomx != other.zoomx:
+            diff.append('zoomx')
+        if self.zoomy != other.zoomy:
+            diff.append('zoomy')
+        if self.length != other.length:
+            diff.append('length')
+
+        return diff
         
     def width(self, zoom=True):
         return GridState.to_ticks(*self.length, beat_count=self.beat_count,
             bar_width=self.bar_width(zoom))
 
     def height(self, zoom=True):
-        return GridState.GRID_HEIGHT_IN_CELLS * self.cell_height(zoom)
+        return NUM_OF_KEYS * self.cell_height(zoom)
 
     def bar_width(self, zoom=True):
         sixteenth_units_per_beat = 2 ** (4 - math.log(float(self.beat_unit), 2))
@@ -83,20 +99,3 @@ class GridState(object):
 
     def contains(self, x, y, zoom=True):
         return (x >= 0 and y >= 0 and x <= self.width(zoom) and y <= self.height(zoom))
-
-    def compare(self, other):
-        diff = []
-        if self.beat_count != other.beat_count:
-            diff.append('beat_count')
-        if self.beat_unit != other.beat_unit:
-            diff.append('beat unit')
-        if self.subdiv != other.subdiv:
-            diff.append('subdiv')
-        if self.zoomx != other.zoomx:
-            diff.append('zoomx')
-        if self.zoomy != other.zoomy:
-            diff.append('zoomy')
-        if self.length != other.length:
-            diff.append('length')
-
-        return diff

@@ -1,6 +1,5 @@
 import math
 from Tkinter import *
-from ..grid import Grid
 from ..note import Note
 from ..note_list import NoteList
 from ..rect import Rect
@@ -429,7 +428,7 @@ class CanvasGrid(CustomCanvas):
             self.delete(note.id)
 
     def on_update(self, new_state):
-        diff = new_state.compare(self._gstate)
+        diff = new_state.diff(self._gstate)
         self._gstate = new_state
 
         if any(x in diff for x in ['beat_count', 'beat_unit']):
