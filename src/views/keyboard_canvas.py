@@ -3,7 +3,7 @@ from ..rect import Rect
 from include.custom_canvas import CustomCanvas
 
 
-class CanvasKeys(CustomCanvas):
+class KeyboardCanvas(CustomCanvas):
 
     WIDTH = 128
 
@@ -26,7 +26,7 @@ class CanvasKeys(CustomCanvas):
     def __init__(self, parent, state, **kwargs):
         CustomCanvas.__init__(self, parent, highlightthickness=0, **kwargs)
         self.parent = parent
-        self.config(width=CanvasKeys.WIDTH)
+        self.config(width=KeyboardCanvas.WIDTH)
 
         self._init_data(state)
         self._redraw()
@@ -48,14 +48,14 @@ class CanvasKeys(CustomCanvas):
 
     def _draw_complex_keys(self):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(CanvasKeys.LPAD * canvas_width)
-        rpad = round(CanvasKeys.RPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD * canvas_width)
+        rpad = round(KeyboardCanvas.RPAD * canvas_width)
         keyboard_width = canvas_width -lpad - rpad
 
         pattern = "1201220"
         cell_height = self._gstate.cell_height()
-        wbk_height = round(cell_height * CanvasKeys.WHITE_BIG_KEY_RATIO)
-        wsk_height = round(cell_height * CanvasKeys.WHITE_SMALL_KEY_RATIO)
+        wbk_height = round(cell_height * KeyboardCanvas.WHITE_BIG_KEY_RATIO)
+        wsk_height = round(cell_height * KeyboardCanvas.WHITE_SMALL_KEY_RATIO)
 
         height_of_octaves_in_white_keys = [5] + [7] * 10
         height_of_octaves_in_px = [4 * wsk_height + wbk_height] + [12 * cell_height] * 10
@@ -73,19 +73,19 @@ class CanvasKeys(CustomCanvas):
                 y2 = y_offset + px_in_octave - sum_of_key_heights_in_px
                 y1 = max(0, y2 - wk_height)
 
-                self._draw_key(CanvasKeys.WHITE_KEY_LAYER, y1, y2, keyboard_width)
+                self._draw_key(KeyboardCanvas.WHITE_KEY_LAYER, y1, y2, keyboard_width)
                 if key_type in ['1', '2'] and not (nth_octave == 0 and i == 4):
                     bk_rect = Rect(centery=y1, height=cell_height)
-                    self._draw_key(CanvasKeys.BLACK_KEY_LAYER,
+                    self._draw_key(KeyboardCanvas.BLACK_KEY_LAYER,
                         bk_rect.top, bk_rect.bottom,
-                        keyboard_width * CanvasKeys.BLACK_KEY_RATIO)
+                        keyboard_width * KeyboardCanvas.BLACK_KEY_RATIO)
 
                 sum_of_key_heights_in_px += wk_height
 
     def _draw_simple_keys(self):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(CanvasKeys.LPAD * canvas_width)
-        rpad = round(CanvasKeys.RPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD * canvas_width)
+        rpad = round(KeyboardCanvas.RPAD * canvas_width)
         keyboard_width = canvas_width - lpad - rpad
 
         pattern = "101011010101"
@@ -96,9 +96,9 @@ class CanvasKeys(CustomCanvas):
             y_offset = sum(keys_in_octave[:nth_octave + 1]) * cell_height
             for i in range(keys_in_octave[nth_octave]):
                 if pattern[i] == '1':
-                    layer = CanvasKeys.WHITE_KEY_LAYER
+                    layer = KeyboardCanvas.WHITE_KEY_LAYER
                 else:
-                    layer = CanvasKeys.BLACK_KEY_LAYER
+                    layer = KeyboardCanvas.BLACK_KEY_LAYER
 
                 y2 = y_offset - i * cell_height
                 y1 = y2 - cell_height
@@ -107,21 +107,21 @@ class CanvasKeys(CustomCanvas):
 
     def _draw_key(self, layer, y1, y2, width):
         if layer == 1:
-            color = CanvasKeys.WHITE_KEY_FILL_COLOR
+            color = KeyboardCanvas.WHITE_KEY_FILL_COLOR
         else:
-            color = CanvasKeys.BLACK_KEY_FILL_COLOR
+            color = KeyboardCanvas.BLACK_KEY_FILL_COLOR
 
         canvas_width = int(self.config()['width'][4])
-        lpad = round(CanvasKeys.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD * canvas_width)
 
         self.add_to_layer(layer, self.create_rectangle,
             (lpad, y1, lpad + width, y2),
-            outline=CanvasKeys.KEY_OUTLINE_COLOR,
+            outline=KeyboardCanvas.KEY_OUTLINE_COLOR,
             fill=color, tags='rect')
 
     def _draw_lines(self, on_octave=False):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(CanvasKeys.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD * canvas_width)
 
         cell_height = self._gstate.cell_height()
         keys_in_octave = [8] + [12] * 10
@@ -130,7 +130,7 @@ class CanvasKeys(CustomCanvas):
             y_offset = sum(keys_in_octave[:nth_octave + 1]) * cell_height
             for i in range(keys_in_octave[nth_octave]):
                 y = y_offset - i * cell_height
-                self.add_to_layer(CanvasKeys.LINE_LAYER,
+                self.add_to_layer(KeyboardCanvas.LINE_LAYER,
                     self.create_line, (0, y, lpad, y), tags='line')
 
                 if on_octave: break
@@ -140,7 +140,7 @@ class CanvasKeys(CustomCanvas):
 
         canvas_width = int(self.config()['width'][4])
         cell_height = self._gstate.cell_height()
-        lpad = round(CanvasKeys.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD * canvas_width)
 
         keys_in_octaves = [8] + [12] * 10
 
@@ -149,7 +149,7 @@ class CanvasKeys(CustomCanvas):
             for i in range(keys_in_octave):
                 y = y_offset - i * cell_height - max(cell_height / 2, 7)
                 text = names[i] + str(8 - nth_octave)
-                self.add_to_layer(CanvasKeys.TEXT_LAYER,
+                self.add_to_layer(KeyboardCanvas.TEXT_LAYER,
                     self.create_text, (lpad - 4, y),
                     text=text, anchor=E)
 

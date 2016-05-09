@@ -6,7 +6,7 @@ from ..rect import Rect
 from include.custom_canvas import CustomCanvas
 
 
-class CanvasGrid(CustomCanvas):
+class GridCanvas(CustomCanvas):
 
     NO_ID = -1
 
@@ -49,7 +49,7 @@ class CanvasGrid(CustomCanvas):
         self._selection_bounds = None
 
         self._click_pos = None
-        self._click_type = CanvasGrid.CLICKED_ON_EMPTY_AREA
+        self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
 
         self._tool = 0
         self._gstate = gstate
@@ -71,30 +71,30 @@ class CanvasGrid(CustomCanvas):
     def _on_bttnone_press(self, event):
         id = self._rect_at(event.x, event.y)
 
-        if self._tool == CanvasGrid.SEL_TOOL:
+        if self._tool == GridCanvas.SEL_TOOL:
             if id == None:
-                self.deselect_notes(CanvasGrid.SELECTED)
-                self._click_type = CanvasGrid.CLICKED_ON_EMPTY_AREA
+                self.deselect_notes(GridCanvas.SELECTED)
+                self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
             elif id not in self._notes.selected_ids():
-                self.deselect_notes(CanvasGrid.SELECTED)
+                self.deselect_notes(GridCanvas.SELECTED)
                 self.select_notes(id)
-                self._click_type = CanvasGrid.CLICKED_ON_UNSELECTED_RECT
+                self._click_type = GridCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
-                self._click_type = CanvasGrid.CLICKED_ON_SELECTED_RECT
+                self._click_type = GridCanvas.CLICKED_ON_SELECTED_RECT
 
-        elif self._tool == CanvasGrid.PEN_TOOL:
-            self.deselect_notes(CanvasGrid.SELECTED)
+        elif self._tool == GridCanvas.PEN_TOOL:
+            self.deselect_notes(GridCanvas.SELECTED)
             canvasx = self.canvasx(event.x)
             canvasy = self.canvasy(event.y)
             if self._gstate.contains(canvasx, canvasy):
                 rect = self._calc_note_rect(canvasx, canvasy)
-                new_note = Note(CanvasGrid.NO_ID, rect, True)
+                new_note = Note(GridCanvas.NO_ID, rect, True)
                 new_note.id = self._draw_notes(new_note)[0][1]
                 self._notes.add(new_note)
                 self._notes_on_click.add(new_note)
 
-        elif self._tool == CanvasGrid.ERASER_TOOL:
-            self.deselect_notes(CanvasGrid.SELECTED)
+        elif self._tool == GridCanvas.ERASER_TOOL:
+            self.deselect_notes(GridCanvas.SELECTED)
             if id != None: self.remove_notes(id)
 
         self._click_pos = (event.x, event.y)
@@ -104,33 +104,33 @@ class CanvasGrid(CustomCanvas):
         self.parent.focus_set()
 
     def _on_bttnone_ctrl(self, event):
-        if self._tool == CanvasGrid.SEL_TOOL:
+        if self._tool == GridCanvas.SEL_TOOL:
             id = self._rect_at(event.x, event.y)
 
             if id == None:
-                self._click_type = CanvasGrid.CLICKED_ON_EMPTY_AREA
+                self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
             elif id not in self._notes.selected_ids():
                 self.select_notes(id)
                 self._notes_on_click = self._notes.copy_selected()
                 self._selection_bounds = self._calc_selection_bounds()
-                self._click_type = CanvasGrid.CLICKED_ON_UNSELECTED_RECT
+                self._click_type = GridCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
                 self.deselect_notes(id)
                 self._notes_on_click = self._notes.copy_selected()
                 self._selection_bounds = self._calc_selection_bounds()
-                self._click_type = CanvasGrid.CLICKED_CTRL_ON_SELECTED_RECT
+                self._click_type = GridCanvas.CLICKED_CTRL_ON_SELECTED_RECT
 
             self._click_pos = (event.x, event.y)
 
     def _on_bttnone_release(self, event):
         dragged = (self._click_pos[0] - event.x != 0 or self._click_pos[1] - event.y != 0)
         if (len(self._notes.selected()) > 1 and self._click_type ==
-            CanvasGrid.CLICKED_ON_SELECTED_RECT and not dragged):
-            self.deselect_notes(CanvasGrid.SELECTED)
+            GridCanvas.CLICKED_ON_SELECTED_RECT and not dragged):
+            self.deselect_notes(GridCanvas.SELECTED)
             self.select_notes(self._rect_at(event.x, event.y))
 
-        elif (self._tool == CanvasGrid.SEL_TOOL == 0 and self._click_type ==
-            CanvasGrid.CLICKED_ON_EMPTY_AREA and dragged):
+        elif (self._tool == GridCanvas.SEL_TOOL == 0 and self._click_type ==
+            GridCanvas.CLICKED_ON_EMPTY_AREA and dragged):
             sel_region_id = self.find_withtags('selection_region')[0]
             coords = self.coords(sel_region_id)
             overlapping = self.find_overlapping(*coords)
@@ -141,12 +141,12 @@ class CanvasGrid(CustomCanvas):
             self.delete(sel_region_id)
 
     def _on_bttnone_motion(self, event):
-        if self._tool == CanvasGrid.SEL_TOOL:
+        if self._tool == GridCanvas.SEL_TOOL:
             if (len(self._notes.selected()) > 0 and self._click_type !=
-                CanvasGrid.CLICKED_ON_EMPTY_AREA):
+                GridCanvas.CLICKED_ON_EMPTY_AREA):
                 self._drag_notes(event.x, event.y)
                 self._update_note_ids(self._draw_notes(*self._notes.selected()))
-            elif self._click_type == CanvasGrid.CLICKED_ON_EMPTY_AREA:
+            elif self._click_type == GridCanvas.CLICKED_ON_EMPTY_AREA:
                 self.delete(*self.find_withtags('selection_region'))
                 self._draw_selection_region(event.x, event.y)
 
@@ -173,8 +173,8 @@ class CanvasGrid(CustomCanvas):
 
         for j in range(n):
             y = j * cell_height + offset
-            color = CanvasGrid.NORMAL_LINE_COLOR
-            self.add_to_layer(CanvasGrid.HL_LAYER,
+            color = GridCanvas.NORMAL_LINE_COLOR
+            self.add_to_layer(GridCanvas.HL_LAYER,
                 self.create_line, (x1, y, x2, y),
                 fill=color, tags=('line', 'horizontal'))
 
@@ -194,9 +194,9 @@ class CanvasGrid(CustomCanvas):
             lines_per_bar = int(min(bar_width, grid_width - bar_x) / cell_width)
             for i in range(lines_per_bar):
                 x = i * cell_width + bar_x + cell_width
-                self.add_to_layer(CanvasGrid.VL_LAYER,
+                self.add_to_layer(GridCanvas.VL_LAYER,
                     self.create_line, (x, y1, x, y2),
-                    fill=CanvasGrid.NORMAL_LINE_COLOR,
+                    fill=GridCanvas.NORMAL_LINE_COLOR,
                     tags=('line', 'vertical'))
 
         xorigin = self.canvasx(0)
@@ -205,9 +205,9 @@ class CanvasGrid(CustomCanvas):
 
         for i in range(n):
             x = i * self._gstate.bar_width() + offset
-            self.add_to_layer(CanvasGrid.VL_LAYER,
+            self.add_to_layer(GridCanvas.VL_LAYER,
                 self.create_line, (x, y1, x, y2),
-                fill=CanvasGrid.BAR_LINE_COLOR,
+                fill=GridCanvas.BAR_LINE_COLOR,
                 tags=('line', 'vertical'))
 
     def _draw_notes(self, *notes):
@@ -221,12 +221,12 @@ class CanvasGrid(CustomCanvas):
             y2 = y1 + note.rect[3] * self._gstate.zoomy
             coords = (x1, y1, x2, y2)
 
-            outline_color = (CanvasGrid.SEL_OUTLINE_COLOR if note.selected else
-                CanvasGrid.NORMAL_OUTLINE_COLOR)
-            fill_color = (CanvasGrid.SEL_FILL_COLOR if note.selected else
-                CanvasGrid.NORMAL_FILL_COLOR)
+            outline_color = (GridCanvas.SEL_OUTLINE_COLOR if note.selected else
+                GridCanvas.NORMAL_OUTLINE_COLOR)
+            fill_color = (GridCanvas.SEL_FILL_COLOR if note.selected else
+                GridCanvas.NORMAL_FILL_COLOR)
 
-            new_id = self.add_to_layer(CanvasGrid.RECT_LAYER, self.create_rectangle,
+            new_id = self.add_to_layer(GridCanvas.RECT_LAYER, self.create_rectangle,
                 coords, outline=outline_color, fill=fill_color, tags='rect')
 
             old_ids.append(note.id)
@@ -241,7 +241,7 @@ class CanvasGrid(CustomCanvas):
         y2 = self.canvasy(mousey)
 
         coords = (x1, y1, x2, y2)
-        self.add_to_layer(CanvasGrid.SEL_REGION_LAYER,
+        self.add_to_layer(GridCanvas.SEL_REGION_LAYER,
             self.create_rectangle, coords, fill='blue', outline='blue',
             stipple='gray12', tags='selection_region')
 
@@ -270,7 +270,7 @@ class CanvasGrid(CustomCanvas):
             self._notes.from_id(old_id).id = new_id
             if self._notes.from_id(new_id).selected:
                 self._notes_on_click.from_id(old_id).id = new_id
-            if old_id != CanvasGrid.NO_ID:
+            if old_id != GridCanvas.NO_ID:
                 self.delete(old_id)
 
     def _is_note_visible(self, note):
@@ -385,40 +385,40 @@ class CanvasGrid(CustomCanvas):
         argc = len(args)
         if argc == 0:
             return
-        if argc == 1 and args[0] == CanvasGrid.SELECTED:
+        if argc == 1 and args[0] == GridCanvas.SELECTED:
             return
-        elif argc == 1 and args[0] == CanvasGrid.ALL:
+        elif argc == 1 and args[0] == GridCanvas.ALL:
             notes = self._notes
         else:
             notes = (self._notes.from_id(id) for id in args)
 
         for note in notes:
-            self.itemconfig(note.id, fill=CanvasGrid.SEL_FILL_COLOR,
-                outline=CanvasGrid.SEL_FILL_COLOR)
+            self.itemconfig(note.id, fill=GridCanvas.SEL_FILL_COLOR,
+                outline=GridCanvas.SEL_FILL_COLOR)
             note.selected = True
 
     def deselect_notes(self, *args):
         argc = len(args)
         if argc == 0:
             return
-        if (argc == 1 and args[0] == CanvasGrid.ALL or
-            args[0] == CanvasGrid.SELECTED):
+        if (argc == 1 and args[0] == GridCanvas.ALL or
+            args[0] == GridCanvas.SELECTED):
             notes = self._notes.selected()
         else:
             notes = (self._notes.from_id(id) for id in args)
 
         for note in notes:
-            self.itemconfig(note.id, fill=CanvasGrid.NORMAL_FILL_COLOR,
-                outline=CanvasGrid.NORMAL_OUTLINE_COLOR)
+            self.itemconfig(note.id, fill=GridCanvas.NORMAL_FILL_COLOR,
+                outline=GridCanvas.NORMAL_OUTLINE_COLOR)
             note.selected = False
 
     def remove_notes(self, *args):
         argc = len(args)
         if argc == 0:
             return
-        if argc == 1 and args[0] == CanvasGrid.SELECTED:
+        if argc == 1 and args[0] == GridCanvas.SELECTED:
             notes = self._notes.selected()
-        elif argc == 1 and args[0] == CanvasGrid.ALL:
+        elif argc == 1 and args[0] == GridCanvas.ALL:
             notes = self._notes
         else:
             notes = (self._notes.from_id(id) for id in args)

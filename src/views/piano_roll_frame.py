@@ -1,6 +1,6 @@
 from Tkinter import *
-from canvas_grid import CanvasGrid
-from canvas_keys import CanvasKeys
+from grid_canvas import GridCanvas
+from keyboard_canvas import KeyboardCanvas
 from include.auto_scrollbar import AutoScrollbar
 from ..grid import Grid
 
@@ -23,9 +23,9 @@ class PianoRollFrame(Frame):
         self._hbar = AutoScrollbar(self, orient=HORIZONTAL)
         self._vbar = AutoScrollbar(self, orient=VERTICAL)
 
-        self._canvas_keys = CanvasKeys(self, self._grid.get_state(),
+        self._canvas_keys = KeyboardCanvas(self, self._grid.get_state(),
             yscrollcommand=self._vbar.set)
-        self._canvas_grid = CanvasGrid(self, self._grid.get_state(),
+        self._canvas_grid = GridCanvas(self, self._grid.get_state(),
             xscrollcommand=self._hbar.set,
             yscrollcommand=self._vbar.set)
         self._grid.register_listener(self._canvas_keys.on_update)
@@ -53,11 +53,11 @@ class PianoRollFrame(Frame):
         self.bind('3', self._on_ctrl_num)
 
     def _on_ctrl_a(self, event):
-        self._canvas_grid.select_notes(CanvasGrid.ALL)
-        self.parent.set_toolbox_tool(CanvasGrid.SEL_TOOL)
+        self._canvas_grid.select_notes(GridCanvas.ALL)
+        self.parent.set_toolbox_tool(GridCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
-        self._canvas_grid.remove_notes(CanvasGrid.SELECTED)
+        self._canvas_grid.remove_notes(GridCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = event.state & PianoRollFrame.CTRL_MASK == PianoRollFrame.CTRL_MASK
