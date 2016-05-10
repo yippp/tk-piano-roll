@@ -54,7 +54,7 @@ class GridState(object):
         if self.beat_count != other.beat_count:
             diff.append('beat_count')
         if self.beat_unit != other.beat_unit:
-            diff.append('beat unit')
+            diff.append('beat_unit')
         if self.subdiv != other.subdiv:
             diff.append('subdiv')
         if self.zoomx != other.zoomx:
