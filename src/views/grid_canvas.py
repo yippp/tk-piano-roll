@@ -66,7 +66,7 @@ class GridCanvas(CustomCanvas):
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
         self.bind('<B1-Motion>', self._on_bttnone_motion)
         self.bind('<Control-1>', self._on_bttnone_ctrl)
-        self.bind('<Configure>', self._update_regions)
+        self.bind('<Configure>', self._on_window_resize)
 
     def _on_bttnone_press(self, event):
         id = self._rect_at(event.x, event.y)
@@ -179,12 +179,13 @@ class GridCanvas(CustomCanvas):
                 fill=color, tags=('line', 'horizontal'))
 
     def _draw_vertical_lines(self):
+        visibleregion_top = self._visibleregion[1]
         visibleregion_height = self._visibleregion[3]
         grid_width = self._gstate.width()
         grid_height = self._gstate.height()
         bar_width = self._gstate.bar_width()
         cell_width = self._gstate.max_cell_width()
-        y1 = self._visibleregion[1]
+        y1 = visibleregion_top
         y2 = self.canvasy(y1 + min(visibleregion_height, grid_height))
 
         bars = int(math.ceil((grid_width + bar_width) / bar_width) - 1)
@@ -245,10 +246,6 @@ class GridCanvas(CustomCanvas):
             self.create_rectangle, coords, fill='blue', outline='blue',
             stipple='gray12', tags='selection_region')
 
-    def _update_regions(self, event):
-        self._update_visibleregion()
-        self._update_scrollregion()
-
     def _update_scrollregion(self):
         visibleregion_width = self._visibleregion[2]
         scrollregion_width = max(self._gstate.width(), visibleregion_width)
@@ -261,9 +258,6 @@ class GridCanvas(CustomCanvas):
         self._visibleregion[1] = self.canvasy(0)
         self._visibleregion[2] = self.winfo_width()
         self._visibleregion[3] = self.winfo_height()
-
-        self.delete(*self.find_withtags('line'))
-        self._draw_lines()
 
     def _update_note_ids(self, ids):
         for old_id, new_id in ids:
@@ -356,6 +350,12 @@ class GridCanvas(CustomCanvas):
 
         return None
 
+    def _on_window_resize(self, event):
+        self._update_scrollregion()
+        self._update_visibleregion()
+        self.delete(*self.find_withtags('line'))
+        self._draw()
+
     def _on_subdiv_change(self):
         self.delete(*self.find_withtags('line', 'vertical'))
         self._draw_lines()
@@ -363,6 +363,7 @@ class GridCanvas(CustomCanvas):
 
     def _on_zoom_change(self):
         self._update_scrollregion()
+        self._update_visibleregion()
         self.delete(ALL)
         self._draw()
 
@@ -376,7 +377,6 @@ class GridCanvas(CustomCanvas):
         self._update_scrollregion()
         self.delete(*self.find_withtags('line'))
         self._draw_lines()
-        self._adjust_layers()
 
     def set_tool(self, value):
         self._tool = value
@@ -441,17 +441,13 @@ class GridCanvas(CustomCanvas):
             self._on_length_change()
 
     def xview(self, *args):
-        self._update_visibleregion()
-
-        self.delete(*self.find_withtags('line'))
+        self.delete(ALL)
         CustomCanvas.xview(self, *args)
-        self._draw_lines()
-        self._adjust_layers()
+        self._update_visibleregion()
+        self._draw()
 
     def yview(self, *args):
-        self._update_visibleregion()
-
         self.delete(*self.find_withtags('line'))
         CustomCanvas.yview(self, *args)
-        self._draw_lines()
-        self._adjust_layers()
+        self._update_visibleregion()
+        self._draw()

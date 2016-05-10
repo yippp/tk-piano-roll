@@ -6,7 +6,7 @@ TMP_LENGTH = (2, 1, 0)
 
 class GridState(object):
 
-    DEFAULT_CELL_HEIGHT_IN_PX = 16
+    DEFAULT_CELL_HEIGHT_IN_PX = 12
     SIXTEENTH_UNIT_WIDTH = 32
     MIN_CELL_WIDTH_IN_PX = 16
     
