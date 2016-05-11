@@ -7,6 +7,9 @@ class CustomCanvas(Canvas):
         Canvas.__init__(self, *args, **kwargs)
         self._layers = []
 
+        if 'highlightthickness' not in kwargs:
+            self.config(highlightthickness=0)
+
     def add_to_layer(self, layer, command, coords, **kwargs):
         layer_tag = "layer {}".format(layer)
         if layer_tag not in self._layers: self._layers.append(layer_tag)

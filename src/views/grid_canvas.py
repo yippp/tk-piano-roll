@@ -36,8 +36,11 @@ class GridCanvas(CustomCanvas):
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, width=512, height=384,
-            bg='white', highlightthickness=0, **kwargs)
+        bg='white', bd=2, relief=SUNKEN, **kwargs)
         self.parent = parent
+
+        self.xview_moveto(0)
+        self.yview_moveto(0)
 
         self._init_data(gstate)
         self._bind_event_handlers()
@@ -248,16 +251,20 @@ class GridCanvas(CustomCanvas):
 
     def _update_scrollregion(self):
         visibleregion_width = self._visibleregion[2]
+        visibleregion_height = self._visibleregion[3]
+
         scrollregion_width = max(self._gstate.width(), visibleregion_width)
-        scrollregion_height = self._gstate.height()
+        scrollregion_height = max(self._gstate.height(), visibleregion_height) + 1
 
         self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
     def _update_visibleregion(self):
         self._visibleregion[0] = self.canvasx(0)
         self._visibleregion[1] = self.canvasy(0)
-        self._visibleregion[2] = self.winfo_width()
-        self._visibleregion[3] = self.winfo_height()
+
+        bd = int(self.config()['borderwidth'][4])
+        self._visibleregion[2] = self.winfo_width() - bd * 2
+        self._visibleregion[3] = self.winfo_height() + 1
 
     def _update_note_ids(self, ids):
         for old_id, new_id in ids:
@@ -275,8 +282,8 @@ class GridCanvas(CustomCanvas):
         return visibleregion_rect.collide_rect(note_rect)
 
     def _calc_note_rect(self, canvasx, canvasy):
-        cell_width = self._gstate.cell_width(False)
-        cell_height = self._gstate.cell_height(False)
+        cell_width = self._gstate.cell_width(zoom=False)
+        cell_height = self._gstate.cell_height(zoom=False)
         cell_width_z = self._gstate.cell_width()
         cell_height_z = self._gstate.cell_height()
 
@@ -304,8 +311,8 @@ class GridCanvas(CustomCanvas):
         return (left, top, right, bottom)
 
     def _drag_notes(self, mousex, mousey):
-        cell_width = self._gstate.cell_width(False)
-        cell_height = self._gstate.cell_height(False)
+        cell_width = self._gstate.cell_width(zoom=False)
+        cell_height = self._gstate.cell_height(zoom=False)
         cell_width_z = self._gstate.cell_width()
         cell_height_z = self._gstate.cell_height()
 
@@ -314,18 +321,18 @@ class GridCanvas(CustomCanvas):
 
         if self._selection_bounds[0] + dx < 0:
             dx = -self._selection_bounds[0]
-        elif self._selection_bounds[2] + dx >= self._gstate.width(False):
+        elif self._selection_bounds[2] + dx >= self._gstate.width(zoom=False):
             grid_right = self._gstate.width(False)
             sel_right = self._selection_bounds[2]
-            row = self._gstate.row(grid_right - sel_right, False)
+            row = self._gstate.row(grid_right - sel_right, zoom=False)
             dx = cell_width * row
 
         if self._selection_bounds[1] + dy < 0:
             dy = -self._selection_bounds[1]
-        elif self._selection_bounds[3] + dy >= self._gstate.height(False):
+        elif self._selection_bounds[3] + dy >= self._gstate.height(zoom=False):
             grid_bottom  = self._gstate.height(False)
             sel_bottom = self._selection_bounds[3]
-            col = self._gstate.col(grid_bottom - sel_bottom, False)
+            col = self._gstate.col(grid_bottom - sel_bottom, zoom=False)
             dy = cell_height * col
 
         for before in self._notes_on_click:
@@ -427,9 +434,9 @@ class GridCanvas(CustomCanvas):
             self._notes.remove(note)
             self.delete(note.id)
 
-    def on_update(self, new_state):
-        diff = new_state.diff(self._gstate)
-        self._gstate = new_state
+    def on_update(self, new_gstate):
+        diff = new_gstate.diff(self._gstate)
+        self._gstate = new_gstate
 
         if any(x in diff for x in ['beat_count', 'beat_unit']):
             self._on_timesig_change()

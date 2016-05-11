@@ -1,4 +1,5 @@
 from Tkinter import *
+from tkFont import Font
 from ..rect import Rect
 from include.custom_canvas import CustomCanvas
 
@@ -20,24 +21,29 @@ class KeyboardCanvas(CustomCanvas):
     WHITE_SMALL_KEY_RATIO = 1.5
     BLACK_KEY_RATIO = 0.75
 
-    LPAD = 0.35
-    RPAD = 0.05
+    LPAD_RATIO = 0.35
 
-    def __init__(self, parent, state, **kwargs):
-        CustomCanvas.__init__(self, parent, highlightthickness=0, **kwargs)
+    KEYS_IN_OCTAVE = 12
+    WHITE_KEYS_IN_OCTAVE = 7
+
+
+    def __init__(self, parent, gstate, **kwargs):
+        CustomCanvas.__init__(self, parent, bd=2, relief=SUNKEN, **kwargs)
         self.parent = parent
-        self.config(width=KeyboardCanvas.WIDTH)
 
-        self._init_data(state)
+        self._init_data(gstate)
         self._redraw()
 
     def _init_data(self, state):
         self._gstate = state
+        self._font = Font(family='sans-serif', size=9)
+        self.config(width=KeyboardCanvas.WIDTH)
         self._update_scrollregion()
 
     def _redraw(self):
         cell_height = self._gstate.cell_height()
-        if cell_height > 12:
+
+        if cell_height >= 14:
             self._draw_complex_keys()
             self._draw_lines()
             self._draw_text()
@@ -48,17 +54,17 @@ class KeyboardCanvas(CustomCanvas):
 
     def _draw_complex_keys(self):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(KeyboardCanvas.LPAD * canvas_width)
-        rpad = round(KeyboardCanvas.RPAD * canvas_width)
-        keyboard_width = canvas_width -lpad - rpad
+        lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
+        keyboard_width = canvas_width - lpad
 
         pattern = "1201220"
         cell_height = self._gstate.cell_height()
         wbk_height = round(cell_height * KeyboardCanvas.WHITE_BIG_KEY_RATIO)
         wsk_height = round(cell_height * KeyboardCanvas.WHITE_SMALL_KEY_RATIO)
 
-        height_of_octaves_in_white_keys = [5] + [7] * 10
-        height_of_octaves_in_px = [4 * wsk_height + wbk_height] + [12 * cell_height] * 10
+        height_of_octaves_in_white_keys = [5] + [KeyboardCanvas.WHITE_KEYS_IN_OCTAVE] * 10
+        height_of_octaves_in_px = [4 * wsk_height + wbk_height]
+        height_of_octaves_in_px += [KeyboardCanvas.KEYS_IN_OCTAVE * cell_height] * 10
 
         for nth_octave in range(11):
             y_offset = sum(height_of_octaves_in_px[:nth_octave])
@@ -84,13 +90,12 @@ class KeyboardCanvas(CustomCanvas):
 
     def _draw_simple_keys(self):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(KeyboardCanvas.LPAD * canvas_width)
-        rpad = round(KeyboardCanvas.RPAD * canvas_width)
-        keyboard_width = canvas_width - lpad - rpad
+        lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
+        keyboard_width = canvas_width - lpad
 
         pattern = "101011010101"
         cell_height = self._gstate.cell_height()
-        keys_in_octave = [8] + [12] * 10
+        keys_in_octave = [8] + [KeyboardCanvas.KEYS_IN_OCTAVE] * 10
 
         for nth_octave in range(11):
             y_offset = sum(keys_in_octave[:nth_octave + 1]) * cell_height
@@ -112,19 +117,19 @@ class KeyboardCanvas(CustomCanvas):
             color = KeyboardCanvas.BLACK_KEY_FILL_COLOR
 
         canvas_width = int(self.config()['width'][4])
-        lpad = round(KeyboardCanvas.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
         self.add_to_layer(layer, self.create_rectangle,
-            (lpad, y1, lpad + width, y2),
+            (lpad, y1, lpad + width - 1, y2),
             outline=KeyboardCanvas.KEY_OUTLINE_COLOR,
             fill=color, tags='rect')
 
     def _draw_lines(self, on_octave=False):
         canvas_width = int(self.config()['width'][4])
-        lpad = round(KeyboardCanvas.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
         cell_height = self._gstate.cell_height()
-        keys_in_octave = [8] + [12] * 10
+        keys_in_octave = [8] + [KeyboardCanvas.KEYS_IN_OCTAVE] * 10
 
         for nth_octave in range(11):
             y_offset = sum(keys_in_octave[:nth_octave + 1]) * cell_height
@@ -140,35 +145,37 @@ class KeyboardCanvas(CustomCanvas):
 
         canvas_width = int(self.config()['width'][4])
         cell_height = self._gstate.cell_height()
-        lpad = round(KeyboardCanvas.LPAD * canvas_width)
+        lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
-        keys_in_octaves = [8] + [12] * 10
+        keys_in_octaves = [8] + [KeyboardCanvas.KEYS_IN_OCTAVE] * 10
 
         for nth_octave, keys_in_octave in zip(range(11), keys_in_octaves):
             y_offset = sum(keys_in_octaves[:nth_octave + 1]) * cell_height
+            y_offset -= 7 if on_octave else cell_height / 2
             for i in range(keys_in_octave):
-                y = y_offset - i * cell_height - max(cell_height / 2, 7)
+                y = y_offset - i * cell_height
                 text = names[i] + str(8 - nth_octave)
                 self.add_to_layer(KeyboardCanvas.TEXT_LAYER,
                     self.create_text, (lpad - 4, y),
-                    text=text, anchor=E)
+                    text=text, anchor=E, font=self._font)
 
                 if on_octave: break
 
     def _update_scrollregion(self):
         sr_width = int(self.config()['width'][4])
-        sr_height = self._gstate.height()
+        sr_height = self._gstate.height() + 1
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 
     def _on_zoomy_change(self):
         self._update_scrollregion()
+
         self.delete(ALL)
         self._redraw()
 
-    def on_update(self, new_state):
-        diff = new_state.diff(self._gstate)
-        self._gstate = new_state
+    def on_update(self, new_gstate):
+        diff = new_gstate.diff(self._gstate)
+        self._gstate = new_gstate
 
         if 'zoomy' in diff:
             self._on_zoomy_change()

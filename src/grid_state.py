@@ -1,14 +1,19 @@
 import math
-from const import SNAP_DICT, NUM_OF_KEYS
+from const import SNAP_DICT
 
 TMP_LENGTH = (2, 1, 0)
 
 
 class GridState(object):
 
-    DEFAULT_CELL_HEIGHT_IN_PX = 12
+    DEFAULT_CELL_HEIGHT_IN_PX = 16
     SIXTEENTH_UNIT_WIDTH = 32
     MIN_CELL_WIDTH_IN_PX = 16
+    NUM_OF_KEYS_IN_OCTAVE = 128
+
+    BAR_SUBDIV = 0
+    CUR_SUBDIV = -1
+    BU_SUBDIV = -2
     
     def __init__(self, beat_count=4, beat_unit=4, subdiv=0, zoomx=1,
         zoomy=1, length=TMP_LENGTH):
@@ -25,23 +30,11 @@ class GridState(object):
             (beats - 1) * bar_width / beat_count +
             ticks * bar_width / 256)
 
-    def _calc_cell_width(self, subdiv, zoom=True):
-        if zoom:
-            return 2 ** (4 - subdiv) * GridState.SIXTEENTH_UNIT_WIDTH * self.zoomx
-        else:
-            return 2 ** (4 - subdiv) * GridState.SIXTEENTH_UNIT_WIDTH
-
-    def _calc_cell_height(self, zoom=True):
-        if zoom:
-            return GridState.DEFAULT_CELL_HEIGHT_IN_PX * self.zoomy
-        else:
-            return GridState.DEFAULT_CELL_HEIGHT_IN_PX
-
     def _calc_max_subdiv(self, zoom=True):
         n_snap_opts = len(SNAP_DICT)
 
         for i in range(n_snap_opts - 1, -1, -1):
-            cell_width = self._calc_cell_width(i, zoom)
+            cell_width = self.cell_width(i, zoom)
             if cell_width >= GridState.MIN_CELL_WIDTH_IN_PX:
                 return i
 
@@ -71,31 +64,48 @@ class GridState(object):
             bar_width=self.bar_width(zoom))
 
     def height(self, zoom=True):
-        return NUM_OF_KEYS * self.cell_height(zoom)
+        return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
 
     def bar_width(self, zoom=True):
+        sixteenth_unit_width = GridState.SIXTEENTH_UNIT_WIDTH
+
         sixteenth_units_per_beat = 2 ** (4 - math.log(float(self.beat_unit), 2))
         sixteenth_units_per_bar = self.beat_count * sixteenth_units_per_beat
         if zoom:
-            return GridState.SIXTEENTH_UNIT_WIDTH * sixteenth_units_per_bar * self.zoomx
+            return sixteenth_unit_width * sixteenth_units_per_bar * self.zoomx
         else:
-            return GridState.SIXTEENTH_UNIT_WIDTH * sixteenth_units_per_bar
+            return sixteenth_unit_width * sixteenth_units_per_bar
 
-    def cell_width(self, zoom=True):
-        return self._calc_cell_width(self.subdiv, zoom)
+    def cell_width(self, subdiv=CUR_SUBDIV, zoom=True):
+        if subdiv in [GridState.CUR_SUBDIV, 'cur_subdiv']:
+            _subdiv = self.subdiv
+        elif subdiv in [GridState.BU_SUBDIV, 'bu_subdiv']:
+            _subdiv = math.log(float(self.beat_unit), 2)
+        else:
+            _subdiv = subdiv
+
+        if _subdiv in [GridState.BAR_SUBDIV, 'bar_subdiv']:
+            return self.bar_width(zoom)
+        else:
+            zoomx = self.zoomx if zoom else 1
+            return 2 ** (4 - _subdiv) * GridState.SIXTEENTH_UNIT_WIDTH * zoomx
 
     def cell_height(self, zoom=True):
-        return self._calc_cell_height(zoom)
+        if zoom:
+            return GridState.DEFAULT_CELL_HEIGHT_IN_PX * self.zoomy
+        else:
+            return GridState.DEFAULT_CELL_HEIGHT_IN_PX
 
     def max_cell_width(self, zoom=True):
-        max_subdiv = self._calc_max_subdiv(zoom)
-        return self._calc_cell_width(min(self.subdiv, max_subdiv), zoom)
+        max_subdiv = self._calc_max_subdiv(zoom=zoom)
+        return self.cell_width(min(self.subdiv, max_subdiv), zoom=zoom)
         
     def row(self, x, zoom=True):
-        return int(x / self.cell_width(zoom))
+        return int(x / self.cell_width(zoom=zoom))
 
     def col(self, y, zoom=True):
-        return int(y / self.cell_height(False))
+        return int(y / self.cell_height(zoom=False))
 
     def contains(self, x, y, zoom=True):
-        return (x >= 0 and y >= 0 and x <= self.width(zoom) and y <= self.height(zoom))
+        return (x >= 0 and y >= 0 and x <= self.width(zoom=zoom
+            and y <= self.height(zoom=zoom)))

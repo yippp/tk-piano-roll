@@ -22,7 +22,6 @@ class LengthFrame(LabelFrame):
         self._bar_var = StringVar()
         self._beat_var = StringVar()
         self._tick_var = StringVar()
-
         self._bar_spinbox = Spinbox(self, from_=1, to=99999,
             textvariable=self._bar_var, width=LengthFrame.SPINBOX_WIDTH)
         self._beat_spinbox = Spinbox(self, from_=1, to=4,

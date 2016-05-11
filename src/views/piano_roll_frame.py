@@ -1,15 +1,17 @@
 from Tkinter import *
-from grid_canvas import GridCanvas
+from ruler_canvas import RulerCanvas
 from keyboard_canvas import KeyboardCanvas
+from grid_canvas import GridCanvas
 from include.auto_scrollbar import AutoScrollbar
 from ..grid import Grid
+
 
 class PianoRollFrame(Frame):
 
     CTRL_MASK = 0x0004
 
-    def __init__(self, parent):
-        Frame.__init__(self, parent)
+    def __init__(self, parent, **kwargs):
+        Frame.__init__(self, parent, **kwargs)
         self.parent = parent
 
         self._init_data()
@@ -23,23 +25,31 @@ class PianoRollFrame(Frame):
         self._hbar = AutoScrollbar(self, orient=HORIZONTAL)
         self._vbar = AutoScrollbar(self, orient=VERTICAL)
 
-        self._canvas_keys = KeyboardCanvas(self, self._grid.get_state(),
+        self._ruler_canvas = RulerCanvas(self, self._grid.get_state(),
+            xscrollcommand=self._hbar.set)
+        self._keyboard_canvas = KeyboardCanvas(self, self._grid.get_state(),
             yscrollcommand=self._vbar.set)
-        self._canvas_grid = GridCanvas(self, self._grid.get_state(),
+        self._grid_canvas = GridCanvas(self, self._grid.get_state(),
             xscrollcommand=self._hbar.set,
             yscrollcommand=self._vbar.set)
-        self._grid.register_listener(self._canvas_keys.on_update)
-        self._grid.register_listener(self._canvas_grid.on_update)
+
+        self._grid.register_listener(self._keyboard_canvas.on_update)
+        self._grid.register_listener(self._ruler_canvas.on_update)
+        self._grid.register_listener(self._grid_canvas.on_update)
 
         self._hbar.config(command=self._xview)
         self._vbar.config(command=self._yview)
 
-        self._hbar.grid(row=1, column=0, columnspan=2, sticky=E+W)
-        self._vbar.grid(row=0, column=2, sticky=N+S)
-        self._canvas_keys.grid(row=0, column=0, sticky=W+N+E+S)
-        self._canvas_grid.grid(row=0, column=1, sticky=W+N+E+S)
+        self._hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
+        self._vbar.grid(row=0, column=2, sticky=N+S, rowspan=3)
+        self._keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S,
+            padx=8, pady=(0, 8))
+        self._ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S,
+            padx=(0, 8), pady=8)
+        self._grid_canvas.grid(row=1, column=1, sticky=W+N+E+S,
+            padx=(0, 8), pady=(0, 8))
 
-        self.grid_rowconfigure(0, weight=2)
+        self.grid_rowconfigure(1, weight=2)
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
 
@@ -53,11 +63,11 @@ class PianoRollFrame(Frame):
         self.bind('3', self._on_ctrl_num)
 
     def _on_ctrl_a(self, event):
-        self._canvas_grid.select_notes(GridCanvas.ALL)
+        self._grid_canvas.select_notes(GridCanvas.ALL)
         self.parent.set_toolbox_tool(GridCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
-        self._canvas_grid.remove_notes(GridCanvas.SELECTED)
+        self._grid_canvas.remove_notes(GridCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = event.state & PianoRollFrame.CTRL_MASK == PianoRollFrame.CTRL_MASK
@@ -65,11 +75,12 @@ class PianoRollFrame(Frame):
             self.parent.set_toolbox_tool(int(event.keysym) - 1)
 
     def _xview(self, *args):
-        self._canvas_grid.xview(*args)
+        self._ruler_canvas.xview(*args)
+        self._grid_canvas.xview(*args)
 
     def _yview(self, *args):
-        self._canvas_keys.yview(*args)
-        self._canvas_grid.yview(*args)
+        self._keyboard_canvas.yview(*args)
+        self._grid_canvas.yview(*args)
 
     def set_subdiv(self, value):
         self._grid.subdiv = value
@@ -88,4 +99,4 @@ class PianoRollFrame(Frame):
         self._grid.beat_unit = beat_unit
 
     def set_tool(self, value):
-        self._canvas_grid.set_tool(value)
+        self._grid_canvas.set_tool(value)
