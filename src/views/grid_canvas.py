@@ -389,6 +389,9 @@ class GridCanvas(CustomCanvas):
         self.delete(*self.find_withtags('line'))
         self._draw_lines()
 
+    def get_note_list(self):
+        return self._notes.copy()
+
     def set_tool(self, value):
         self._tool = value
 

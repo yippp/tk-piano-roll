@@ -24,18 +24,18 @@ class Toolbox(Frame):
             'pen':    PhotoImage(file=PEN_TOOL_IMG_PATH)
         }
 
-        self._cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
+        self.cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
             image=self._bttn_images['cursor'], indicatoron=0, padx=2, pady=2)
-        self._pen_bttn = Radiobutton(self, value=1, variable=self._var,
+        self.pen_bttn = Radiobutton(self, value=1, variable=self._var,
             image=self._bttn_images['pen'], indicatoron=0, padx=10, pady=10)
-        self._eraser_bttn = Radiobutton(self, value=2, variable=self._var,
+        self.eraser_bttn = Radiobutton(self, value=2, variable=self._var,
             image=self._bttn_images['eraser'], indicatoron=0, padx=2, pady=2)
 
         self._var.trace("w", self._cb)
 
-        self._cursor_bttn.pack(side=LEFT)
-        self._pen_bttn.pack(side=LEFT)
-        self._eraser_bttn.pack(side=LEFT)
+        self.cursor_bttn.pack(side=LEFT)
+        self.pen_bttn.pack(side=LEFT)
+        self.eraser_bttn.pack(side=LEFT)
 
     def set(self, value):
         self._var.set(value)

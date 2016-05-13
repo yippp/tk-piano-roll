@@ -1,13 +1,11 @@
 import math
-from const import SNAP_DICT
+from const import *
 
 TMP_LENGTH = (2, 1, 0)
 
 
 class GridState(object):
 
-    DEFAULT_CELL_HEIGHT_IN_PX = 16
-    SIXTEENTH_UNIT_WIDTH = 32
     MIN_CELL_WIDTH_IN_PX = 16
     NUM_OF_KEYS_IN_OCTAVE = 128
 
@@ -23,12 +21,6 @@ class GridState(object):
         self.zoomx = zoomx
         self.zoomy = zoomy
         self.length = length
-        
-    @staticmethod
-    def to_ticks(bars, beats, ticks, bar_width, beat_count):
-        return ((bars - 1) * bar_width +
-            (beats - 1) * bar_width / beat_count +
-            ticks * bar_width / 256)
 
     def _calc_max_subdiv(self, zoom=True):
         n_snap_opts = len(SNAP_DICT)
@@ -60,21 +52,23 @@ class GridState(object):
         return diff
         
     def width(self, zoom=True):
-        return GridState.to_ticks(*self.length, beat_count=self.beat_count,
-            bar_width=self.bar_width(zoom))
+        bar_width = self.bar_width(zoom)
+        beat_count = self.beat_count
+        bar, beat, tick = self.length
+
+        return ((bar - 1) * bar_width +
+        (beat - 1) * bar_width / beat_count +
+        tick * bar_width / 256)
 
     def height(self, zoom=True):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
 
     def bar_width(self, zoom=True):
-        sixteenth_unit_width = GridState.SIXTEENTH_UNIT_WIDTH
+        from helper import calc_ticks_per_bar
+        zoomx = self.zoomx if zoom else 1
 
-        sixteenth_units_per_beat = 2 ** (4 - math.log(float(self.beat_unit), 2))
-        sixteenth_units_per_bar = self.beat_count * sixteenth_units_per_beat
-        if zoom:
-            return sixteenth_unit_width * sixteenth_units_per_bar * self.zoomx
-        else:
-            return sixteenth_unit_width * sixteenth_units_per_bar
+        return calc_ticks_per_bar(SIXTEENTH_UNIT_WIDTH_IN_PX,
+            self.beat_count, self.beat_unit) * zoomx
 
     def cell_width(self, subdiv=CUR_SUBDIV, zoom=True):
         if subdiv in [GridState.CUR_SUBDIV, 'cur_subdiv']:
@@ -88,13 +82,13 @@ class GridState(object):
             return self.bar_width(zoom)
         else:
             zoomx = self.zoomx if zoom else 1
-            return 2 ** (4 - _subdiv) * GridState.SIXTEENTH_UNIT_WIDTH * zoomx
+            return 2 ** (4 - _subdiv) * SIXTEENTH_UNIT_WIDTH_IN_PX * zoomx
 
     def cell_height(self, zoom=True):
         if zoom:
-            return GridState.DEFAULT_CELL_HEIGHT_IN_PX * self.zoomy
+            return CELL_HEIGHT_IN_PX * self.zoomy
         else:
-            return GridState.DEFAULT_CELL_HEIGHT_IN_PX
+            return CELL_HEIGHT_IN_PX
 
     def max_cell_width(self, zoom=True):
         max_subdiv = self._calc_max_subdiv(zoom=zoom)

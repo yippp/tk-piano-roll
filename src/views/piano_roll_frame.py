@@ -22,29 +22,29 @@ class PianoRollFrame(Frame):
         self._grid = Grid()
 
     def _init_ui(self):
-        self._hbar = AutoScrollbar(self, orient=HORIZONTAL)
-        self._vbar = AutoScrollbar(self, orient=VERTICAL)
+        self.hbar = AutoScrollbar(self, orient=HORIZONTAL)
+        self.vbar = AutoScrollbar(self, orient=VERTICAL)
 
-        self._ruler_canvas = RulerCanvas(self, self._grid.get_state(),
-            xscrollcommand=self._hbar.set)
-        self._keyboard_canvas = KeyboardCanvas(self, self._grid.get_state(),
-            yscrollcommand=self._vbar.set)
-        self._grid_canvas = GridCanvas(self, self._grid.get_state(),
-            xscrollcommand=self._hbar.set,
-            yscrollcommand=self._vbar.set)
+        self.ruler_canvas = RulerCanvas(self, self._grid.get_state(),
+            xscrollcommand=self.hbar.set)
+        self.keyboard_canvas = KeyboardCanvas(self, self._grid.get_state(),
+            yscrollcommand=self.vbar.set)
+        self.grid_canvas = GridCanvas(self, self._grid.get_state(),
+            xscrollcommand=self.hbar.set,
+            yscrollcommand=self.vbar.set)
 
-        self._grid.register_listener(self._keyboard_canvas.on_update)
-        self._grid.register_listener(self._ruler_canvas.on_update)
-        self._grid.register_listener(self._grid_canvas.on_update)
+        self._grid.register_listener(self.keyboard_canvas.on_update)
+        self._grid.register_listener(self.ruler_canvas.on_update)
+        self._grid.register_listener(self.grid_canvas.on_update)
 
-        self._hbar.config(command=self._xview)
-        self._vbar.config(command=self._yview)
+        self.hbar.config(command=self._xview)
+        self.vbar.config(command=self._yview)
 
-        self._hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
-        self._vbar.grid(row=0, column=2, sticky=N+S, rowspan=3)
-        self._keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S, padx=8, pady=(0, 8))
-        self._ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S, padx=(0, 8), pady=8)
-        self._grid_canvas.grid(row=1, column=1, sticky=W+N+E+S, padx=(0, 8), pady=(0, 8))
+        self.hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
+        self.vbar.grid(row=0, column=2, sticky=N+S, rowspan=3)
+        self.keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S, padx=8, pady=(0, 8))
+        self.ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S, padx=(0, 8), pady=8)
+        self.grid_canvas.grid(row=1, column=1, sticky=W+N+E+S, padx=(0, 8), pady=(0, 8))
 
         self.grid_rowconfigure(1, weight=2)
         self.grid_columnconfigure(0, weight=0)
@@ -60,11 +60,11 @@ class PianoRollFrame(Frame):
         self.bind('3', self._on_ctrl_num)
 
     def _on_ctrl_a(self, event):
-        self._grid_canvas.select_notes(GridCanvas.ALL)
+        self.grid_canvas.select_notes(GridCanvas.ALL)
         self.parent.set_toolbox_tool(GridCanvas.SEL_TOOL)
 
     def _on_delete(self, event):
-        self._grid_canvas.remove_notes(GridCanvas.SELECTED)
+        self.grid_canvas.remove_notes(GridCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = (event.state & PianoRollFrame.CTRL_MASK ==
@@ -73,12 +73,20 @@ class PianoRollFrame(Frame):
             self.parent.set_toolbox_tool(int(event.keysym) - 1)
 
     def _xview(self, *args):
-        self._ruler_canvas.xview(*args)
-        self._grid_canvas.xview(*args)
+        self.ruler_canvas.xview(*args)
+        self.grid_canvas.xview(*args)
 
     def _yview(self, *args):
-        self._keyboard_canvas.yview(*args)
-        self._grid_canvas.yview(*args)
+        self.keyboard_canvas.yview(*args)
+        self.grid_canvas.yview(*args)
+
+    def get_song_data(self):
+        return {
+            'note_list': self.grid_canvas.get_note_list(),
+            'length': self._grid.length,
+            'beat_count': self._grid.beat_count,
+            'beat_unit': self._grid.beat_unit
+        }
 
     def set_subdiv(self, value):
         self._grid.subdiv = value
@@ -95,6 +103,3 @@ class PianoRollFrame(Frame):
     def set_timesig(self, beat_count, beat_unit):
         self._grid.beat_count = beat_count
         self._grid.beat_unit = beat_unit
-
-    def set_tool(self, value):
-        self._grid_canvas.set_tool(value)

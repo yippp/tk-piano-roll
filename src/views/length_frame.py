@@ -15,40 +15,40 @@ class LengthFrame(LabelFrame):
         self._init_ui()
 
     def _init_ui(self):
-        self._bar_spinbox = CustomSpinbox(self, from_=1, to=maxsize,
+        self.bar_spinbox = CustomSpinbox(self, from_=1, to=maxsize,
             width=LengthFrame.SPINBOX_WIDTH)
-        self._bar_spinbox.set('2')
-        self._bar_spinbox.on_value_change(self._forward)
+        self.bar_spinbox.set('2')
+        self.bar_spinbox.on_value_change(self._forward)
 
-        self._beat_spinbox = CustomSpinbox(self, from_=1, to=4,
+        self.beat_spinbox = CustomSpinbox(self, from_=1, to=4,
             width=LengthFrame.SPINBOX_WIDTH)
-        self._beat_spinbox.on_value_change(self._forward)
+        self.beat_spinbox.on_value_change(self._forward)
 
-        self._tick_spinbox = CustomSpinbox(self, from_=0, to=127,
+        self.tick_spinbox = CustomSpinbox(self, from_=0, to=127,
             width=LengthFrame.SPINBOX_WIDTH)
-        self._tick_spinbox.on_value_change(self._forward)
+        self.tick_spinbox.on_value_change(self._forward)
 
-        self.after_idle(Widget.nametowidget(self._beat_spinbox,
-            str(self._beat_spinbox)).config, {'validate': 'key'})
-        self.after_idle(Widget.nametowidget(self._tick_spinbox,
-            str(self._tick_spinbox)).config, {'validate': 'key'})
+        self.after_idle(Widget.nametowidget(self.beat_spinbox,
+            str(self.beat_spinbox)).config, {'validate': 'key'})
+        self.after_idle(Widget.nametowidget(self.tick_spinbox,
+            str(self.tick_spinbox)).config, {'validate': 'key'})
 
-        self._bar_label = Label(self, text="Bar")
-        self._beat_label = Label(self, text="Beat")
-        self._tick_label = Label(self, text="Tick")
+        self.bar_label = Label(self, text="Bar")
+        self.beat_label = Label(self, text="Beat")
+        self.tick_label = Label(self, text="Tick")
 
-        self._bar_label.pack(side=LEFT)
-        self._bar_spinbox.pack(side=LEFT)
-        self._beat_label.pack(side=LEFT)
-        self._beat_spinbox.pack(side=LEFT)
-        self._tick_label.pack(side=LEFT)
-        self._tick_spinbox.pack(side=LEFT)
+        self.bar_label.pack(side=LEFT)
+        self.bar_spinbox.pack(side=LEFT)
+        self.beat_label.pack(side=LEFT)
+        self.beat_spinbox.pack(side=LEFT)
+        self.tick_label.pack(side=LEFT)
+        self.tick_spinbox.pack(side=LEFT)
 
     def _forward(self):
-        bar = int(self._bar_spinbox.get())
-        beat = int(self._beat_spinbox.get())
-        tick = int(self._tick_spinbox.get())
+        bar = int(self.bar_spinbox.get())
+        beat = int(self.beat_spinbox.get())
+        tick = int(self.tick_spinbox.get())
         self._cb((bar, beat, tick))
 
     def set_max_beat(self, value):
-        self._beat_spinbox.set_to(value)
+        self.beat_spinbox.set_to(value)

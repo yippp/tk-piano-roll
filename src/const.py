@@ -7,4 +7,5 @@ SNAP_DICT = OrderedDict([item for item in zip(__snap_labels, __snap_values)])
 
 ZOOM_VALUES = [0.5, 0.625, 0.75, 0.875, 1, 1.25, 1.5, 1.75, 2]
 
-DEFAULT_BAR_WIDTH_IN_PX = 512
+SIXTEENTH_UNIT_WIDTH_IN_PX = 32
+CELL_HEIGHT_IN_PX = 16

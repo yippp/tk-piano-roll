@@ -13,13 +13,13 @@ class Toolbar(Frame):
         self._init_ui(callbacks)
 
     def _init_ui(self, callbacks):
-        self._snap_frame = SnapFrame(self, callbacks['snap'])
-        self._zoom_frame = ZoomFrame(self, callbacks['zoomx'], callbacks['zoomy'])
-        self._toolbox = Toolbox(self, callbacks['tool'])
+        self.snap_frame = SnapFrame(self, callbacks['snap'])
+        self.zoom_frame = ZoomFrame(self, callbacks['zoomx'], callbacks['zoomy'])
+        self.toolbox = Toolbox(self, callbacks['tool'])
 
-        self._snap_frame.pack(side=LEFT)
-        self._toolbox.pack(side=LEFT)
-        self._zoom_frame.pack(side=RIGHT)
+        self.snap_frame.pack(side=LEFT)
+        self.toolbox.pack(side=LEFT)
+        self.zoom_frame.pack(side=RIGHT)
 
     def set_tool(self, value):
-        self._toolbox.set(value)
+        self.toolbox.set(value)
