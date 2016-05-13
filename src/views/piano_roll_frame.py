@@ -42,12 +42,9 @@ class PianoRollFrame(Frame):
 
         self._hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
         self._vbar.grid(row=0, column=2, sticky=N+S, rowspan=3)
-        self._keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S,
-            padx=8, pady=(0, 8))
-        self._ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S,
-            padx=(0, 8), pady=8)
-        self._grid_canvas.grid(row=1, column=1, sticky=W+N+E+S,
-            padx=(0, 8), pady=(0, 8))
+        self._keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S, padx=8, pady=(0, 8))
+        self._ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S, padx=(0, 8), pady=8)
+        self._grid_canvas.grid(row=1, column=1, sticky=W+N+E+S, padx=(0, 8), pady=(0, 8))
 
         self.grid_rowconfigure(1, weight=2)
         self.grid_columnconfigure(0, weight=0)
@@ -70,7 +67,8 @@ class PianoRollFrame(Frame):
         self._grid_canvas.remove_notes(GridCanvas.SELECTED)
 
     def _on_ctrl_num(self, event):
-        ctrl_pressed = event.state & PianoRollFrame.CTRL_MASK == PianoRollFrame.CTRL_MASK
+        ctrl_pressed = (event.state & PianoRollFrame.CTRL_MASK ==
+            PianoRollFrame.CTRL_MASK)
         if ctrl_pressed:
             self.parent.set_toolbox_tool(int(event.keysym) - 1)
 

@@ -53,3 +53,4 @@ class PianoRoll(Frame):
 
     def set_timesig(self, beat_count, beat_unit):
         self._piano_roll_frame.set_timesig(beat_count, beat_unit)
+        self._bottombar.set_max_beat(beat_count)

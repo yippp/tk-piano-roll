@@ -36,7 +36,7 @@ class GridCanvas(CustomCanvas):
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, width=512, height=384,
-        bg='white', bd=2, relief=SUNKEN, **kwargs)
+            bg='white', bd=2, relief=SUNKEN, **kwargs)
         self.parent = parent
 
         self.xview_moveto(0)
