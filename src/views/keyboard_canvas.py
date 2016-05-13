@@ -28,11 +28,15 @@ class KeyboardCanvas(CustomCanvas):
 
 
     def __init__(self, parent, gstate, **kwargs):
-        CustomCanvas.__init__(self, parent, bd=2, relief=SUNKEN, **kwargs)
+        CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
+        self._init_ui()
         self._init_data(gstate)
         self._redraw()
+
+    def _init_ui(self):
+        self.config(bd=2, relief=SUNKEN)
 
     def _init_data(self, state):
         self._gstate = state

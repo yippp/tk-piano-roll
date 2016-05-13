@@ -35,16 +35,20 @@ class GridCanvas(CustomCanvas):
     SEL_FILL_COLOR = "#990000"
 
     def __init__(self, parent, gstate, **kwargs):
-        CustomCanvas.__init__(self, parent, width=512, height=384,
-            bg='white', bd=2, relief=SUNKEN, **kwargs)
+        CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
         self.xview_moveto(0)
         self.yview_moveto(0)
 
         self._init_data(gstate)
+        self._init_ui()
         self._bind_event_handlers()
         self._draw_lines()
+
+    def _init_ui(self):
+        self.config(width=512, height=384, bg='white',
+            bd=2, relief=SUNKEN)
 
     def _init_data(self, gstate):
         self._notes = NoteList()
@@ -401,7 +405,7 @@ class GridCanvas(CustomCanvas):
 
         for note in notes:
             self.itemconfig(note.id, fill=GridCanvas.SEL_FILL_COLOR,
-                outline=GridCanvas.SEL_FILL_COLOR)
+                outline=GridCanvas.SEL_OUTLINE_COLOR)
             note.selected = True
 
     def deselect_notes(self, *args):

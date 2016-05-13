@@ -14,12 +14,15 @@ class RulerCanvas(CustomCanvas):
     BAR_LINE_COLOR = '#000000'
 
     def __init__(self, parent, gstate, **kwargs):
-        CustomCanvas.__init__(self, parent, bg='white',
-            bd=2, relief=SUNKEN, **kwargs)
+        CustomCanvas.__init__(self, parent, **kwargs)
 
         self._init_data(gstate)
+        self._init_ui()
         self._bind_event_handlers()
         self._draw()
+
+    def _init_ui(self):
+        self.config(bg='white', bd=2, relief=SUNKEN)
 
     def _init_data(self, gstate):
         self._gstate = gstate
