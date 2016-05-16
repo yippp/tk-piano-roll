@@ -41,10 +41,13 @@ class PianoRollFrame(Frame):
         self.vbar.config(command=self._yview)
 
         self.hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
-        self.vbar.grid(row=0, column=2, sticky=N+S, rowspan=3)
-        self.keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S, padx=8, pady=(0, 8))
-        self.ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S, padx=(0, 8), pady=8)
-        self.grid_canvas.grid(row=1, column=1, sticky=W+N+E+S, padx=(0, 8), pady=(0, 8))
+        self.vbar.grid(row=0, column=2, sticky=N+S, rowspan=2)
+        self.keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S,
+            padx=8, pady=(0, 8))
+        self.ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S,
+            padx=(0, 8), pady=8)
+        self.grid_canvas.grid(row=1, column=1, sticky=W+N+E+S,
+            padx=(0, 8), pady=(0, 8))
 
         self.grid_rowconfigure(1, weight=2)
         self.grid_columnconfigure(0, weight=0)

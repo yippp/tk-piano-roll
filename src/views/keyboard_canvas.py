@@ -104,11 +104,7 @@ class KeyboardCanvas(CustomCanvas):
         for nth_octave in range(11):
             y_offset = sum(keys_in_octave[:nth_octave + 1]) * cell_height
             for i in range(keys_in_octave[nth_octave]):
-                if pattern[i] == '1':
-                    layer = KeyboardCanvas.WHITE_KEY_LAYER
-                else:
-                    layer = KeyboardCanvas.BLACK_KEY_LAYER
-
+                layer = int(pattern[i])
                 y2 = y_offset - i * cell_height
                 y1 = y2 - cell_height
 

@@ -19,7 +19,6 @@ class RulerCanvas(CustomCanvas):
         self._init_data(gstate)
         self._init_ui()
         self._bind_event_handlers()
-        self._draw()
 
     def _init_ui(self):
         self.config(bg='white', bd=2, relief=SUNKEN)
@@ -27,13 +26,15 @@ class RulerCanvas(CustomCanvas):
     def _init_data(self, gstate):
         self._gstate = gstate
         self.config(height=RulerCanvas.HEIGHT)
-        self._update_scrollregion()
 
     def _bind_event_handlers(self):
         self.bind('<Configure>', self._on_window_resize)
 
-    def _on_window_resize(self, event):
+    def _on_window_resize(self, event=None):
+        self.delete(ALL)
+        self._update_visibleregion()
         self._update_scrollregion()
+        self._draw()
 
     def _draw(self):
         self._draw_lines()
@@ -48,10 +49,13 @@ class RulerCanvas(CustomCanvas):
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
         cell_width = max(normal_cell_width, bu_cell_width)
 
-        for bar in range(int(grid_width / bar_width) + 1):
+        bar_start = int(self._visibleregion[0] / bar_width)
+        nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
+
+        for bar in range(bar_start, bar_start + nbars):
             x_offset = bar_width * bar
-            x_left = grid_width - x_offset
-            cells_in_bar = int(math.ceil(min(bar_width, x_left) / cell_width))
+            bar_left = grid_width - x_offset
+            cells_in_bar = int(math.ceil(min(bar_width, bar_left) / cell_width))
             for cell in range(max(1, cells_in_bar)):
                 x = x_offset + cell * cell_width
 
@@ -73,21 +77,33 @@ class RulerCanvas(CustomCanvas):
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
         cell_width = max(normal_cell_width, bu_cell_width)
 
-        for bar in range(int(grid_width / bar_width) + 1):
+        bar_start = int(self._visibleregion[0] / bar_width)
+        nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
+
+        for bar in range(bar_start, bar_start + nbars):
             x_offset = bar_width * bar
             x_left = grid_width - x_offset
             cells_in_bar = int(math.ceil(min(bar_width, x_left) / cell_width))
             for cell in range(max(1, cells_in_bar)):
                 cell_offset = cell * cell_width
                 x = x_offset + padding + cell_offset
-                bu = cell_offset / bu_cell_width
-                text = "{0}.{1}".format(bar + 1, int(bu + 1))
+                u = cell_offset / bu_cell_width
+                text = "{0}.{1}".format(bar + 1, int(u + 1))
 
                 self.add_to_layer(RulerCanvas.TEXT_LAYER, self.create_text,
                     (x, canvas_height), text=text, anchor=SW)
 
+    def _update_visibleregion(self):
+        bd = int(self.config('borderwidth')[4])
+        self._visibleregion = [0] * 4
+        self._visibleregion[0] = self.canvasx(0)
+        self._visibleregion[1] = self.canvasy(0)
+        self._visibleregion[2] = self.winfo_width() - bd * 2
+        self._visibleregion[3] = self.winfo_height() - bd * 2
+
     def _update_scrollregion(self):
-        sr_height = int(self.config()['height'][4])
+        bd = int(self.config()['borderwidth'][4])
+        sr_height = self.winfo_height() - bd * 2
         sr_width = self._gstate.width()
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
@@ -103,6 +119,7 @@ class RulerCanvas(CustomCanvas):
 
     def _on_length_change(self):
         self._update_scrollregion()
+        self._update_visibleregion()
         self.delete(ALL)
         self._draw()
 
@@ -123,3 +140,9 @@ class RulerCanvas(CustomCanvas):
             self._on_length_change()
         if any(x in diff for x in ['beat_count', 'beat_unit']):
             self._on_timesig_change()
+
+    def xview(self, *args):
+        self.delete(ALL)
+        CustomCanvas.xview(self, *args)
+        self._update_visibleregion()
+        self._draw()

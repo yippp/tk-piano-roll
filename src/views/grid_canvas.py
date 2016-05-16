@@ -62,7 +62,8 @@ class GridCanvas(CustomCanvas):
         self._gstate = gstate
 
         vs_height = int(self.config()['height'][4])
-        sr_width = vs_width = self._gstate.width()
+        vs_width = int(self.config()['width'][4])
+        sr_width = self._gstate.width()
         sr_height = self._gstate.height()
         self._visibleregion = [0, 0, vs_width, vs_height]
         scrollregion = (0, 0, sr_width, sr_height)
@@ -186,33 +187,30 @@ class GridCanvas(CustomCanvas):
                 fill=color, tags=('line', 'horizontal'))
 
     def _draw_vertical_lines(self):
-        visibleregion_top = self._visibleregion[1]
-        visibleregion_height = self._visibleregion[3]
         grid_width = self._gstate.width()
         grid_height = self._gstate.height()
         bar_width = self._gstate.bar_width()
         cell_width = self._gstate.max_cell_width()
-        y1 = visibleregion_top
-        y2 = self.canvasy(y1 + min(visibleregion_height, grid_height))
+        y1 = self._visibleregion[1]
+        y2 = self.canvasy(y1 + min(self._visibleregion[3], grid_height))
 
-        bars = int(math.ceil((grid_width + bar_width) / bar_width) - 1)
+        bars_start = int(self._visibleregion[0] / bar_width)
+        bars = int(math.ceil((min(self._visibleregion[2], grid_width) +
+            bar_width) / bar_width))
 
-        for n in range(bars):
-            bar_x = bar_width * n
-            lines_per_bar = int(min(bar_width, grid_width - bar_x) / cell_width)
+        for n in range(bars_start, bars_start + bars):
+            x_offset = n * bar_width
+            x_left = grid_width - x_offset
+            lines_per_bar = int(min(bar_width, x_left) / cell_width)
             for i in range(lines_per_bar):
-                x = i * cell_width + bar_x + cell_width
+                x = i * cell_width + x_offset + cell_width
                 self.add_to_layer(GridCanvas.VL_LAYER,
                     self.create_line, (x, y1, x, y2),
                     fill=GridCanvas.NORMAL_LINE_COLOR,
                     tags=('line', 'vertical'))
 
-        xorigin = self.canvasx(0)
-        offset = bar_width * math.ceil(xorigin / bar_width)
-        n = int(self._gstate.width() / self._gstate.bar_width()) + 1
-
-        for i in range(n):
-            x = i * self._gstate.bar_width() + offset
+        for i in range(bars_start, bars + bars_start):
+            x = i * bar_width
             self.add_to_layer(GridCanvas.VL_LAYER,
                 self.create_line, (x, y1, x, y2),
                 fill=GridCanvas.BAR_LINE_COLOR,
@@ -263,12 +261,12 @@ class GridCanvas(CustomCanvas):
         self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
     def _update_visibleregion(self):
-        self._visibleregion[0] = self.canvasx(0)
-        self._visibleregion[1] = self.canvasy(0)
-
         bd = int(self.config()['borderwidth'][4])
-        self._visibleregion[2] = self.winfo_width() - bd * 2
-        self._visibleregion[3] = self.winfo_height() + 1
+        vr_left = self.canvasx(0) + bd
+        vr_top = self.canvasy(0) + bd
+        vr_width = self.winfo_width() - bd * 2
+        vr_height = self.winfo_height() - bd * 2
+        self._visibleregion = (vr_left, vr_top, vr_width, vr_height)
 
     def _update_note_ids(self, ids):
         for old_id, new_id in ids:
@@ -380,6 +378,7 @@ class GridCanvas(CustomCanvas):
 
     def _on_length_change(self):
         self._update_scrollregion()
+        self._update_visibleregion()
         self.delete(*self.find_withtags('line'))
         self._draw_lines()
         self._adjust_layers()

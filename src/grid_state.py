@@ -57,8 +57,8 @@ class GridState(object):
         bar, beat, tick = self.length
 
         return ((bar - 1) * bar_width +
-        (beat - 1) * bar_width / beat_count +
-        tick * bar_width / 256)
+            (beat - 1) * bar_width / beat_count +
+            tick * bar_width / 256)
 
     def height(self, zoom=True):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
