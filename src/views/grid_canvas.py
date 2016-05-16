@@ -44,7 +44,6 @@ class GridCanvas(CustomCanvas):
         self._init_data(gstate)
         self._init_ui()
         self._bind_event_handlers()
-        self._draw_lines()
 
     def _init_ui(self):
         self.config(width=512, height=384, bg='white',
@@ -441,7 +440,7 @@ class GridCanvas(CustomCanvas):
             self.delete(note.id)
 
     def on_update(self, new_gstate):
-        diff = new_gstate.diff(self._gstate)
+        diff = self._gstate - new_gstate
         self._gstate = new_gstate
 
         if any(x in diff for x in ['beat_count', 'beat_unit']):

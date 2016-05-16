@@ -33,7 +33,9 @@ class KeyboardCanvas(CustomCanvas):
 
         self._init_ui()
         self._init_data(gstate)
-        self._redraw()
+
+        self._update_scrollregion()
+        self._draw()
 
     def _init_ui(self):
         self.config(bd=2, relief=SUNKEN)
@@ -42,9 +44,8 @@ class KeyboardCanvas(CustomCanvas):
         self._gstate = state
         self._font = Font(family='sans-serif', size=9)
         self.config(width=KeyboardCanvas.WIDTH)
-        self._update_scrollregion()
 
-    def _redraw(self):
+    def _draw(self):
         cell_height = self._gstate.cell_height()
 
         if cell_height >= 14:
@@ -57,7 +58,8 @@ class KeyboardCanvas(CustomCanvas):
             self._draw_text(True)
 
     def _draw_complex_keys(self):
-        canvas_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        canvas_width = self.winfo_reqwidth() - bd * 2
         lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -93,7 +95,8 @@ class KeyboardCanvas(CustomCanvas):
                 sum_of_key_heights_in_px += wk_height
 
     def _draw_simple_keys(self):
-        canvas_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        canvas_width = self.winfo_reqwidth() - bd * 2
         lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -116,7 +119,8 @@ class KeyboardCanvas(CustomCanvas):
         else:
             color = KeyboardCanvas.BLACK_KEY_FILL_COLOR
 
-        canvas_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        canvas_width = self.winfo_reqwidth() - bd * 2
         lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
         self.add_to_layer(layer, self.create_rectangle,
@@ -125,7 +129,8 @@ class KeyboardCanvas(CustomCanvas):
             fill=color, tags='rect')
 
     def _draw_lines(self, on_octave=False):
-        canvas_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        canvas_width = self.winfo_reqwidth() - bd * 2
         lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
         cell_height = self._gstate.cell_height()
@@ -143,7 +148,8 @@ class KeyboardCanvas(CustomCanvas):
     def _draw_text(self, on_octave=False):
         names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-        canvas_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        canvas_width = self.winfo_reqwidth() - bd * 2
         cell_height = self._gstate.cell_height()
         lpad = round(KeyboardCanvas.LPAD_RATIO * canvas_width)
 
@@ -162,19 +168,19 @@ class KeyboardCanvas(CustomCanvas):
                 if on_octave: break
 
     def _update_scrollregion(self):
-        sr_width = int(self.config()['width'][4])
+        bd = int(self.config()['borderwidth'][4])
+        sr_width = self.winfo_reqwidth() - bd * 2
         sr_height = self._gstate.height() + 1
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 
     def _on_zoomy_change(self):
-        self._update_scrollregion()
-
         self.delete(ALL)
-        self._redraw()
+        self._update_scrollregion()
+        self._draw()
 
     def on_update(self, new_gstate):
-        diff = new_gstate.diff(self._gstate)
+        diff = self._gstate - new_gstate
         self._gstate = new_gstate
 
         if 'zoomy' in diff:

@@ -22,6 +22,17 @@ class GridState(object):
         self.zoomy = zoomy
         self.length = length
 
+    def __sub__(self, other):
+        if not isinstance(other, GridState):
+            raise ValueError
+
+        def compare(attr):
+            return getattr(self, attr) != getattr(other, attr)
+
+        diff = filter(compare, vars(self).keys())
+
+        return diff
+
     def _calc_max_subdiv(self, zoom=True):
         n_snap_opts = len(SNAP_DICT)
 
@@ -33,32 +44,14 @@ class GridState(object):
     def copy(self):
         return GridState(self.beat_count, self.beat_unit, self.subdiv,
             self.zoomx, self.zoomy, self.length)
-
-    def diff(self, other):
-        diff = []
-        if self.beat_count != other.beat_count:
-            diff.append('beat_count')
-        if self.beat_unit != other.beat_unit:
-            diff.append('beat_unit')
-        if self.subdiv != other.subdiv:
-            diff.append('subdiv')
-        if self.zoomx != other.zoomx:
-            diff.append('zoomx')
-        if self.zoomy != other.zoomy:
-            diff.append('zoomy')
-        if self.length != other.length:
-            diff.append('length')
-
-        return diff
         
     def width(self, zoom=True):
+        from helper import to_ticks
+
         bar_width = self.bar_width(zoom)
-        beat_count = self.beat_count
         bar, beat, tick = self.length
 
-        return ((bar - 1) * bar_width +
-            (beat - 1) * bar_width / beat_count +
-            tick * bar_width / 256)
+        return to_ticks(bar, beat, tick, bar_width, self.beat_count)
 
     def height(self, zoom=True):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)

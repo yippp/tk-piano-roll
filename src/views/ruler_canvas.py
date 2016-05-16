@@ -129,7 +129,7 @@ class RulerCanvas(CustomCanvas):
         self._draw()
 
     def on_update(self, new_gstate):
-        diff = new_gstate.diff(self._gstate)
+        diff = self._gstate - new_gstate
         self._gstate = new_gstate
 
         if 'subdiv' in diff:
