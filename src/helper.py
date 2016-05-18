@@ -1,3 +1,10 @@
+def isint(string):
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False
+
 def calc_ticks_per_bar(sixteenth_unit_width, beat_count, beat_unit):
     from math import log
     sixteenth_units_per_beat = 2 ** (4 - log(float(beat_unit), 2))

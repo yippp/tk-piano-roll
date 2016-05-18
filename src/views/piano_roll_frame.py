@@ -25,11 +25,12 @@ class PianoRollFrame(Frame):
         self.hbar = AutoScrollbar(self, orient=HORIZONTAL)
         self.vbar = AutoScrollbar(self, orient=VERTICAL)
 
-        self.ruler_canvas = RulerCanvas(self, self._grid.get_state(),
+        state = self._grid.get_state()
+        self.ruler_canvas = RulerCanvas(self, state,
             xscrollcommand=self.hbar.set)
-        self.keyboard_canvas = KeyboardCanvas(self, self._grid.get_state(),
+        self.keyboard_canvas = KeyboardCanvas(self, state,
             yscrollcommand=self.vbar.set)
-        self.grid_canvas = GridCanvas(self, self._grid.get_state(),
+        self.grid_canvas = GridCanvas(self, state,
             xscrollcommand=self.hbar.set,
             yscrollcommand=self.vbar.set)
 

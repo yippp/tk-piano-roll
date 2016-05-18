@@ -12,8 +12,7 @@ class TimeSigFrame(LabelFrame):
         self._init_ui()
 
     def _init_ui(self):
-        self.beat_count_spinbox = CustomSpinbox(self, from_=1, to=99, width=3)
-        self.beat_count_spinbox.set('4')
+        self.beat_count_spinbox = CustomSpinbox(self, start=4, from_=1, to=99, width=3)
         self.beat_count_spinbox.on_value_change(self._forward)
 
         self._beat_unit_var = StringVar()
