@@ -5,7 +5,7 @@ from src.helper import isint
 class CustomSpinbox(Spinbox):
 
     def __init__(self, *args, **kwargs):
-        start = kwargs.pop('start', None)
+        start = kwargs.pop('start','')
         Spinbox.__init__(self, *args, **kwargs)
 
         self._init_data(str(start))
