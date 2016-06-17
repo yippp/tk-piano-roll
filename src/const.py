@@ -7,6 +7,10 @@ SNAP_DICT = OrderedDict([item for item in zip(__snap_labels, __snap_values)])
 
 ZOOM_VALUES = [0.5, 0.625, 0.75, 0.875, 1, 1.25, 1.5, 1.75, 2]
 
+KEYS_IN_OCTAVE = 12
+KEYS_IN_LAST_OCTAVE = 8
+KEY_PATTERN = "101011010101"
+
 CELL_HEIGHT_IN_PX = 16
 TICKS_PER_QUARTER_NOTE = 480
 QUARTER_NOTE_WIDTH = 120

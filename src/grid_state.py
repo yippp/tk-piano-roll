@@ -6,7 +6,7 @@ TMP_LENGTH = (2, 1, 0)
 
 class GridState(object):
 
-    MIN_CELL_WIDTH_IN_PX = 16
+    MIN_CELL_WIDTH_IN_PX = 14
     NUM_OF_KEYS_IN_OCTAVE = 128
 
     BAR_SUBDIV = 0

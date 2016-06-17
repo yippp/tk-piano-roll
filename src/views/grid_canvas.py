@@ -4,6 +4,8 @@ from ..note import Note
 from ..note_list import NoteList
 from ..rect import Rect
 from include.custom_canvas import CustomCanvas
+from ..const import (KEYS_IN_OCTAVE,
+    KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
 
 
 class GridCanvas(CustomCanvas):
@@ -17,6 +19,7 @@ class GridCanvas(CustomCanvas):
     LAYER_RECT = 1
     LAYER_VL = 2
     LAYER_HL = 3
+    LAYER_SHARP_ROW = 4
 
     CLICKED_ON_EMPTY_AREA = 0
     CLICKED_ON_UNSELECTED_RECT = 1
@@ -33,6 +36,7 @@ class GridCanvas(CustomCanvas):
     COLOR_OUTLINE_SEL = "#FF0000"
     COLOR_FILL_NORMAL = "#FF0000"
     COLOR_FILL_SEL = "#990000"
+    COLOR_SHARP_ROW = "#f1f3f3"
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
@@ -158,9 +162,11 @@ class GridCanvas(CustomCanvas):
                 self._draw_selection_region(event.x, event.y)
 
     def _draw(self):
-        visible_notes = filter(lambda note: self._is_note_visible(note), self._notes.notes)
-        self._update_note_ids(self._draw_notes(*visible_notes))
         self._draw_lines()
+        self._draw_sharp_rows()
+
+        visible_notes = filter(lambda note:  self._is_note_visible(note), self._notes.notes)
+        self._update_note_ids(self._draw_notes(*visible_notes))
 
     def _draw_lines(self):
         self._draw_horizontal_lines()
@@ -181,9 +187,9 @@ class GridCanvas(CustomCanvas):
         for j in range(n):
             y = j * cell_height + offset
             color = GridCanvas.COLOR_LINE_NORMAL
-            self.add_to_layer(GridCanvas.LAYER_HL,
-                              self.create_line, (x1, y, x2, y),
-                              fill=color, tags=('line', 'horizontal'))
+            self.add_to_layer(
+                GridCanvas.LAYER_HL, self.create_line, (x1, y, x2, y),
+                fill=color, tags=('line', 'horizontal'))
 
     def _draw_vertical_lines(self):
         grid_width = self._gstate.width()
@@ -215,6 +221,26 @@ class GridCanvas(CustomCanvas):
                               fill=GridCanvas.COLOR_LINE_BAR,
                               tags=('line', 'vertical'))
 
+    def _draw_sharp_rows(self):
+        pattern = KEY_PATTERN[::-1]
+        vr_width = self._visibleregion[2]
+        grid_width = self._gstate.width()
+        cell_height = self._gstate.cell_height()
+
+        x1 = 0
+        x2 = min(grid_width, vr_width)
+        for row in range(128):
+            i = (row + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) % KEYS_IN_OCTAVE
+            key = pattern[i]
+            if key == '0':
+                y1 = row * cell_height
+                y2 = y1 + cell_height
+                coords = (x1, y1, x2, y2)
+                self.add_to_layer(
+                    GridCanvas.LAYER_SHARP_ROW, self.create_rectangle,
+                    coords, fill=GridCanvas.COLOR_SHARP_ROW,
+                    tags='sharp_row')
+
     def _draw_notes(self, *notes):
         old_ids = []
         new_ids = []
@@ -226,13 +252,15 @@ class GridCanvas(CustomCanvas):
             y2 = y1 + note.rect[3] * self._gstate.zoomy
             coords = (x1, y1, x2, y2)
 
-            outline_color = (GridCanvas.COLOR_OUTLINE_SEL if note.selected else
-                GridCanvas.COLOR_OUTLINE_NORMAL)
-            fill_color = (GridCanvas.COLOR_FILL_SEL if note.selected else
-                GridCanvas.COLOR_FILL_NORMAL)
+            outline_color = (GridCanvas.COLOR_OUTLINE_SEL if
+                note.selected else GridCanvas.COLOR_OUTLINE_NORMAL)
+            fill_color = (GridCanvas.COLOR_FILL_SEL if
+                note.selected else GridCanvas.COLOR_FILL_NORMAL)
 
-            new_id = self.add_to_layer(GridCanvas.LAYER_RECT, self.create_rectangle,
-                                       coords, outline=outline_color, fill=fill_color, tags='rect')
+            new_id = self.add_to_layer(
+                GridCanvas.LAYER_RECT, self.create_rectangle,
+                coords, outline=outline_color,
+                fill=fill_color, tags='rect')
 
             old_ids.append(note.id)
             new_ids.append(new_id)
@@ -379,7 +407,9 @@ class GridCanvas(CustomCanvas):
         self._update_scrollregion()
         self._update_visibleregion()
         self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('sharp_row'))
         self._draw_lines()
+        self._draw_sharp_rows()
         self._adjust_layers()
 
     def _on_timesig_change(self):
