@@ -65,7 +65,7 @@ class PianoRollFrame(Frame):
 
     def _on_ctrl_a(self, event):
         self.grid_canvas.select_notes(GridCanvas.ALL)
-        self.parent.set_toolbox_tool(GridCanvas.SEL_TOOL)
+        self.parent.set_toolbox_tool(GridCanvas.TOOL_SEL)
 
     def _on_delete(self, event):
         self.grid_canvas.remove_notes(GridCanvas.SELECTED)
