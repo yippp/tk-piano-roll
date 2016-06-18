@@ -4,6 +4,8 @@ from keyboard_canvas import KeyboardCanvas
 from grid_canvas import GridCanvas
 from include.auto_scrollbar import AutoScrollbar
 from ..grid import Grid
+from ..helper import tick_to_px
+from ..const import CELL_HEIGHT_IN_PX
 
 
 class PianoRollFrame(Frame):
@@ -86,7 +88,7 @@ class PianoRollFrame(Frame):
 
     def get_song_data(self):
         return {
-            'note_list': self.grid_canvas.get_note_list(),
+            'notes': self.grid_canvas.note_list.notes,
             'length': self._grid.length,
             'beat_count': self._grid.beat_count,
             'beat_unit': self._grid.beat_unit
@@ -107,3 +109,11 @@ class PianoRollFrame(Frame):
     def set_timesig(self, beat_count, beat_unit):
         self._grid.beat_count = beat_count
         self._grid.beat_unit = beat_unit
+
+    def setup(self, song_data):
+        self.set_length(song_data['length'])
+        self.set_timesig(song_data['beat_count'], song_data['beat_unit'])
+
+        self.grid_canvas.remove_notes(GridCanvas.ALL)
+        for note in song_data['notes']:
+            self.grid_canvas.add_note(note)

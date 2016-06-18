@@ -16,25 +16,30 @@ class PianoRoll(Frame):
         self._init_data()
 
     def _init_ui(self):
-        root = self._root()
-        menu = PianoRollMenu(root, saveas_cmd=self._saveas_cmd)
-        root.config(menu=menu)
+        menu_cb = {
+            'open': self._open_cmd,
+            'save_as': self._saveas_cmd
+        }
 
-        toolbar_callbacks = {
+        toolbar_cb = {
             'snap': self.set_snap,
             'zoomx': self.set_zoomx,
             'zoomy': self.set_zoomy,
             'tool': self.set_canvas_tool
         }
 
-        bottombar_callbacks = {
+        bottombar_cb = {
             'length': self.set_length,
             'timesig': self.set_timesig
         }
 
-        self.toolbar = Toolbar(self, toolbar_callbacks)
+        root = self._root()
+        menu = PianoRollMenu(root, menu_cb)
+        root.config(menu=menu)
+
+        self.toolbar = Toolbar(self, toolbar_cb)
         self.piano_roll_frame = PianoRollFrame(self)
-        self.bottombar = BottomBar(self, bottombar_callbacks)
+        self.bottombar = BottomBar(self, bottombar_cb)
 
         self.toolbar.pack(side=TOP, fill=X)
         self.piano_roll_frame.pack(fill=BOTH, expand=True)
@@ -43,6 +48,19 @@ class PianoRoll(Frame):
 
     def _init_data(self):
         self._initial_dir = None
+
+    def _open_cmd(self):
+        from tkFileDialog import askopenfilename
+        from ..helper import load_song
+
+        filename = askopenfilename(parent=self,
+            initialdir=self._initial_dir)
+        if not filename: return
+
+        self._initial_dir = os.path.dirname(filename)
+
+        song_data = load_song(filename)
+        self.piano_roll_frame.setup(song_data)
 
     def _saveas_cmd(self):
         from tkFileDialog import asksaveasfilename
@@ -53,6 +71,7 @@ class PianoRoll(Frame):
         if not filename: return
 
         self._initial_dir = os.path.dirname(filename)
+
         data = self.piano_roll_frame.get_song_data()
         save_song(filename, data)
 

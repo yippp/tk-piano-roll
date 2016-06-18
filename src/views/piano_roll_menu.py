@@ -1,19 +1,25 @@
 from Tkinter import *
 
+def _dummy():
+    pass
+
 
 class PianoRollMenu(Menu):
 
     COLOR1 = '#FCF9F1'
     COLOR2 = '#444C4E'
 
-    def __init__(self, open_cmd=lambda: None, save_cmd=lambda: None,
-            saveas_cmd=lambda: None, *args, **kwargs):
-        Menu.__init__(self, *args, **kwargs)
+    def __init__(self, parent, callbacks, *args, **kwargs):
+        Menu.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
 
         self._init_ui()
-        self.file_menu.entryconfig(0, command=open_cmd)
-        self.file_menu.entryconfig(1, command=save_cmd)
-        self.file_menu.entryconfig(2, command=saveas_cmd)
+        self.file_menu.entryconfig(
+                0, command=callbacks.get('open', _dummy))
+        self.file_menu.entryconfig(
+                1, command=callbacks.get('save', _dummy))
+        self.file_menu.entryconfig(
+                2, command=callbacks.get('save_as', _dummy))
 
     def _init_ui(self):
         self.file_menu = Menu(self, tearoff=0,

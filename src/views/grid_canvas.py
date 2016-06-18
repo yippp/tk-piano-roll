@@ -1,16 +1,16 @@
 import math
 from Tkinter import *
+from include.custom_canvas import CustomCanvas
 from ..note import Note
 from ..note_list import NoteList
 from ..rect import Rect
-from include.custom_canvas import CustomCanvas
-from ..const import (KEYS_IN_OCTAVE,
-    KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
+from ..helper import px_to_tick
+from ..const import (
+    KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
+    KEY_PATTERN)
 
 
 class GridCanvas(CustomCanvas):
-
-    NO_ID = -1
 
     SELECTED = -1
     ALL = -2
@@ -36,7 +36,7 @@ class GridCanvas(CustomCanvas):
     COLOR_OUTLINE_SEL = "#FF0000"
     COLOR_FILL_NORMAL = "#FF0000"
     COLOR_FILL_SEL = "#990000"
-    COLOR_SHARP_ROW = "#f1f3f3"
+    COLOR_SHARP_ROW = "#F1F3F3"
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
@@ -54,7 +54,7 @@ class GridCanvas(CustomCanvas):
             bd=2, relief=SUNKEN)
 
     def _init_data(self, gstate):
-        self._notes = NoteList()
+        self.note_list = NoteList()
         self._notes_on_click = NoteList()
         self._selection_bounds = None
 
@@ -86,7 +86,7 @@ class GridCanvas(CustomCanvas):
             if id == None:
                 self.deselect_notes(GridCanvas.SELECTED)
                 self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
-            elif id not in self._notes.selected_ids():
+            elif id not in self.note_list.selected_ids():
                 self.deselect_notes(GridCanvas.SELECTED)
                 self.select_notes(id)
                 self._click_type = GridCanvas.CLICKED_ON_UNSELECTED_RECT
@@ -94,22 +94,32 @@ class GridCanvas(CustomCanvas):
                 self._click_type = GridCanvas.CLICKED_ON_SELECTED_RECT
 
         elif self._tool == GridCanvas.TOOL_PEN:
-            self.deselect_notes(GridCanvas.SELECTED)
+            grid_height = self._gstate.height(zoom=False)
+            cell_width = self._gstate.cell_width(zoom=False)
+            cell_height = self._gstate.cell_height(zoom=False)
+            cell_width_z = self._gstate.cell_width()
+            cell_height_z = self._gstate.cell_height()
+
             canvasx = self.canvasx(event.x)
             canvasy = self.canvasy(event.y)
+
             if self._gstate.contains(canvasx, canvasy):
-                rect = self._calc_note_rect(canvasx, canvasy)
-                new_note = Note(GridCanvas.NO_ID, rect, True)
-                new_note.id = self._draw_notes(new_note)[0][1]
-                self._notes.add(new_note)
-                self._notes_on_click.add(new_note)
+                x = cell_width * int(canvasx / cell_width_z)
+                y = cell_height * int(canvasy / cell_height_z)
+
+                midinumber = (grid_height - y) / cell_height
+                velocity = 100
+                onset =  px_to_tick(x)
+                dur = px_to_tick(cell_width)
+                note = Note(midinumber, velocity, onset, dur, selected=True)
+                self.add_note(note)
 
         elif self._tool == GridCanvas.TOOL_ERASER:
             self.deselect_notes(GridCanvas.SELECTED)
             if id != None: self.remove_notes(id)
 
         self._click_pos = (event.x, event.y)
-        self._notes_on_click = self._notes.copy_selected()
+        self._notes_on_click = self.note_list.copy_selected()
         self._selection_bounds = self._calc_selection_bounds()
 
         self.parent.focus_set()
@@ -120,14 +130,14 @@ class GridCanvas(CustomCanvas):
 
             if id == None:
                 self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
-            elif id not in self._notes.selected_ids():
+            elif id not in self.note_list.selected_ids():
                 self.select_notes(id)
-                self._notes_on_click = self._notes.copy_selected()
+                self._notes_on_click = self.note_list.copy_selected()
                 self._selection_bounds = self._calc_selection_bounds()
                 self._click_type = GridCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
                 self.deselect_notes(id)
-                self._notes_on_click = self._notes.copy_selected()
+                self._notes_on_click = self.note_list.copy_selected()
                 self._selection_bounds = self._calc_selection_bounds()
                 self._click_type = GridCanvas.CLICKED_CTRL_ON_SELECTED_RECT
 
@@ -135,7 +145,7 @@ class GridCanvas(CustomCanvas):
 
     def _on_bttnone_release(self, event):
         dragged = (self._click_pos[0] - event.x != 0 or self._click_pos[1] - event.y != 0)
-        if (len(self._notes.selected()) > 1 and self._click_type ==
+        if (len(self.note_list.selected()) > 1 and self._click_type ==
             GridCanvas.CLICKED_ON_SELECTED_RECT and not dragged):
             self.deselect_notes(GridCanvas.SELECTED)
             self.select_notes(self._rect_at(event.x, event.y))
@@ -148,15 +158,15 @@ class GridCanvas(CustomCanvas):
             rects = self.find_withtags('rect')
             overlapping_rects = set(overlapping).intersection(rects)
             self.select_notes(*overlapping_rects)
-            self._notes_on_click = self._notes.copy_selected()
+            self._notes_on_click = self.note_list.copy_selected()
             self.delete(sel_region_id)
 
     def _on_bttnone_motion(self, event):
         if self._tool == GridCanvas.TOOL_SEL:
-            if (len(self._notes.selected()) > 0 and self._click_type !=
+            if (len(self.note_list.selected()) > 0 and self._click_type !=
                 GridCanvas.CLICKED_ON_EMPTY_AREA):
                 self._drag_notes(event.x, event.y)
-                self._update_note_ids(self._draw_notes(*self._notes.selected()))
+                self._update_note_ids(self._draw_notes(*self.note_list.selected()))
             elif self._click_type == GridCanvas.CLICKED_ON_EMPTY_AREA:
                 self.delete(*self.find_withtags('selection_region'))
                 self._draw_selection_region(event.x, event.y)
@@ -165,7 +175,7 @@ class GridCanvas(CustomCanvas):
         self._draw_lines()
         self._draw_sharp_rows()
 
-        visible_notes = filter(lambda note:  self._is_note_visible(note), self._notes.notes)
+        visible_notes = filter(lambda note:  self._is_note_visible(note), self.note_list.notes)
         self._update_note_ids(self._draw_notes(*visible_notes))
 
     def _draw_lines(self):
@@ -246,10 +256,11 @@ class GridCanvas(CustomCanvas):
         new_ids = []
 
         for note in notes:
-            x1 = note.rect[0] * self._gstate.zoomx
-            y1 = note.rect[1] * self._gstate.zoomy
-            x2 = x1 + note.rect[2] * self._gstate.zoomx
-            y2 = y1 + note.rect[3] * self._gstate.zoomy
+            rect = note.rect()
+            x1 = rect.left * self._gstate.zoomx
+            y1 = rect.top * self._gstate.zoomy
+            x2 = x1 + rect.width * self._gstate.zoomx
+            y2 = y1 + rect.height * self._gstate.zoomy
             coords = (x1, y1, x2, y2)
 
             outline_color = (GridCanvas.COLOR_OUTLINE_SEL if
@@ -297,49 +308,39 @@ class GridCanvas(CustomCanvas):
 
     def _update_note_ids(self, ids):
         for old_id, new_id in ids:
-            self._notes.from_id(old_id).id = new_id
-            if self._notes.from_id(new_id).selected:
+            self.note_list.from_id(old_id).id = new_id
+            if self.note_list.from_id(new_id).selected:
                 self._notes_on_click.from_id(old_id).id = new_id
-            if old_id != GridCanvas.NO_ID:
+            if old_id:
                 self.delete(old_id)
 
     def _is_note_visible(self, note):
         visibleregion_rect = Rect(*self._visibleregion)
-        note_rect = Rect(*note.rect).xscale(
+        note_rect = note.rect().xscale(
             self._gstate.zoomx).yscale(
             self._gstate.zoomy)
         return visibleregion_rect.collide_rect(note_rect)
 
-    def _calc_note_rect(self, canvasx, canvasy):
-        cell_width = self._gstate.cell_width(zoom=False)
-        cell_height = self._gstate.cell_height(zoom=False)
-        cell_width_z = self._gstate.cell_width()
-        cell_height_z = self._gstate.cell_height()
-
-        rect_x = cell_width * int(canvasx / cell_width_z)
-        rect_y = cell_height * int(canvasy / cell_height_z)
-
-        return [rect_x, rect_y, cell_width, cell_height]
-
     def _calc_selection_bounds(self):
-        selected_notes = self._notes.selected()
+        selected_notes = self.note_list.selected()
         if not selected_notes:
             return None
 
-        selected_rects = [note.rect for note in selected_notes]
-        leftmost = sorted(selected_rects,   key=lambda r:   r[0]                     )[0]
-        topmost = sorted(selected_rects,    key=lambda r:   r[1]                     )[0]
-        rightmost = sorted(selected_rects,  key=lambda r:   r[0] + r[2], reverse=True)[0]
-        bottommost = sorted(selected_rects, key=lambda r:   r[1] + r[3], reverse=True)[0]
+        selected_rects = [note.rect() for note in selected_notes]
+        leftmost = sorted(selected_rects, key=lambda r: r.left)[0]
+        topmost = sorted(selected_rects, key=lambda r: r.top)[0]
+        rightmost = sorted(selected_rects, key=lambda r: r.right, reverse=True)[0]
+        bottommost = sorted(selected_rects, key=lambda r: r.bottom, reverse=True)[0]
 
-        left = leftmost[0]
-        top = topmost[1]
-        right = rightmost[0] + rightmost[2]
-        bottom = bottommost[1] + bottommost[3]
+        left = leftmost.left
+        top = topmost.top
+        right = rightmost.right
+        bottom = bottommost.bottom
 
         return (left, top, right, bottom)
 
     def _drag_notes(self, mousex, mousey):
+        grid_height = self._gstate.height(zoom=False)
         cell_width = self._gstate.cell_width(zoom=False)
         cell_height = self._gstate.cell_height(zoom=False)
         cell_width_z = self._gstate.cell_width()
@@ -365,9 +366,11 @@ class GridCanvas(CustomCanvas):
             dy = cell_height * col
 
         for before in self._notes_on_click:
-            note = self._notes.from_id(before.id)
-            note.rect[0] = before.rect[0] + dx
-            note.rect[1] = before.rect[1] + dy
+            note = self.note_list.from_id(before.id)
+            before_rect = before.rect()
+            note.onset = px_to_tick(before_rect.left + dx)
+            note.midinumber = ((grid_height -
+                before_rect.top - dy) / cell_height)
 
     def _rect_at(self, mousex, mousey):
         ids = self.find_withtags('rect')
@@ -418,10 +421,30 @@ class GridCanvas(CustomCanvas):
         self._draw_lines()
 
     def get_note_list(self):
-        return self._notes.copy()
+        return self.note_list.copy()
 
     def set_tool(self, value):
         self._tool = value
+
+    def add_note(self, note):
+        note.id = self._draw_notes(note)[0][1]
+        self.note_list.add(note)
+        self._notes_on_click.add(note)
+
+    def remove_notes(self, *args):
+        argc = len(args)
+        if argc == 0:
+            return
+        if argc == 1 and args[0] == GridCanvas.SELECTED:
+            notes = self.note_list.copy_selected()
+        elif argc == 1 and args[0] == GridCanvas.ALL:
+            notes = self.note_list.copy()
+        else:
+            notes = NoteList((self.note_list.from_id(id) for id in args))
+
+        for note in notes:
+            self.note_list.remove(note)
+            self.delete(note.id)
 
     def select_notes(self, *args):
         argc = len(args)
@@ -430,9 +453,9 @@ class GridCanvas(CustomCanvas):
         if argc == 1 and args[0] == GridCanvas.SELECTED:
             return
         elif argc == 1 and args[0] == GridCanvas.ALL:
-            notes = self._notes
+            notes = self.note_list
         else:
-            notes = (self._notes.from_id(id) for id in args)
+            notes = (self.note_list.from_id(id) for id in args)
 
         for note in notes:
             self.itemconfig(note.id, fill=GridCanvas.COLOR_FILL_SEL,
@@ -445,29 +468,14 @@ class GridCanvas(CustomCanvas):
             return
         if (argc == 1 and args[0] == GridCanvas.ALL or
             args[0] == GridCanvas.SELECTED):
-            notes = self._notes.selected()
+            notes = self.note_list.selected()
         else:
-            notes = (self._notes.from_id(id) for id in args)
+            notes = (self.note_list.from_id(id) for id in args)
 
         for note in notes:
             self.itemconfig(note.id, fill=GridCanvas.COLOR_FILL_NORMAL,
                             outline=GridCanvas.COLOR_OUTLINE_NORMAL)
             note.selected = False
-
-    def remove_notes(self, *args):
-        argc = len(args)
-        if argc == 0:
-            return
-        if argc == 1 and args[0] == GridCanvas.SELECTED:
-            notes = self._notes.selected()
-        elif argc == 1 and args[0] == GridCanvas.ALL:
-            notes = self._notes
-        else:
-            notes = (self._notes.from_id(id) for id in args)
-
-        for note in notes:
-            self._notes.remove(note)
-            self.delete(note.id)
 
     def on_update(self, new_gstate):
         diff = self._gstate - new_gstate

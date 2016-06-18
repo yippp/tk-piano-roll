@@ -1,3 +1,6 @@
+import os
+from note import Note
+from note_list import NoteList
 from const import *
 
 def isint(string):
@@ -19,30 +22,62 @@ def to_notedur(ticks, bpb=4, tpq=TICKS_PER_QUARTER_NOTE):
     ticks_ = int(ticks % tpq)
     return [bars, beat, ticks_]
 
+def tick_to_px(ticks, qw=QUARTER_NOTE_WIDTH, tpq=TICKS_PER_QUARTER_NOTE):
+    return float(ticks) / tpq * qw
+
+def px_to_tick(px, qw=QUARTER_NOTE_WIDTH, tpq=TICKS_PER_QUARTER_NOTE):
+    return float(px) / qw * tpq
+
 def save_song(filename, song_data):
     f = open(filename, 'w')
 
-    note_list = song_data['note_list']
+    notes = song_data['notes']
     beat_count = song_data['beat_count']
+    beat_unit = song_data['beat_unit']
     length = song_data['length']
 
     f.write("{0} {1} {2};\n".format(*[str(x) for x in length]))
+    f.write("{0} {1};\n".format(beat_count, beat_unit))
 
-    for note in note_list:
-        note_left = note.rect[0]
-        note_top = note.rect[1]
-        note_width = note.rect[2]
+    for note in notes:
+        onset = to_notedur(note.onset, beat_count)
+        onset[0] += 1
+        onset[1] += 1
 
-        grid_height = CELL_HEIGHT_IN_PX * 128
-        midinumber = int((grid_height - note_top) / CELL_HEIGHT_IN_PX) - 1
+        dur = to_notedur(note.duration, beat_count)
+        f.write("{0} | {1} | {2} {3} {4} | {5} {6} {7};\n".format(
+            note.midinumber, note.velocity, onset[0], onset[1],
+            onset[2], dur[0], dur[1], dur[2]))
 
-        ticks = note_left * TICKS_PER_QUARTER_NOTE / QUARTER_NOTE_WIDTH
-        pos = to_notedur(ticks, beat_count)
-        pos[0] += 1
-        pos[1] += 1
+def load_song(filename):
+    with open(filename, 'r') as f:
+        try:
+            length = map(
+                lambda n: int(n),
+                f.readline().strip()[:-1].split(" "))
 
-        ticks = note_width * TICKS_PER_QUARTER_NOTE / QUARTER_NOTE_WIDTH
-        dur = to_notedur(ticks, beat_count)
-        f.write("{0} | 100 | {1} {2} {3} | {4} {5} {6};\n".format(
-            midinumber, pos[0], pos[1], pos[2], dur[0], dur[1],
-            dur[2]))
+            beat_count, beat_unit = map(
+                    int, f.readline().strip()[:-1].split(" "))
+
+            notes = []
+            for line in f:
+                tokens = map(str.strip, line.strip()[:-1].split("|"))
+
+                midinumber = int(tokens[0])
+                velocity = int(tokens[1])
+                onset_bar, onset_beat, onset_tick = map(int, tokens[2].split(" "))
+                dur_bar, dur_beat, dur_tick = map(int, tokens[3].split(" "))
+                onset = to_ticks(onset_bar - 1, onset_beat - 1, onset_tick)
+                dur = to_ticks(dur_bar, dur_beat, dur_tick)
+
+                notes.append(Note(midinumber, velocity, onset, dur))
+
+            return {
+                'notes': notes,
+                'length': length,
+                'beat_count': beat_count,
+                'beat_unit': beat_unit
+            }
+
+        except IOError:
+            print "Could not read file '{0}'".format(filename)

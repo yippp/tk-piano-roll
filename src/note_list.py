@@ -39,7 +39,8 @@ class NoteList(object):
         return [note.id for note in self.notes]
 
     def selected_ids(self):
-        return list(set(self.ids()).intersection([note.id for note in self.selected()]))
+        return list(set(self.ids()).intersection(
+                [note.id for note in self.selected()]))
 
     def from_id(self, id):
         for note in self.notes:
