@@ -5,7 +5,7 @@ from ..const import ZOOM_VALUES
 
 class ZoomYFrame(Frame):
 
-    def __init__(self, parent, cb=lambda: None):
+    def __init__(self, parent, cb):
         Frame.__init__(self, parent)
         self.parent = parent
         self.cb = cb

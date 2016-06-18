@@ -1,5 +1,5 @@
 from Tkinter import *
-from src.helper import isint
+from src.helper import dummy, isint
 
 
 class CustomSpinbox(Spinbox):
@@ -22,7 +22,7 @@ class CustomSpinbox(Spinbox):
         self.config(textvariable=self._var, state='readonly')
         self.set(self._curr_value)
 
-        self._on_value_change = lambda: None
+        self._on_value_change = dummy
 
     def _update(self, *args):
         self._curr_value = self._var.get()

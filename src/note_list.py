@@ -1,10 +1,12 @@
 from note import Note
+from helper import dummy
 
 
 class NoteList(object):
 
-    def __init__(self, notes=()):
+    def __init__(self, notes=(), on_state_change=dummy):
         self.notes = list(notes)
+        self._on_state_change = on_state_change
 
     def __iter__(self):
         for note in self.notes:
@@ -17,10 +19,12 @@ class NoteList(object):
             return self.from_id(arg) != None
 
     def copy(self):
-        return NoteList([note.copy() for note in self.notes])
+        notes = [note.copy() for note in self.notes]
+        return NoteList(notes, self._on_state_change)
 
     def copy_selected(self):
-        return NoteList([note.copy() for note in self.selected()])
+        notes = [note.copy() for note in self.selected()]
+        return NoteList(notes, self._on_state_change)
 
     def select(self, *ids):
         for id in ids:
@@ -53,7 +57,19 @@ class NoteList(object):
         if not isinstance(note, Note):
             raise ValueError
 
+
+        note.set_on_state_change_cb(
+            lambda note: self._on_state_change(list(self.notes)))
         self.notes.append(note)
+        self._on_state_change(list(self.notes))
 
     def remove(self, note):
         self.notes.remove(note)
+        self._on_state_change(list(self.notes))
+
+    def set_on_state_change_cb(self, cb):
+        self._on_state_change = cb
+
+        for note in self.notes:
+            note.set_on_state_change_cb(
+                lambda *args: cb(list(self.notes)))

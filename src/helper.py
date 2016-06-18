@@ -1,7 +1,11 @@
-import os
-from note import Note
-from note_list import NoteList
 from const import *
+
+def dummy(*args, **kwargs):
+    pass
+
+def make_title(name, dirty):
+    return "{0}{1} - Piano Roll".format(
+        "*" if dirty else "", name)
 
 def isint(string):
     try:
@@ -50,6 +54,8 @@ def save_song(filename, song_data):
             onset[2], dur[0], dur[1], dur[2]))
 
 def load_song(filename):
+    from note import Note
+
     with open(filename, 'r') as f:
         try:
             length = map(

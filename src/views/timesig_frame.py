@@ -1,11 +1,12 @@
 from Tkinter import *
 from ttk import Combobox
 from include.custom_spinbox import CustomSpinbox
+from ..helper import dummy
 
 
 class TimeSigFrame(LabelFrame):
 
-    def __init__(self, parent, cb=lambda *args: None):
+    def __init__(self, parent, cb=dummy):
         LabelFrame.__init__(self, parent, text="Time Signature", padx=4, pady=5)
         self.cb = cb
 

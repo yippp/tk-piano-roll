@@ -14,7 +14,7 @@ class Toolbar(Frame):
 
     def _init_ui(self, callbacks):
         self.snap_frame = SnapFrame(self, callbacks['snap'])
-        self.zoom_frame = ZoomFrame(self, callbacks['zoomx'], callbacks['zoomy'])
+        self.zoom_frame = ZoomFrame(self, callbacks['zoom'])
         self.toolbox = Toolbox(self, callbacks['tool'])
 
         self.snap_frame.pack(side=LEFT)

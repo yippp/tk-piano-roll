@@ -4,7 +4,7 @@ from include.custom_canvas import CustomCanvas
 from ..note import Note
 from ..note_list import NoteList
 from ..rect import Rect
-from ..helper import px_to_tick
+from ..helper import dummy, px_to_tick
 from ..const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
@@ -12,7 +12,7 @@ from ..const import (
 
 class GridCanvas(CustomCanvas):
 
-    SELECTED = -1
+    SEL = -1
     ALL = -2
 
     LAYER_SEL_REGION = 0
@@ -38,14 +38,14 @@ class GridCanvas(CustomCanvas):
     COLOR_FILL_SEL = "#990000"
     COLOR_SHARP_ROW = "#F1F3F3"
 
-    def __init__(self, parent, gstate, **kwargs):
+    def __init__(self, parent, gstate, dirty_cb=dummy, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
         self.xview_moveto(0)
         self.yview_moveto(0)
 
-        self._init_data(gstate)
+        self._init_data(gstate, dirty_cb)
         self._init_ui()
         self._bind_event_handlers()
 
@@ -53,8 +53,8 @@ class GridCanvas(CustomCanvas):
         self.config(width=480, height=384, bg='white',
             bd=2, relief=SUNKEN)
 
-    def _init_data(self, gstate):
-        self.note_list = NoteList()
+    def _init_data(self, gstate, dirty_cb):
+        self.note_list = NoteList(on_state_change=dirty_cb)
         self._notes_on_click = NoteList()
         self._selection_bounds = None
 
@@ -84,10 +84,10 @@ class GridCanvas(CustomCanvas):
 
         if self._tool == GridCanvas.TOOL_SEL:
             if id == None:
-                self.deselect_notes(GridCanvas.SELECTED)
+                self.deselect_notes(GridCanvas.SEL)
                 self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
             elif id not in self.note_list.selected_ids():
-                self.deselect_notes(GridCanvas.SELECTED)
+                self.deselect_notes(GridCanvas.SEL)
                 self.select_notes(id)
                 self._click_type = GridCanvas.CLICKED_ON_UNSELECTED_RECT
             else:
@@ -107,7 +107,7 @@ class GridCanvas(CustomCanvas):
                 x = cell_width * int(canvasx / cell_width_z)
                 y = cell_height * int(canvasy / cell_height_z)
 
-                midinumber = (grid_height - y) / cell_height
+                midinumber = int((grid_height - y) / cell_height)
                 velocity = 100
                 onset =  px_to_tick(x)
                 dur = px_to_tick(cell_width)
@@ -115,7 +115,7 @@ class GridCanvas(CustomCanvas):
                 self.add_note(note)
 
         elif self._tool == GridCanvas.TOOL_ERASER:
-            self.deselect_notes(GridCanvas.SELECTED)
+            self.deselect_notes(GridCanvas.SEL)
             if id != None: self.remove_notes(id)
 
         self._click_pos = (event.x, event.y)
@@ -147,7 +147,7 @@ class GridCanvas(CustomCanvas):
         dragged = (self._click_pos[0] - event.x != 0 or self._click_pos[1] - event.y != 0)
         if (len(self.note_list.selected()) > 1 and self._click_type ==
             GridCanvas.CLICKED_ON_SELECTED_RECT and not dragged):
-            self.deselect_notes(GridCanvas.SELECTED)
+            self.deselect_notes(GridCanvas.SEL)
             self.select_notes(self._rect_at(event.x, event.y))
 
         elif (self._tool == GridCanvas.TOOL_SEL == 0 and self._click_type ==
@@ -369,7 +369,7 @@ class GridCanvas(CustomCanvas):
             note = self.note_list.from_id(before.id)
             before_rect = before.rect()
             note.onset = px_to_tick(before_rect.left + dx)
-            note.midinumber = ((grid_height -
+            note.midinumber = int((grid_height -
                 before_rect.top - dy) / cell_height)
 
     def _rect_at(self, mousex, mousey):
@@ -418,7 +418,9 @@ class GridCanvas(CustomCanvas):
     def _on_timesig_change(self):
         self._update_scrollregion()
         self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('sharp_row'))
         self._draw_lines()
+        self._draw_sharp_rows()
 
     def get_note_list(self):
         return self.note_list.copy()
@@ -435,9 +437,9 @@ class GridCanvas(CustomCanvas):
         argc = len(args)
         if argc == 0:
             return
-        if argc == 1 and args[0] == GridCanvas.SELECTED:
+        if argc == 1 and args[0] in [GridCanvas.SEL, 'sel']:
             notes = self.note_list.copy_selected()
-        elif argc == 1 and args[0] == GridCanvas.ALL:
+        elif argc == 1 and args[0] in [GridCanvas.ALL, 'all']:
             notes = self.note_list.copy()
         else:
             notes = NoteList((self.note_list.from_id(id) for id in args))
@@ -450,9 +452,9 @@ class GridCanvas(CustomCanvas):
         argc = len(args)
         if argc == 0:
             return
-        if argc == 1 and args[0] == GridCanvas.SELECTED:
+        if argc == 1 and args[0] == [GridCanvas.SEL, 'sel']:
             return
-        elif argc == 1 and args[0] == GridCanvas.ALL:
+        elif argc == 1 and args[0] in [GridCanvas.ALL, 'all']:
             notes = self.note_list
         else:
             notes = (self.note_list.from_id(id) for id in args)
@@ -466,8 +468,8 @@ class GridCanvas(CustomCanvas):
         argc = len(args)
         if argc == 0:
             return
-        if (argc == 1 and args[0] == GridCanvas.ALL or
-            args[0] == GridCanvas.SELECTED):
+        if (argc == 1 and args[0] in
+            [GridCanvas.SEL, GridCanvas.ALL, 'all', 'sel']):
             notes = self.note_list.selected()
         else:
             notes = (self.note_list.from_id(id) for id in args)

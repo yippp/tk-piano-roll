@@ -4,24 +4,24 @@ from keyboard_canvas import KeyboardCanvas
 from grid_canvas import GridCanvas
 from include.auto_scrollbar import AutoScrollbar
 from ..grid import Grid
-from ..helper import tick_to_px
-from ..const import CELL_HEIGHT_IN_PX
+from ..helper import dummy
 
 
 class PianoRollFrame(Frame):
 
     CTRL_MASK = 0x0004
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, dirty_cb=dummy, **kwargs):
         Frame.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self._init_data()
+        self._init_data(dirty_cb)
         self._init_ui()
         self._bind_event_handlers()
 
-    def _init_data(self):
+    def _init_data(self, dirty_cb):
         self._grid = Grid()
+        self._on_state_change = dirty_cb
 
     def _init_ui(self):
         self.hbar = AutoScrollbar(self, orient=HORIZONTAL)
@@ -32,7 +32,8 @@ class PianoRollFrame(Frame):
             xscrollcommand=self.hbar.set)
         self.keyboard_canvas = KeyboardCanvas(self, state,
             yscrollcommand=self.vbar.set)
-        self.grid_canvas = GridCanvas(self, state,
+        self.grid_canvas = GridCanvas(
+            self, state, self._on_state_change,
             xscrollcommand=self.hbar.set,
             yscrollcommand=self.vbar.set)
 
@@ -70,7 +71,7 @@ class PianoRollFrame(Frame):
         self.parent.set_toolbox_tool(GridCanvas.TOOL_SEL)
 
     def _on_delete(self, event):
-        self.grid_canvas.remove_notes(GridCanvas.SELECTED)
+        self.grid_canvas.remove_notes(GridCanvas.SEL)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = (event.state & PianoRollFrame.CTRL_MASK ==
@@ -86,7 +87,15 @@ class PianoRollFrame(Frame):
         self.keyboard_canvas.yview(*args)
         self.grid_canvas.yview(*args)
 
-    def get_song_data(self):
+    def setup(self, song_state):
+        self.set_length(song_state['length'])
+        self.set_timesig(song_state['beat_count'], song_state['beat_unit'])
+
+        self.grid_canvas.remove_notes(GridCanvas.ALL)
+        for note in song_state['notes']:
+            self.grid_canvas.add_note(note)
+
+    def get_song_state(self):
         return {
             'notes': self.grid_canvas.note_list.notes,
             'length': self._grid.length,
@@ -95,25 +104,25 @@ class PianoRollFrame(Frame):
         }
 
     def set_subdiv(self, value):
-        self._grid.subdiv = value
+        if self._grid.subdiv != value:
+            self._grid.subdiv = value
 
     def set_zoomx(self, value):
-        self._grid.zoomx = value
+        if self._grid.zoomx != value:
+            self._grid.zoomx = value
 
     def set_zoomy(self, value):
-        self._grid.zoomy = value
+        if self._grid.zoomy != value:
+            self._grid.zoomy = value
 
     def set_length(self, value):
-        self._grid.length = value
+        if self._grid.length != value:
+            self._grid.length = value
+            self._on_state_change()
 
     def set_timesig(self, beat_count, beat_unit):
-        self._grid.beat_count = beat_count
-        self._grid.beat_unit = beat_unit
-
-    def setup(self, song_data):
-        self.set_length(song_data['length'])
-        self.set_timesig(song_data['beat_count'], song_data['beat_unit'])
-
-        self.grid_canvas.remove_notes(GridCanvas.ALL)
-        for note in song_data['notes']:
-            self.grid_canvas.add_note(note)
+        if (self._grid.beat_count != beat_count or
+            self._grid.beat_unit != beat_unit):
+            self._grid.beat_count = beat_count
+            self._grid.beat_unit = beat_unit
+            self._on_state_change()

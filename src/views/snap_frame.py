@@ -1,11 +1,12 @@
 from Tkinter import *
 from ttk import Combobox
 from ..const import SNAP_DICT
+from ..helper import dummy
 
 
 class SnapFrame(Frame):
 
-    def __init__(self, parent, cb=lambda: None):
+    def __init__(self, parent, cb=dummy):
         Frame.__init__(self, parent)
         self.parent = parent
         self.cb = cb
