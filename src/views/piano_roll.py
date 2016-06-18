@@ -8,6 +8,7 @@ from toolbar import Toolbar
 from bottombar import BottomBar
 from ..helper import (make_title,
     save_song, load_song)
+from ..paths import ICON_IMG_PATH
 
 class PianoRoll(Frame):
 
@@ -15,8 +16,13 @@ class PianoRoll(Frame):
         Frame.__init__(self, parent)
         self.parent = parent
 
-        self._init_ui()
         self._init_data()
+        self._init_ui()
+
+    def _init_data(self):
+        self._initial_dir = None
+        self._filepath = None
+        self._dirty = False
 
     def _init_ui(self):
         menu_cb = {
@@ -44,6 +50,14 @@ class PianoRoll(Frame):
         root = self._root()
         menu = PianoRollMenu(root, menu_cb)
         root.config(menu=menu)
+        root.title(make_title("Untitled", self._dirty))
+
+        try:
+            print ICON_IMG_PATH
+            image = PhotoImage(file=ICON_IMG_PATH)
+            root.tk.call('wm', 'iconphoto', root._w, image)
+        except TclError:
+            print "Couldn't load icon file"
 
         self.toolbar = Toolbar(self, toolbar_cb)
         self.piano_roll_frame = PianoRollFrame(
@@ -54,11 +68,6 @@ class PianoRoll(Frame):
         self.piano_roll_frame.pack(fill=BOTH, expand=True)
         self.bottombar.pack(side=BOTTOM, fill=X)
         self.pack(fill=BOTH, expand=True)
-
-    def _init_data(self):
-        self._initial_dir = None
-        self._filepath = None
-        self._dirty = False
 
     def _new_cmd(self):
         clear_notes = True

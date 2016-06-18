@@ -19,9 +19,9 @@ class Toolbox(Frame):
         self._var = IntVar()
 
         self._bttn_images = {
-            'cursor': PhotoImage(file=CURSOR_TOOL_IMG_PATH),
-            'eraser': PhotoImage(file=ERASER_TOOL_IMG_PATH),
-            'pen':    PhotoImage(file=PEN_TOOL_IMG_PATH)
+            'cursor': PhotoImage(file=TOOL_CURSOR_IMG_PATH),
+            'eraser': PhotoImage(file=TOOL_ERASER_IMG_PATH),
+            'pen':    PhotoImage(file=TOOL_PEN_IMG_PATH)
         }
 
         self.cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
