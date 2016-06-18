@@ -100,6 +100,8 @@ class GridCanvas(CustomCanvas):
             cell_width_z = self._gstate.cell_width()
             cell_height_z = self._gstate.cell_height()
 
+            self.deselect_notes(GridCanvas.ALL)
+
             canvasx = self.canvasx(event.x)
             canvasy = self.canvasy(event.y)
 
