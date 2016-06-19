@@ -212,26 +212,25 @@ class GridCanvas(CustomCanvas):
         y2 = self.canvasy(y1 + min(self._visibleregion[3], grid_height))
 
         bars_start = int(self._visibleregion[0] / bar_width)
-        bars = int(math.ceil((min(self._visibleregion[2], grid_width) +
-            bar_width) / bar_width))
+        bars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
 
-        for n in range(bars_start, bars_start + bars):
+        for n in range(bars_start, bars_start + int(math.ceil(bars))):
             x_offset = n * bar_width
             x_left = grid_width - x_offset
             lines_per_bar = int(min(bar_width, x_left) / cell_width)
             for i in range(lines_per_bar):
                 x = i * cell_width + x_offset + cell_width
                 self.add_to_layer(GridCanvas.LAYER_VL,
-                                  self.create_line, (x, y1, x, y2),
-                                  fill=GridCanvas.COLOR_LINE_NORMAL,
-                                  tags=('line', 'vertical'))
+                    self.create_line, (x, y1, x, y2),
+                    fill=GridCanvas.COLOR_LINE_NORMAL,
+                    tags=('line', 'vertical'))
 
-        for i in range(bars_start, bars + bars_start):
+        for i in range(bars_start, bars_start + int(math.floor(bars))):
             x = i * bar_width
             self.add_to_layer(GridCanvas.LAYER_VL,
-                              self.create_line, (x, y1, x, y2),
-                              fill=GridCanvas.COLOR_LINE_BAR,
-                              tags=('line', 'vertical'))
+                self.create_line, (x, y1, x, y2),
+                fill=GridCanvas.COLOR_LINE_BAR,
+                tags=('line', 'vertical'))
 
     def _draw_sharp_rows(self):
         pattern = KEY_PATTERN[::-1]
@@ -242,7 +241,8 @@ class GridCanvas(CustomCanvas):
         x1 = 0
         x2 = min(grid_width, vr_width)
         for row in range(128):
-            i = (row + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) % KEYS_IN_OCTAVE
+            i = ((row + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) %
+                KEYS_IN_OCTAVE)
             key = pattern[i]
             if key == '0':
                 y1 = row * cell_height
@@ -250,7 +250,7 @@ class GridCanvas(CustomCanvas):
                 coords = (x1, y1, x2, y2)
                 self.add_to_layer(
                     GridCanvas.LAYER_SHARP_ROW, self.create_rectangle,
-                    coords, fill=GridCanvas.COLOR_SHARP_ROW,
+                    coords, fill=GridCanvas.COLOR_SHARP_ROW, width=0,
                     tags='sharp_row')
 
     def _draw_notes(self, *notes):
