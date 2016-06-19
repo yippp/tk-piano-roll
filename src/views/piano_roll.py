@@ -43,8 +43,8 @@ class PianoRoll(Frame):
         }
 
         bottombar_cb = {
-            'length': self.set_length,
-            'timesig': self.set_timesig
+            'length': self.set_canvas_length,
+            'timesig': self.set_canvas_timesig
         }
 
         root = self._root()
@@ -53,7 +53,6 @@ class PianoRoll(Frame):
         root.title(make_title("Untitled", self._dirty))
 
         try:
-            print ICON_IMG_PATH
             image = PhotoImage(file=ICON_IMG_PATH)
             root.tk.call('wm', 'iconphoto', root._w, image)
         except TclError:
@@ -65,8 +64,8 @@ class PianoRoll(Frame):
         self.bottombar = BottomBar(self, bottombar_cb)
 
         self.toolbar.pack(side=TOP, fill=X)
-        self.piano_roll_frame.pack(fill=BOTH, expand=True)
         self.bottombar.pack(side=BOTTOM, fill=X)
+        self.piano_roll_frame.pack(fill=BOTH, expand=True)
         self.pack(fill=BOTH, expand=True)
 
     def _new_cmd(self):
@@ -74,7 +73,7 @@ class PianoRoll(Frame):
 
         if self._dirty:
             title = "New Score"
-            msg = "Save changes before starting new score?"
+            msg = "Save changes before starting a new score?"
             answer = askyesnocancel(title, msg)
 
             if answer == None:
@@ -85,6 +84,8 @@ class PianoRoll(Frame):
                 else:
                     clear_notes = self._save_as_cmd()
 
+        self.set_bottombar_length((2, 1, 0))
+        self.set_bottombar_timesig((4, 4))
         if clear_notes:
             self.piano_roll_frame.grid_canvas.remove_notes('all')
 
@@ -94,7 +95,7 @@ class PianoRoll(Frame):
     def _open_cmd(self):
         if self._dirty:
             title = "New Score"
-            msg = "Save changes before starting new score?"
+            msg = "Save changes before opening a new score?"
             answer = askyesnocancel(title, msg)
 
             if answer == None:
@@ -113,7 +114,9 @@ class PianoRoll(Frame):
         self._filepath = filename
 
         song_data = load_song(filename)
-        self.piano_roll_frame.setup(song_data)
+        self.set_bottombar_length(song_data['length'])
+        self.set_bottombar_timesig(song_data['timesig'])
+        self.piano_roll_frame.setup(song_data['notes'])
 
         self.set_dirty(False)
 
@@ -149,7 +152,7 @@ class PianoRoll(Frame):
     def _exit_cmd(self):
         if self._dirty:
             title = "New Score"
-            msg = "Save changes before starting new score?"
+            msg = "Save changes before exiting?"
             answer = askyesnocancel(title, msg)
 
             if answer == None:
@@ -171,8 +174,11 @@ class PianoRoll(Frame):
     def set_zoomy(self, zoomy):
         self.piano_roll_frame.set_zoomy(zoomy)
 
-    def set_length(self, length):
+    def set_canvas_length(self, length):
         self.piano_roll_frame.set_length(length)
+
+    def set_bottombar_length(self, length):
+        self.bottombar.set_length(length)
 
     def set_canvas_tool(self, tool):
         self.piano_roll_frame.grid_canvas.set_tool(tool)
@@ -180,9 +186,12 @@ class PianoRoll(Frame):
     def set_toolbox_tool(self, value):
         self.toolbar.set_tool(value)
 
-    def set_timesig(self, beat_count, beat_unit):
-        self.piano_roll_frame.set_timesig(beat_count, beat_unit)
-        self.bottombar.set_max_beat(beat_count)
+    def set_canvas_timesig(self, timesig):
+        self.piano_roll_frame.set_timesig(timesig)
+        self.bottombar.set_max_beat_count(timesig[0])
+
+    def set_bottombar_timesig(self, timesig):
+        self.bottombar.set_timesig(timesig)
 
     def set_dirty(self, dirty):
         self._dirty = dirty

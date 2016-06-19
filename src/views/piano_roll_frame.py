@@ -60,18 +60,9 @@ class PianoRollFrame(Frame):
         self.focus_set()
 
     def _bind_event_handlers(self):
-        self.bind('<Control-a>', self._on_ctrl_a)
-        self.bind('<Delete>', self._on_delete)
-        self.bind('1', self._on_ctrl_num)
-        self.bind('2', self._on_ctrl_num)
-        self.bind('3', self._on_ctrl_num)
-
-    def _on_ctrl_a(self, event):
-        self.grid_canvas.select_notes(GridCanvas.ALL)
-        self.parent.set_toolbox_tool(GridCanvas.TOOL_SEL)
-
-    def _on_delete(self, event):
-        self.grid_canvas.remove_notes(GridCanvas.SEL)
+        self.bind_all('1', self._on_ctrl_num)
+        self.bind_all('2', self._on_ctrl_num)
+        self.bind_all('3', self._on_ctrl_num)
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = (event.state & PianoRollFrame.CTRL_MASK ==
@@ -87,20 +78,17 @@ class PianoRollFrame(Frame):
         self.keyboard_canvas.yview(*args)
         self.grid_canvas.yview(*args)
 
-    def setup(self, song_state):
-        self.set_length(song_state['length'])
-        self.set_timesig(song_state['beat_count'], song_state['beat_unit'])
-
+    def setup(self, notes):
         self.grid_canvas.remove_notes(GridCanvas.ALL)
-        for note in song_state['notes']:
+        for note in notes:
             self.grid_canvas.add_note(note)
 
     def get_song_state(self):
+        timesig = (self._grid.beat_count, self._grid.beat_unit)
         return {
             'notes': self.grid_canvas.note_list.notes,
             'length': self._grid.length,
-            'beat_count': self._grid.beat_count,
-            'beat_unit': self._grid.beat_unit
+            'timesig': timesig
         }
 
     def set_subdiv(self, value):
@@ -120,7 +108,8 @@ class PianoRollFrame(Frame):
             self._grid.length = value
             self._on_state_change()
 
-    def set_timesig(self, beat_count, beat_unit):
+    def set_timesig(self, timesig):
+        beat_count, beat_unit = timesig
         if (self._grid.beat_count != beat_count or
             self._grid.beat_unit != beat_unit):
             self._grid.beat_count = beat_count

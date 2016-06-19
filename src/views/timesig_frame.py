@@ -33,4 +33,9 @@ class TimeSigFrame(LabelFrame):
     def _forward(self, *args):
         beat_count = int(self.beat_count_spinbox.get())
         beat_unit = int(self.beat_unit_combobox.get())
-        self.cb(beat_count, beat_unit)
+        self.cb((beat_count, beat_unit))
+
+    def set_timesig(self, timesig):
+        beat_count, beat_unit = timesig
+        self.beat_count_spinbox.set(beat_count)
+        self.beat_unit_combobox.set(beat_unit)

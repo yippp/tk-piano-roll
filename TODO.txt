@@ -3,6 +3,7 @@ NEXT
 + do something about notes being drawn on top of one another
 + keep viewing area still while zooming
 + use absolute snapping as default (relative snapping optional)
++ look into problem with input focus in GridCanvas (tmp fix)
 
 SOLVED
 

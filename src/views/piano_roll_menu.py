@@ -34,7 +34,7 @@ class PianoRollMenu(Menu):
             accelerator="Ctrl+W")
         self.add_cascade(
             label='File', menu=self.file_menu,
-            underline=0, accelerator="Ctrl+F")
+            underline=0)
 
         self.config(
             relief=FLAT, bg=PianoRollMenu.COLOR2,

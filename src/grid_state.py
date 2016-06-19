@@ -51,7 +51,8 @@ class GridState(object):
         bar, beat, tick = self.length
         zoomx = self.zoomx if zoom else 1
         return to_ticks(bar - 1, beat - 1, tick,
-            self.beat_count, QUARTER_NOTE_WIDTH) * zoomx
+            self.beat_count, self.beat_unit,
+            tpq=QUARTER_NOTE_WIDTH) * zoomx
 
     def height(self, zoom=True):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
@@ -60,7 +61,8 @@ class GridState(object):
         from helper import to_ticks
         zoomx = self.zoomx if zoom else 1
 
-        return to_ticks(bpb=self.beat_count, tpq=QUARTER_NOTE_WIDTH) * zoomx
+        return to_ticks(bpb=self.beat_count, bu=self.beat_unit,
+            tpq=QUARTER_NOTE_WIDTH) * zoomx
 
     def cell_width(self, subdiv=CUR_SUBDIV, zoom=True):
         if subdiv in [GridState.CUR_SUBDIV, 'cur_subdiv']:

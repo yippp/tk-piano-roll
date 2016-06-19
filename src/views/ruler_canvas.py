@@ -10,8 +10,10 @@ class RulerCanvas(CustomCanvas):
     LINE_LAYER = 0
     TEXT_LAYER = 0
 
+    COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
+    COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
     NORMAL_LINE_COLOR = '#CCCCCC'
-    BAR_LINE_COLOR = '#000000'
+    BAR_LINE_COLOR = '#808080'
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
@@ -21,13 +23,17 @@ class RulerCanvas(CustomCanvas):
         self._bind_event_handlers()
 
     def _init_ui(self):
-        self.config(bg='white', bd=2, relief=SUNKEN)
+        self.config(
+            height=RulerCanvas.HEIGHT, bg='white', highlightthickness=2,
+            highlightbackground=RulerCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
+            highlightcolor=RulerCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
 
     def _init_data(self, gstate):
         self._gstate = gstate
         self.config(height=RulerCanvas.HEIGHT)
 
     def _bind_event_handlers(self):
+        self.bind('<ButtonPress-1>', lambda *args, **kwargs: self.focus_set())
         self.bind('<Configure>', self._on_window_resize)
 
     def _on_window_resize(self, event=None):
@@ -94,17 +100,17 @@ class RulerCanvas(CustomCanvas):
                     (x, canvas_height), text=text, anchor=SW)
 
     def _update_visibleregion(self):
-        bd = int(self.config('borderwidth')[4])
-        self._visibleregion = [0] * 4
-        self._visibleregion[0] = self.canvasx(0)
-        self._visibleregion[1] = self.canvasy(0)
-        self._visibleregion[2] = self.winfo_width() - bd * 2
-        self._visibleregion[3] = self.winfo_height() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        vr_left = self.canvasx(0) + hlt
+        vr_top = self.canvasx(0) + hlt
+        vr_width = self.winfo_width() - hlt
+        vr_height = self.winfo_height() - hlt
+        self._visibleregion = vr_left, vr_top, vr_width, vr_height
 
     def _update_scrollregion(self):
-        bd = int(self.config()['borderwidth'][4])
-        sr_height = self.winfo_height() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
         sr_width = self._gstate.width()
+        sr_height = self.winfo_height() - hlt * 2
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 

@@ -15,6 +15,8 @@ class KeyboardCanvas(CustomCanvas):
     LAYER_TEXT = 1
     LAYER_LINE = 1
 
+    COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
+    COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
     COLOR_OUTLINE_KEY = "#000000"
     COLOR_FILL_KEY_BLACK = "#444C4E"
     COLOR_FILL_KEY_WHITE = "#FCF9F1"
@@ -33,17 +35,26 @@ class KeyboardCanvas(CustomCanvas):
 
         self._init_ui()
         self._init_data(gstate)
+        self._bind_event_handlers()
 
         self._update_scrollregion()
         self._draw()
 
+        self.yview_moveto(0)
+
     def _init_ui(self):
-        self.config(bd=2, relief=SUNKEN)
+        self.config(
+            highlightthickness=2,
+            highlightbackground=KeyboardCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
+            highlightcolor=KeyboardCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
 
     def _init_data(self, state):
         self._gstate = state
         self._font = Font(family='sans-serif', size=9)
         self.config(width=KeyboardCanvas.WIDTH)
+
+    def _bind_event_handlers(self):
+        self.bind("<ButtonPress-1>", lambda *args, **kwargs: self.focus_set())
 
     def _draw(self):
         cell_height = self._gstate.cell_height()
@@ -58,8 +69,8 @@ class KeyboardCanvas(CustomCanvas):
             self._draw_text(True)
 
     def _draw_complex_keys(self):
-        bd = int(self.config()['borderwidth'][4])
-        canvas_width = self.winfo_reqwidth() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        canvas_width = self.winfo_reqwidth() - hlt * 2
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -95,8 +106,8 @@ class KeyboardCanvas(CustomCanvas):
                 sum_of_key_heights_in_px += wk_height
 
     def _draw_simple_keys(self):
-        bd = int(self.config()['borderwidth'][4])
-        canvas_width = self.winfo_reqwidth() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        canvas_width = self.winfo_reqwidth() - hlt * 2
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -118,8 +129,8 @@ class KeyboardCanvas(CustomCanvas):
         else:
             color = KeyboardCanvas.COLOR_FILL_KEY_BLACK
 
-        bd = int(self.config()['borderwidth'][4])
-        canvas_width = self.winfo_reqwidth() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        canvas_width = self.winfo_reqwidth() - hlt * 2
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
         self.add_to_layer(layer, self.create_rectangle,
@@ -128,8 +139,8 @@ class KeyboardCanvas(CustomCanvas):
             fill=color, tags='rect')
 
     def _draw_lines(self, on_octave=False):
-        bd = int(self.config()['borderwidth'][4])
-        canvas_width = self.winfo_reqwidth() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        canvas_width = self.winfo_reqwidth() - hlt * 2
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
         cell_height = self._gstate.cell_height()
@@ -147,8 +158,8 @@ class KeyboardCanvas(CustomCanvas):
     def _draw_text(self, on_octave=False):
         names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-        bd = int(self.config()['borderwidth'][4])
-        canvas_width = self.winfo_reqwidth() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        canvas_width = self.winfo_reqwidth() - hlt * 2
         cell_height = self._gstate.cell_height()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
@@ -167,9 +178,9 @@ class KeyboardCanvas(CustomCanvas):
                 if on_octave: break
 
     def _update_scrollregion(self):
-        bd = int(self.config()['borderwidth'][4])
-        sr_width = self.winfo_reqwidth() - bd * 2
-        sr_height = self._gstate.height() + 1
+        hlt = int(self.config()['highlightthickness'][4])
+        sr_width = self.winfo_reqwidth() - hlt * 2
+        sr_height = self._gstate.height()
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 

@@ -50,5 +50,12 @@ class LengthFrame(LabelFrame):
         tick = int(self.tick_spinbox.get())
         self._cb((bar, beat, tick))
 
+    def set_length(self, length):
+        bar, beat, tick = length
+        self.bar_spinbox.set(bar)
+        self.beat_spinbox.set(beat)
+        self.tick_spinbox.set(tick)
+        self._forward()
+
     def set_max_beat(self, value):
         self.beat_spinbox.set_to(value)

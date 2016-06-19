@@ -12,6 +12,9 @@ from ..const import (
 
 class GridCanvas(CustomCanvas):
 
+    CANVAS_WIDTH = 480
+    CANVAS_HEIGHT = 384
+
     SEL = -1
     ALL = -2
 
@@ -30,28 +33,34 @@ class GridCanvas(CustomCanvas):
     TOOL_PEN = 1
     TOOL_ERASER = 2
 
+    COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
+    COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
     COLOR_LINE_NORMAL = "#CCCCCC"
-    COLOR_LINE_BAR = "#000000"
-    COLOR_OUTLINE_NORMAL = "#000000"
-    COLOR_OUTLINE_SEL = "#FF0000"
-    COLOR_FILL_NORMAL = "#FF0000"
-    COLOR_FILL_SEL = "#990000"
+    COLOR_LINE_BAR = "#808080"
+    COLOR_NOTE_OUTLINE_NORMAL = "#000000"
+    COLOR_NOTE_OUTLINE_SEL = "#FF0000"
+    COLOR_NOTE_FILL_NORMAL = "#FF0000"
+    COLOR_NOTE_FILL_SEL = "#990000"
     COLOR_SHARP_ROW = "#F1F3F3"
 
     def __init__(self, parent, gstate, dirty_cb=dummy, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self.xview_moveto(0)
-        self.yview_moveto(0)
-
         self._init_data(gstate, dirty_cb)
         self._init_ui()
         self._bind_event_handlers()
 
+        self.xview_moveto(0)
+        self.yview_moveto(0)
+
     def _init_ui(self):
-        self.config(width=480, height=384, bg='white',
-            bd=2, relief=SUNKEN)
+        self.config(
+            width=GridCanvas.CANVAS_WIDTH,
+            height=GridCanvas.CANVAS_HEIGHT,
+            bg='white', highlightthickness=2,
+            highlightbackground=GridCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
+            highlightcolor=GridCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
 
     def _init_data(self, gstate, dirty_cb):
         self.note_list = NoteList(on_state_change=dirty_cb)
@@ -77,6 +86,8 @@ class GridCanvas(CustomCanvas):
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
         self.bind('<B1-Motion>', self._on_bttnone_motion)
         self.bind('<Control-1>', self._on_bttnone_ctrl)
+        self.bind('<Control-a>', self._on_ctrl_a)
+        self.bind('<Delete>', self._on_delete)
         self.bind('<Configure>', self._on_window_resize)
 
     def _on_bttnone_press(self, event):
@@ -124,7 +135,7 @@ class GridCanvas(CustomCanvas):
         self._notes_on_click = self.note_list.copy_selected()
         self._selection_bounds = self._calc_selection_bounds()
 
-        self.parent.focus_set()
+        self.focus_set()
 
     def _on_bttnone_ctrl(self, event):
         if self._tool == GridCanvas.TOOL_SEL:
@@ -146,6 +157,9 @@ class GridCanvas(CustomCanvas):
             self._click_pos = (event.x, event.y)
 
     def _on_bttnone_release(self, event):
+        if not self._click_pos or not self.find_withtags('selection_region'):
+            return
+
         dragged = (self._click_pos[0] - event.x != 0 or self._click_pos[1] - event.y != 0)
         if (len(self.note_list.selected()) > 1 and self._click_type ==
             GridCanvas.CLICKED_ON_SELECTED_RECT and not dragged):
@@ -172,6 +186,12 @@ class GridCanvas(CustomCanvas):
             elif self._click_type == GridCanvas.CLICKED_ON_EMPTY_AREA:
                 self.delete(*self.find_withtags('selection_region'))
                 self._draw_selection_region(event.x, event.y)
+
+    def _on_ctrl_a(self, event):
+        self.select_notes(GridCanvas.ALL)
+
+    def _on_delete(self, event):
+        self.remove_notes(GridCanvas.SEL)
 
     def _draw(self):
         self._draw_lines()
@@ -265,10 +285,10 @@ class GridCanvas(CustomCanvas):
             y2 = y1 + rect.height * self._gstate.zoomy
             coords = (x1, y1, x2, y2)
 
-            outline_color = (GridCanvas.COLOR_OUTLINE_SEL if
-                note.selected else GridCanvas.COLOR_OUTLINE_NORMAL)
-            fill_color = (GridCanvas.COLOR_FILL_SEL if
-                note.selected else GridCanvas.COLOR_FILL_NORMAL)
+            outline_color = (GridCanvas.COLOR_NOTE_OUTLINE_SEL if
+                note.selected else GridCanvas.COLOR_NOTE_OUTLINE_NORMAL)
+            fill_color = (GridCanvas.COLOR_NOTE_FILL_SEL if
+                note.selected else GridCanvas.COLOR_NOTE_FILL_NORMAL)
 
             new_id = self.add_to_layer(
                 GridCanvas.LAYER_RECT, self.create_rectangle,
@@ -292,20 +312,20 @@ class GridCanvas(CustomCanvas):
                           stipple='gray12', tags='selection_region')
 
     def _update_scrollregion(self):
-        visibleregion_width = self._visibleregion[2]
-        visibleregion_height = self._visibleregion[3]
-
-        scrollregion_width = max(self._gstate.width(), visibleregion_width)
-        scrollregion_height = max(self._gstate.height(), visibleregion_height) + 1
+        hlt = int(self.config()['highlightthickness'][4])
+        scrollregion_width = max(
+            self._gstate.width(), self._visibleregion[2] - hlt * 2)
+        scrollregion_height = max(
+            self._gstate.height(), self._visibleregion[3] - hlt * 2)
 
         self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
     def _update_visibleregion(self):
-        bd = int(self.config()['borderwidth'][4])
-        vr_left = self.canvasx(0) + bd
-        vr_top = self.canvasy(0) + bd
-        vr_width = self.winfo_width() - bd * 2
-        vr_height = self.winfo_height() - bd * 2
+        hlt = int(self.config()['highlightthickness'][4])
+        vr_left = self.canvasx(0) + hlt
+        vr_top = self.canvasy(0) + hlt
+        vr_width = self.winfo_width() - hlt
+        vr_height = self.winfo_height() - hlt
         self._visibleregion = (vr_left, vr_top, vr_width, vr_height)
 
     def _update_note_ids(self, ids):
@@ -462,8 +482,8 @@ class GridCanvas(CustomCanvas):
             notes = (self.note_list.from_id(id) for id in args)
 
         for note in notes:
-            self.itemconfig(note.id, fill=GridCanvas.COLOR_FILL_SEL,
-                            outline=GridCanvas.COLOR_OUTLINE_SEL)
+            self.itemconfig(note.id, fill=GridCanvas.COLOR_NOTE_FILL_SEL,
+                            outline=GridCanvas.COLOR_NOTE_OUTLINE_SEL)
             note.selected = True
 
     def deselect_notes(self, *args):
@@ -477,8 +497,8 @@ class GridCanvas(CustomCanvas):
             notes = (self.note_list.from_id(id) for id in args)
 
         for note in notes:
-            self.itemconfig(note.id, fill=GridCanvas.COLOR_FILL_NORMAL,
-                            outline=GridCanvas.COLOR_OUTLINE_NORMAL)
+            self.itemconfig(note.id, fill=GridCanvas.COLOR_NOTE_FILL_NORMAL,
+                            outline=GridCanvas.COLOR_NOTE_OUTLINE_NORMAL)
             note.selected = False
 
     def on_update(self, new_gstate):

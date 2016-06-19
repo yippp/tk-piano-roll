@@ -19,5 +19,11 @@ class BottomBar(Frame):
         self.length_frame.grid(row=0, column=2, sticky=E)
         self.grid_columnconfigure(0, weight=1)
 
-    def set_max_beat(self, value):
+    def set_length(self, length):
+        self.length_frame.set_length(length)
+
+    def set_timesig(self, timesig):
+        self.timesig_frame.set_timesig(timesig)
+
+    def set_max_beat_count(self, value):
         self.length_frame.set_max_beat(value)
