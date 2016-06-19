@@ -30,7 +30,7 @@ class CustomSpinbox(Spinbox):
     def _bind_event_handlers(self):
         self.bind('<Return>', self._on_return)
         self.bind('<KP_Enter>', self._on_return)
-        # self.bind('<FocusOut>', self._on_lost_focus)
+        self.bind('<FocusOut>', self._on_lost_focus)
         self.bind('<Key>', self._after_keypress)
 
     def _on_return(self, event):
