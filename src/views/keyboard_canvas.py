@@ -33,28 +33,15 @@ class KeyboardCanvas(CustomCanvas):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self._init_ui()
         self._init_data(gstate)
-        self._bind_event_handlers()
-
         self._update_scrollregion()
         self._draw()
-
         self.yview_moveto(0)
-
-    def _init_ui(self):
-        self.config(
-            highlightthickness=2,
-            highlightbackground=KeyboardCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
-            highlightcolor=KeyboardCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
 
     def _init_data(self, state):
         self._gstate = state
         self._font = Font(family='sans-serif', size=9)
         self.config(width=KeyboardCanvas.WIDTH)
-
-    def _bind_event_handlers(self):
-        self.bind("<ButtonPress-1>", lambda *args, **kwargs: self.focus_set())
 
     def _draw(self):
         cell_height = self._gstate.cell_height()
@@ -69,8 +56,7 @@ class KeyboardCanvas(CustomCanvas):
             self._draw_text(True)
 
     def _draw_complex_keys(self):
-        hlt = int(self.config()['highlightthickness'][4])
-        canvas_width = self.winfo_reqwidth() - hlt * 2
+        canvas_width = self.winfo_reqwidth()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -106,8 +92,7 @@ class KeyboardCanvas(CustomCanvas):
                 sum_of_key_heights_in_px += wk_height
 
     def _draw_simple_keys(self):
-        hlt = int(self.config()['highlightthickness'][4])
-        canvas_width = self.winfo_reqwidth() - hlt * 2
+        canvas_width = self.winfo_reqwidth()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
         keyboard_width = canvas_width - lpad
 
@@ -129,8 +114,7 @@ class KeyboardCanvas(CustomCanvas):
         else:
             color = KeyboardCanvas.COLOR_FILL_KEY_BLACK
 
-        hlt = int(self.config()['highlightthickness'][4])
-        canvas_width = self.winfo_reqwidth() - hlt * 2
+        canvas_width = self.winfo_reqwidth()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
         self.add_to_layer(layer, self.create_rectangle,
@@ -139,8 +123,7 @@ class KeyboardCanvas(CustomCanvas):
             fill=color, tags='rect')
 
     def _draw_lines(self, on_octave=False):
-        hlt = int(self.config()['highlightthickness'][4])
-        canvas_width = self.winfo_reqwidth() - hlt * 2
+        canvas_width = self.winfo_reqwidth()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
         cell_height = self._gstate.cell_height()
@@ -158,8 +141,7 @@ class KeyboardCanvas(CustomCanvas):
     def _draw_text(self, on_octave=False):
         names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-        hlt = int(self.config()['highlightthickness'][4])
-        canvas_width = self.winfo_reqwidth() - hlt * 2
+        canvas_width = self.winfo_reqwidth()
         cell_height = self._gstate.cell_height()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
@@ -178,9 +160,8 @@ class KeyboardCanvas(CustomCanvas):
                 if on_octave: break
 
     def _update_scrollregion(self):
-        hlt = int(self.config()['highlightthickness'][4])
-        sr_width = self.winfo_reqwidth() - hlt * 2
-        sr_height = self._gstate.height()
+        sr_width = self.winfo_reqwidth()
+        sr_height = self._gstate.height() + 1
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 

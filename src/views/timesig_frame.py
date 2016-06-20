@@ -18,8 +18,10 @@ class TimeSigFrame(LabelFrame):
 
         self._beat_unit_var = StringVar()
         values = [str(2 ** i) for i in range(1, 6)]
-        self.beat_unit_combobox = Combobox(self, values=values,
-            width=3, textvariable=self._beat_unit_var, state='readonly')
+        self.beat_unit_combobox = Combobox(
+            self, values=values, width=3,
+            textvariable=self._beat_unit_var,
+            state='readonly')
         self._beat_unit_var.set('4')
         self._beat_unit_var.trace('w', self._forward)
 

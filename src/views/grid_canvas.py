@@ -33,8 +33,6 @@ class GridCanvas(CustomCanvas):
     TOOL_PEN = 1
     TOOL_ERASER = 2
 
-    COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
-    COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
     COLOR_LINE_NORMAL = "#CCCCCC"
     COLOR_LINE_BAR = "#808080"
     COLOR_NOTE_OUTLINE_NORMAL = "#000000"
@@ -58,9 +56,7 @@ class GridCanvas(CustomCanvas):
         self.config(
             width=GridCanvas.CANVAS_WIDTH,
             height=GridCanvas.CANVAS_HEIGHT,
-            bg='white', highlightthickness=2,
-            highlightbackground=GridCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
-            highlightcolor=GridCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
+            bg='white')
 
     def _init_data(self, gstate, dirty_cb):
         self.note_list = NoteList(on_state_change=dirty_cb)
@@ -76,7 +72,7 @@ class GridCanvas(CustomCanvas):
         vs_height = int(self.config()['height'][4])
         vs_width = int(self.config()['width'][4])
         sr_width = self._gstate.width()
-        sr_height = self._gstate.height()
+        sr_height = self._gstate.height() + 1
         self._visibleregion = [0, 0, vs_width, vs_height]
         scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=scrollregion)
@@ -105,7 +101,7 @@ class GridCanvas(CustomCanvas):
                 self._click_type = GridCanvas.CLICKED_ON_SELECTED_RECT
 
         elif self._tool == GridCanvas.TOOL_PEN:
-            grid_height = self._gstate.height(zoom=False)
+            grid_height = self._gstate.height(zoom=False) + 1
             cell_width = self._gstate.cell_width(zoom=False)
             cell_height = self._gstate.cell_height(zoom=False)
             cell_width_z = self._gstate.cell_width()
@@ -134,8 +130,6 @@ class GridCanvas(CustomCanvas):
         self._click_pos = (event.x, event.y)
         self._notes_on_click = self.note_list.copy_selected()
         self._selection_bounds = self._calc_selection_bounds()
-
-        self.focus_set()
 
     def _on_bttnone_ctrl(self, event):
         if self._tool == GridCanvas.TOOL_SEL:
@@ -207,7 +201,7 @@ class GridCanvas(CustomCanvas):
     def _draw_horizontal_lines(self):
         cell_height = self._gstate.cell_height()
         visibleregion_height = self._visibleregion[3]
-        grid_height = self._gstate.height()
+        grid_height = self._gstate.height() + 1
         n = int(min(visibleregion_height, grid_height) / cell_height) + 1
 
         x1 = self.canvasx(0)
@@ -225,7 +219,7 @@ class GridCanvas(CustomCanvas):
 
     def _draw_vertical_lines(self):
         grid_width = self._gstate.width()
-        grid_height = self._gstate.height()
+        grid_height = self._gstate.height() + 1
         bar_width = self._gstate.bar_width()
         cell_width = self._gstate.max_cell_width()
         y1 = self._visibleregion[1]
@@ -312,20 +306,18 @@ class GridCanvas(CustomCanvas):
                           stipple='gray12', tags='selection_region')
 
     def _update_scrollregion(self):
-        hlt = int(self.config()['highlightthickness'][4])
         scrollregion_width = max(
-            self._gstate.width(), self._visibleregion[2] - hlt * 2)
+            self._gstate.width(), self._visibleregion[2])
         scrollregion_height = max(
-            self._gstate.height(), self._visibleregion[3] - hlt * 2)
+            self._gstate.height() + 1, self._visibleregion[3])
 
         self.config(scrollregion=(0, 0, scrollregion_width, scrollregion_height))
 
     def _update_visibleregion(self):
-        hlt = int(self.config()['highlightthickness'][4])
-        vr_left = self.canvasx(0) + hlt
-        vr_top = self.canvasy(0) + hlt
-        vr_width = self.winfo_width() - hlt
-        vr_height = self.winfo_height() - hlt
+        vr_left = self.canvasx(0)
+        vr_top = self.canvasy(0)
+        vr_width = self.winfo_width()
+        vr_height = self.winfo_height()
         self._visibleregion = (vr_left, vr_top, vr_width, vr_height)
 
     def _update_note_ids(self, ids):

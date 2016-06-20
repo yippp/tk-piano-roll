@@ -3,6 +3,7 @@ from ruler_canvas import RulerCanvas
 from keyboard_canvas import KeyboardCanvas
 from grid_canvas import GridCanvas
 from include.auto_scrollbar import AutoScrollbar
+from include.border_canvas import BorderCanvas
 from ..grid import Grid
 from ..helper import dummy
 
@@ -10,6 +11,9 @@ from ..helper import dummy
 class PianoRollFrame(Frame):
 
     CTRL_MASK = 0x0004
+
+    COLOR_BORDER_DEFAULT = "#000000"
+    COLOR_BORDER_SELECTED = "#3399FF"
 
     def __init__(self, parent, dirty_cb=dummy, **kwargs):
         Frame.__init__(self, parent, **kwargs)
@@ -28,13 +32,22 @@ class PianoRollFrame(Frame):
         self.vbar = AutoScrollbar(self, orient=VERTICAL)
 
         state = self._grid.get_state()
-        self.ruler_canvas = RulerCanvas(self, state,
-            xscrollcommand=self.hbar.set)
-        self.keyboard_canvas = KeyboardCanvas(self, state,
-            yscrollcommand=self.vbar.set)
-        self.grid_canvas = GridCanvas(
-            self, state, self._on_state_change,
-            xscrollcommand=self.hbar.set,
+        self.ruler_canvas = BorderCanvas(
+            self, RulerCanvas, state, borderwidth=2,
+            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
+            padding=3, xscrollcommand=self.hbar.set)
+        self.keyboard_canvas = BorderCanvas(
+            self, KeyboardCanvas, state, borderwidth=2,
+            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
+            padding=3, yscrollcommand=self.vbar.set)
+        self.grid_canvas = BorderCanvas(
+            self, GridCanvas, state,
+            self._on_state_change, borderwidth=2,
+            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
+            padding=3, xscrollcommand=self.hbar.set,
             yscrollcommand=self.vbar.set)
 
         self._grid.register_listener(self.keyboard_canvas.on_update)

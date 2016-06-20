@@ -19,9 +19,10 @@ class SnapFrame(Frame):
     def _init_ui(self):
         self._var = StringVar()
 
-        self.snap_combobox = Combobox(self, values=SNAP_DICT.keys(),
-            width=5, state='readonly')
-        self.snap_combobox.config(textvariable=self._var)
+        self.snap_combobox = Combobox(
+            self, values=SNAP_DICT.keys(),
+            width=5, textvariable=self._var,
+            state='readonly')
         self.snap_combobox.set(SNAP_DICT.keys()[0])
         self._var.trace('w', self._cb)
 

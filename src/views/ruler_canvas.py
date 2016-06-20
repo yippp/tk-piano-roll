@@ -23,17 +23,13 @@ class RulerCanvas(CustomCanvas):
         self._bind_event_handlers()
 
     def _init_ui(self):
-        self.config(
-            height=RulerCanvas.HEIGHT, bg='white', highlightthickness=2,
-            highlightbackground=RulerCanvas.COLOR_CANVAS_OUTLINE_NORMAL,
-            highlightcolor=RulerCanvas.COLOR_CANVAS_OUTLINE_HIGHLIGHT)
+        self.config(height=RulerCanvas.HEIGHT, bg='white')
 
     def _init_data(self, gstate):
         self._gstate = gstate
         self.config(height=RulerCanvas.HEIGHT)
 
     def _bind_event_handlers(self):
-        self.bind('<ButtonPress-1>', lambda *args, **kwargs: self.focus_set())
         self.bind('<Configure>', self._on_window_resize)
 
     def _on_window_resize(self, event=None):
@@ -100,17 +96,15 @@ class RulerCanvas(CustomCanvas):
                     (x, canvas_height), text=text, anchor=SW)
 
     def _update_visibleregion(self):
-        hlt = int(self.config()['highlightthickness'][4])
-        vr_left = self.canvasx(0) + hlt
-        vr_top = self.canvasx(0) + hlt
-        vr_width = self.winfo_width() - hlt
-        vr_height = self.winfo_height() - hlt
+        vr_left = self.canvasx(0)
+        vr_top = self.canvasx(0)
+        vr_width = self.winfo_width()
+        vr_height = self.winfo_height()
         self._visibleregion = vr_left, vr_top, vr_width, vr_height
 
     def _update_scrollregion(self):
-        hlt = int(self.config()['highlightthickness'][4])
         sr_width = self._gstate.width()
-        sr_height = self.winfo_height() - hlt * 2
+        sr_height = self.winfo_height()
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 
