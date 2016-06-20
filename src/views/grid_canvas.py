@@ -165,7 +165,7 @@ class GridCanvas(CustomCanvas):
             sel_region_id = self.find_withtags('selection_region')[0]
             coords = self.coords(sel_region_id)
             overlapping = self.find_overlapping(*coords)
-            rects = self.find_withtags('rect')
+            rects = self.find_withtags('note')
             overlapping_rects = set(overlapping).intersection(rects)
             self.select_notes(*overlapping_rects)
             self._notes_on_click = self.note_list.copy_selected()
@@ -191,7 +191,9 @@ class GridCanvas(CustomCanvas):
         self._draw_lines()
         self._draw_sharp_rows()
 
-        visible_notes = filter(lambda note:  self._is_note_visible(note), self.note_list.notes)
+        visible_notes = filter(
+            lambda note: self._is_note_visible(note),
+            self.note_list.notes)
         self._update_note_ids(self._draw_notes(*visible_notes))
 
     def _draw_lines(self):
@@ -287,7 +289,7 @@ class GridCanvas(CustomCanvas):
             new_id = self.add_to_layer(
                 GridCanvas.LAYER_RECT, self.create_rectangle,
                 coords, outline=outline_color,
-                fill=fill_color, tags='rect')
+                fill=fill_color, tags='note')
 
             old_ids.append(note.id)
             new_ids.append(new_id)
@@ -507,13 +509,25 @@ class GridCanvas(CustomCanvas):
             self._on_length_change()
 
     def xview(self, *args):
-        self.delete(ALL)
+        self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('note'))
         CustomCanvas.xview(self, *args)
         self._update_visibleregion()
-        self._draw()
+
+        self._draw_lines()
+        visible_notes = filter(
+            lambda note: self._is_note_visible(note),
+            self.note_list.notes)
+        self._update_note_ids(self._draw_notes(*visible_notes))
 
     def yview(self, *args):
         self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('note'))
         CustomCanvas.yview(self, *args)
         self._update_visibleregion()
-        self._draw()
+
+        self._draw_lines()
+        visible_notes = filter(
+            lambda note: self._is_note_visible(note),
+            self.note_list.notes)
+        self._update_note_ids(self._draw_notes(*visible_notes))

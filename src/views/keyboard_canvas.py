@@ -8,7 +8,7 @@ from ..const import (KEYS_IN_OCTAVE,
 
 class KeyboardCanvas(CustomCanvas):
 
-    WIDTH = 128
+    CANVAS_WIDTH = 128
 
     LAYER_KEY_BLACK = 0
     LAYER_KEY_WHITE = 1
@@ -33,6 +33,7 @@ class KeyboardCanvas(CustomCanvas):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
+        self.config(width=KeyboardCanvas.CANVAS_WIDTH)
         self._init_data(gstate)
         self._update_scrollregion()
         self._draw()
@@ -41,7 +42,6 @@ class KeyboardCanvas(CustomCanvas):
     def _init_data(self, state):
         self._gstate = state
         self._font = Font(family='sans-serif', size=9)
-        self.config(width=KeyboardCanvas.WIDTH)
 
     def _draw(self):
         cell_height = self._gstate.cell_height()
