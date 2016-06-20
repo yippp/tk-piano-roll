@@ -1,11 +1,11 @@
 from Tkinter import *
 
-class BorderCanvas(Frame):
+class WithBorder(Frame):
 
-    def __init__(self, parent, cnvclass, *args, **kwargs):
+    def __init__(self, parent, widget_class, *args, **kwargs):
         Frame.__init__(self, parent)
         self.parent = parent
-        self._cnvclass = cnvclass
+        self._widget_class = widget_class
         self._args = args
         self._kwargs = kwargs
 
@@ -16,7 +16,7 @@ class BorderCanvas(Frame):
         return True
 
     def __getattr__(self, name):
-        return getattr(self._canvas, name)
+        return getattr(self._widget, name)
 
     def _init_ui(self):
         # dispose of canvas highlight options
@@ -34,19 +34,19 @@ class BorderCanvas(Frame):
             highlightcolor=bordercolorselected,
             highlightthickness=borderwidth)
 
-        self._canvas = self._cnvclass(self, *self._args, **self._kwargs)
-        self._canvas.pack(
+        self._widget = self._widget_class(self, *self._args, **self._kwargs)
+        self._widget.pack(
             padx=padding, pady=padding,
             fill=BOTH, expand=True)
 
     def _bind_event_handlers(self):
         self.bind('<ButtonPress-1>', self._on_bttnone_press)
-        self._canvas.bind(
+        self._widget.bind(
             '<ButtonPress-1>', self._on_bttnone_press,
             add='+')
 
     def _on_bttnone_press(self, event):
-        self._canvas.focus_set()
+        self._widget.focus_set()
 
 
 

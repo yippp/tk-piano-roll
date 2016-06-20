@@ -3,16 +3,19 @@ from const import *
 def dummy(*args, **kwargs):
     pass
 
-def make_title(name, dirty):
-    return "{0}{1} - Piano Roll".format(
-        "*" if dirty else "", name)
-
 def isint(string):
     try:
         int(string)
         return True
     except ValueError:
         return False
+
+def make_title(name, dirty):
+    return "{0}{1} - Piano Roll".format(
+        "*" if dirty else "", name)
+
+def to_pitchname(midinumber):
+    return PITCHNAMES[midinumber % 12]
 
 def to_ticks(bars=1, beats=0, ticks=0, bpb=4, bu=4,
     tpq=TICKS_PER_QUARTER_NOTE):

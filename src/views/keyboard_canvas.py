@@ -3,7 +3,8 @@ from tkFont import Font
 from ..rect import Rect
 from include.custom_canvas import CustomCanvas
 from ..const import (KEYS_IN_OCTAVE,
-    KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
+    KEYS_IN_LAST_OCTAVE, KEY_PATTERN,
+    PITCHNAMES)
 
 
 class KeyboardCanvas(CustomCanvas):

@@ -41,11 +41,11 @@ class GridCanvas(CustomCanvas):
     COLOR_NOTE_FILL_SEL = "#990000"
     COLOR_SHARP_ROW = "#F1F3F3"
 
-    def __init__(self, parent, gstate, dirty_cb=dummy, **kwargs):
+    def __init__(self, parent, gstate, callbacks={}, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self._init_data(gstate, dirty_cb)
+        self._init_data(gstate, callbacks)
         self._init_ui()
         self._bind_event_handlers()
 
@@ -58,16 +58,18 @@ class GridCanvas(CustomCanvas):
             height=GridCanvas.CANVAS_HEIGHT,
             bg='white')
 
-    def _init_data(self, gstate, dirty_cb):
-        self.note_list = NoteList(on_state_change=dirty_cb)
+    def _init_data(self, gstate, callbacks):
+        self._gstate = gstate
+        self._callbacks = callbacks
+        self._tool = 0
+
+        self.note_list = NoteList(
+            on_state_change=callbacks.get('dirty'))
         self._notes_on_click = NoteList()
         self._selection_bounds = None
 
         self._click_pos = None
         self._click_type = GridCanvas.CLICKED_ON_EMPTY_AREA
-
-        self._tool = 0
-        self._gstate = gstate
 
         vs_height = int(self.config()['height'][4])
         vs_width = int(self.config()['width'][4])
@@ -78,6 +80,7 @@ class GridCanvas(CustomCanvas):
         self.config(scrollregion=scrollregion)
 
     def _bind_event_handlers(self):
+        self.bind('<Motion>', self._on_mouse_motion)
         self.bind('<ButtonPress-1>', self._on_bttnone_press)
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
         self.bind('<B1-Motion>', self._on_bttnone_motion)
@@ -85,6 +88,12 @@ class GridCanvas(CustomCanvas):
         self.bind('<Control-a>', self._on_ctrl_a)
         self.bind('<Delete>', self._on_delete)
         self.bind('<Configure>', self._on_window_resize)
+
+    def _on_mouse_motion(self, event):
+        if 'mousepos' in self._callbacks:
+            x = self.canvasx(event.x)
+            y = self.canvasy(event.y)
+            self._callbacks['mousepos'](x, y)
 
     def _on_bttnone_press(self, event):
         id = self._rect_at(event.x, event.y)
@@ -101,7 +110,7 @@ class GridCanvas(CustomCanvas):
                 self._click_type = GridCanvas.CLICKED_ON_SELECTED_RECT
 
         elif self._tool == GridCanvas.TOOL_PEN:
-            grid_height = self._gstate.height(zoom=False) + 1
+            grid_height = self._gstate.height(zoom=False)
             cell_width = self._gstate.cell_width(zoom=False)
             cell_height = self._gstate.cell_height(zoom=False)
             cell_width_z = self._gstate.cell_width()
@@ -116,7 +125,7 @@ class GridCanvas(CustomCanvas):
                 x = cell_width * int(canvasx / cell_width_z)
                 y = cell_height * int(canvasy / cell_height_z)
 
-                midinumber = int((grid_height - y) / cell_height)
+                midinumber = int((grid_height - y) / cell_height) - 1
                 velocity = 100
                 onset =  px_to_tick(x)
                 dur = px_to_tick(cell_width)
@@ -250,12 +259,11 @@ class GridCanvas(CustomCanvas):
 
     def _draw_sharp_rows(self):
         pattern = KEY_PATTERN[::-1]
-        vr_width = self._visibleregion[2]
         grid_width = self._gstate.width()
         cell_height = self._gstate.cell_height()
 
         x1 = 0
-        x2 = min(grid_width, vr_width)
+        x2 = grid_width
         for row in range(128):
             i = ((row + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) %
                 KEYS_IN_OCTAVE)
@@ -304,8 +312,8 @@ class GridCanvas(CustomCanvas):
 
         coords = (x1, y1, x2, y2)
         self.add_to_layer(GridCanvas.LAYER_SEL_REGION,
-                          self.create_rectangle, coords, fill='blue', outline='blue',
-                          stipple='gray12', tags='selection_region')
+            self.create_rectangle, coords, fill='blue', outline='blue',
+          stipple='gray12', tags='selection_region')
 
     def _update_scrollregion(self):
         scrollregion_width = max(
@@ -386,10 +394,10 @@ class GridCanvas(CustomCanvas):
             before_rect = before.rect()
             note.onset = px_to_tick(before_rect.left + dx)
             note.midinumber = int((grid_height -
-                before_rect.top - dy) / cell_height)
+                before_rect.top - dy) / cell_height) - 1
 
     def _rect_at(self, mousex, mousey):
-        ids = self.find_withtags('rect')
+        ids = self.find_withtags('note')
         for id in ids:
             coords = self.coords(id)
             x = coords[0]
