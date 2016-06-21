@@ -6,15 +6,13 @@ from const import CELL_HEIGHT_IN_PX
 class Note(object):
 
     def __init__(self, midinumber, velocity, onset,
-        duration, id=None, selected=False,
-        on_state_change=dummy):
+        duration, id=None, selected=False):
         self._id = id
         self._midinumber = midinumber
         self._velocity = velocity
         self._onset = onset
         self._duration = duration
         self._selected = selected
-        self._on_state_change = on_state_change
 
     def __eq__(self, other):
         return self.id == other.id
@@ -27,7 +25,6 @@ class Note(object):
     def midinumber(self, midinumber):
         if midinumber != self._midinumber:
             self._midinumber = midinumber
-            self._on_state_change(self.copy())
 
     @property
     def velocity(self):
@@ -37,7 +34,6 @@ class Note(object):
     def velocity(self, velocity):
         if velocity != self._velocity:
             self._velocity = velocity
-            self._on_state_change(self.copy())
 
     @property
     def onset(self):
@@ -47,7 +43,6 @@ class Note(object):
     def onset(self, onset):
         if onset != self._onset:
             self._onset = onset
-            self._on_state_change(self.copy())
 
     @property
     def duration(self):
@@ -57,7 +52,6 @@ class Note(object):
     def duration(self, duration):
         if duration != self._duration:
             self._duration = duration
-            self._on_state_change(self.copy())
 
     @property
     def id(self):
@@ -75,15 +69,11 @@ class Note(object):
     def selected(self, selected):
         self._selected = selected
 
-    def set_on_state_change_cb(self, cb):
-        self._on_state_change = cb
-
     def copy(self):
         return Note(
             self.midinumber, self.velocity,
             self.onset, self.duration,
-            id=self.id, selected=self.selected,
-            on_state_change=self._on_state_change)
+            id=self.id, selected=self.selected)
 
     def rect(self):
         from helper import tick_to_px

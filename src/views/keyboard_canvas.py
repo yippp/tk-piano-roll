@@ -2,9 +2,9 @@ from Tkinter import *
 from tkFont import Font
 from ..rect import Rect
 from include.custom_canvas import CustomCanvas
+from .. helper import to_pitchname
 from ..const import (KEYS_IN_OCTAVE,
-    KEYS_IN_LAST_OCTAVE, KEY_PATTERN,
-    PITCHNAMES)
+    KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
 
 
 class KeyboardCanvas(CustomCanvas):
@@ -140,8 +140,6 @@ class KeyboardCanvas(CustomCanvas):
                 if on_octave: break
 
     def _draw_text(self, on_octave=False):
-        names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-
         canvas_width = self.winfo_reqwidth()
         cell_height = self._gstate.cell_height()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
@@ -153,7 +151,8 @@ class KeyboardCanvas(CustomCanvas):
             y_offset -= 7 if on_octave else cell_height / 2
             for i in range(keys_in_octave):
                 y = y_offset - i * cell_height
-                text = names[i] + str(KEYS_IN_LAST_OCTAVE - nth_octave)
+                octave = KEYS_IN_LAST_OCTAVE - nth_octave
+                text = "{0}{1}".format(to_pitchname(i), octave)
                 self.add_to_layer(KeyboardCanvas.LAYER_TEXT,
                     self.create_text, (lpad - 4, y),
                     text=text, anchor=E, font=self._font)

@@ -87,7 +87,7 @@ class PianoRoll(Frame):
         self.set_bottombar_length((2, 1, 0))
         self.set_bottombar_timesig((4, 4))
         if clear_notes:
-            self.piano_roll_frame.grid_canvas.remove_notes('all')
+            self.piano_roll_frame.grid_canvas.remove_note('all')
 
         self._filepath = None
         self.set_dirty(False)
