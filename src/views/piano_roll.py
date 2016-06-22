@@ -10,6 +10,7 @@ from ..helper import (make_title,
     save_song, load_song)
 from ..paths import ICON_IMG_PATH
 
+
 class PianoRoll(Frame):
 
     def __init__(self, parent=None):

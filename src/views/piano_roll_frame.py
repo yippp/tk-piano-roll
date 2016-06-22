@@ -6,7 +6,6 @@ from mousepos_frame import MousePosFrame
 from include.auto_scrollbar import AutoScrollbar
 from include.with_border import WithBorder
 from ..grid import Grid
-from ..helper import dummy
 
 
 class PianoRollFrame(Frame):

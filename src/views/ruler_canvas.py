@@ -5,15 +5,16 @@ from include.custom_canvas import CustomCanvas
 
 class RulerCanvas(CustomCanvas):
 
-    HEIGHT = 32
+    CANVAS_HEIGHT = 32
 
-    LINE_LAYER = 0
-    TEXT_LAYER = 0
+    LAYER_LINE = 0
+    LAYER_TEXT = 0
 
+    COLOR_LINE_NORMAL = '#CCCCCC'
+    COLOR_LINE_BAR = '#808080'
+    COLOR_LINE_END = '#0000FF'
     COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
     COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
-    NORMAL_LINE_COLOR = '#CCCCCC'
-    BAR_LINE_COLOR = '#808080'
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
@@ -23,11 +24,11 @@ class RulerCanvas(CustomCanvas):
         self._bind_event_handlers()
 
     def _init_ui(self):
-        self.config(height=RulerCanvas.HEIGHT, bg='white')
+        self.config(height=RulerCanvas.CANVAS_HEIGHT, bg='white')
 
     def _init_data(self, gstate):
         self._gstate = gstate
-        self.config(height=RulerCanvas.HEIGHT)
+        self.config(height=RulerCanvas.CANVAS_HEIGHT)
 
     def _bind_event_handlers(self):
         self.bind('<Configure>', self._on_window_resize)
@@ -62,12 +63,19 @@ class RulerCanvas(CustomCanvas):
                 x = x_offset + cell * cell_width
 
                 if x % bar_width == 0:
-                    color = RulerCanvas.BAR_LINE_COLOR
+                    color = RulerCanvas.COLOR_LINE_BAR
                 else:
-                    color = RulerCanvas.NORMAL_LINE_COLOR
+                    color = RulerCanvas.COLOR_LINE_NORMAL
 
-                self.add_to_layer(RulerCanvas.LINE_LAYER, self.create_line,
+                self.add_to_layer(
+                    RulerCanvas.LAYER_LINE, self.create_line,
                     (x, 0, x, canvas_height), fill=color)
+
+
+        self.add_to_layer(
+            RulerCanvas.LAYER_LINE, self.create_line,
+            (grid_width, 0, grid_width, RulerCanvas.CANVAS_HEIGHT),
+            fill=RulerCanvas.COLOR_LINE_END)
 
     def _draw_text(self):
         canvas_height = int(self.config('height')[4])
@@ -92,7 +100,7 @@ class RulerCanvas(CustomCanvas):
                 u = cell_offset / bu_cell_width
                 text = "{0}.{1}".format(bar + 1, int(u + 1))
 
-                self.add_to_layer(RulerCanvas.TEXT_LAYER, self.create_text,
+                self.add_to_layer(RulerCanvas.LAYER_TEXT, self.create_text,
                     (x, canvas_height), text=text, anchor=SW)
 
     def _update_visibleregion(self):

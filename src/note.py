@@ -1,5 +1,4 @@
 from rect import Rect
-from helper import dummy
 from const import CELL_HEIGHT_IN_PX
 
 

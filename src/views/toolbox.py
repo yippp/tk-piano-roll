@@ -19,17 +19,17 @@ class Toolbox(Frame):
         self._var = IntVar()
 
         self._bttn_images = {
-            'cursor': PhotoImage(file=TOOL_CURSOR_IMG_PATH),
+            'cursor': PhotoImage(file=TOOL_SEL_IMG_PATH),
             'eraser': PhotoImage(file=TOOL_ERASER_IMG_PATH),
             'pen':    PhotoImage(file=TOOL_PEN_IMG_PATH)
         }
 
         self.cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
-            image=self._bttn_images['cursor'], indicatoron=0, padx=2, pady=2)
+            image=self._bttn_images['cursor'], indicatoron=0)
         self.pen_bttn = Radiobutton(self, value=1, variable=self._var,
-            image=self._bttn_images['pen'], indicatoron=0, padx=10, pady=10)
+            image=self._bttn_images['pen'], indicatoron=0)
         self.eraser_bttn = Radiobutton(self, value=2, variable=self._var,
-            image=self._bttn_images['eraser'], indicatoron=0, padx=2, pady=2)
+            image=self._bttn_images['eraser'], indicatoron=0)
 
         self._var.trace("w", self._cb)
 
