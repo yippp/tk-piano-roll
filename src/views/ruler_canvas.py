@@ -1,11 +1,13 @@
 import math
 from Tkinter import *
+from tkFont import Font
 from include.custom_canvas import CustomCanvas
 
 
 class RulerCanvas(CustomCanvas):
 
     CANVAS_HEIGHT = 32
+    TEXT_OFFSET = 4
 
     LAYER_LINE = 0
     LAYER_TEXT = 0
@@ -28,18 +30,12 @@ class RulerCanvas(CustomCanvas):
 
     def _init_data(self, gstate):
         self._gstate = gstate
-        self.config(height=RulerCanvas.CANVAS_HEIGHT)
+        self._font = Font(family='sans-serif', size=9)
 
     def _bind_event_handlers(self):
         self.bind('<Configure>', self._on_window_resize)
 
-    def _on_window_resize(self, event=None):
-        self.delete(ALL)
-        self._update_visibleregion()
-        self._update_scrollregion()
-        self._draw()
-
-    def _draw(self):
+    def _draw_all(self):
         self._draw_lines()
         self._draw_text()
 
@@ -47,10 +43,15 @@ class RulerCanvas(CustomCanvas):
         canvas_height = int(self.config('height')[4])
         grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
+        bar = self._gstate.length[0]
+        beat_count = self._gstate.beat_count
 
         normal_cell_width = self._gstate.cell_width()
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
-        cell_width = max(normal_cell_width, bu_cell_width)
+        text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
+        min_cell_width = self._gstate.min_cell_width(
+            text_width + RulerCanvas.TEXT_OFFSET)
+        cell_width = max(normal_cell_width, bu_cell_width, min_cell_width)
 
         bar_start = int(self._visibleregion[0] / bar_width)
         nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
@@ -81,11 +82,15 @@ class RulerCanvas(CustomCanvas):
         canvas_height = int(self.config('height')[4])
         grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
-        padding = 4
+        bar = self._gstate.length[0]
+        beat_count = self._gstate.beat_count
 
         normal_cell_width = self._gstate.cell_width()
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
-        cell_width = max(normal_cell_width, bu_cell_width)
+        text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
+        min_cell_width = self._gstate.min_cell_width(
+            text_width + RulerCanvas.TEXT_OFFSET)
+        cell_width = max(normal_cell_width, bu_cell_width, min_cell_width)
 
         bar_start = int(self._visibleregion[0] / bar_width)
         nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
@@ -96,12 +101,19 @@ class RulerCanvas(CustomCanvas):
             cells_in_bar = int(math.ceil(min(bar_width, x_left) / cell_width))
             for cell in range(max(1, cells_in_bar)):
                 cell_offset = cell * cell_width
-                x = x_offset + padding + cell_offset
+                x = x_offset + RulerCanvas.TEXT_OFFSET + cell_offset
                 u = cell_offset / bu_cell_width
                 text = "{0}.{1}".format(bar + 1, int(u + 1))
 
                 self.add_to_layer(RulerCanvas.LAYER_TEXT, self.create_text,
-                    (x, canvas_height), text=text, anchor=SW)
+                    (x, canvas_height), text=text, anchor=SW, font=self._font)
+
+    def _update(self):
+        self._update_visibleregion()
+        self._update_scrollregion()
+        self.delete(ALL)
+        self._draw_lines()
+        self._draw_text()
 
     def _update_visibleregion(self):
         vr_left = self.canvasx(0)
@@ -116,41 +128,15 @@ class RulerCanvas(CustomCanvas):
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 
-    def _on_subdiv_change(self):
-        self.delete(ALL)
-        self._draw()
-
-    def _on_zoomx_change(self):
-        self._update_scrollregion()
-        self.delete(ALL)
-        self._draw()
-
-    def _on_length_change(self):
-        self._update_scrollregion()
-        self._update_visibleregion()
-        self.delete(ALL)
-        self._draw()
-
-    def _on_timesig_change(self):
-        self._update_scrollregion()
-        self.delete(ALL)
-        self._draw()
+    def _on_window_resize(self, event=None):
+        self._update()
 
     def on_update(self, new_gstate):
         diff = self._gstate - new_gstate
         self._gstate = new_gstate
 
-        if 'subdiv' in diff:
-            self._on_subdiv_change()
-        if 'zoomx' in diff:
-            self._on_zoomx_change()
-        if 'length' in diff:
-            self._on_length_change()
-        if any(x in diff for x in ['beat_count', 'beat_unit']):
-            self._on_timesig_change()
+        if diff: self._update()
 
     def xview(self, *args):
-        self.delete(ALL)
         CustomCanvas.xview(self, *args)
-        self._update_visibleregion()
-        self._draw()
+        self._update()

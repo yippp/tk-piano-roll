@@ -17,6 +17,7 @@ class GridCanvas(CustomCanvas):
 
     CANVAS_WIDTH = 480
     CANVAS_HEIGHT = 384
+    MIN_CELL_WIDTH = 14
 
     SEL = -1
     ALL = -2
@@ -124,7 +125,9 @@ class GridCanvas(CustomCanvas):
         grid_width = self._gstate.width()
         grid_height = self._gstate.height() + 1
         bar_width = self._gstate.bar_width()
-        cell_width = self._gstate.max_cell_width()
+        min_cell_width =self._gstate.min_cell_width(
+            GridCanvas.MIN_CELL_WIDTH)
+        cell_width = max(min_cell_width, self._gstate.cell_width())
         y1 = self._visibleregion[1]
         y2 = self.canvasy(y1 + min(self._visibleregion[3], grid_height))
 

@@ -6,12 +6,11 @@ TMP_LENGTH = (2, 1, 0)
 
 class GridState(object):
 
-    MIN_CELL_WIDTH_IN_PX = 14
     NUM_OF_KEYS_IN_OCTAVE = 128
 
-    BAR_SUBDIV = 0
-    CUR_SUBDIV = -1
-    BU_SUBDIV = -2
+    SUBDIV_BAR = 0
+    SUBDIV_CUR = -1
+    SUBDIV_BU = -2
     
     def __init__(self, beat_count=4, beat_unit=4, subdiv=0, zoomx=1,
         zoomy=1, length=TMP_LENGTH):
@@ -32,14 +31,6 @@ class GridState(object):
         diff = filter(compare, vars(self).keys())
 
         return diff
-
-    def _calc_max_subdiv(self, zoom=True):
-        n_snap_opts = len(SNAP_DICT)
-
-        for i in range(n_snap_opts - 1, -1, -1):
-            cell_width = self.cell_width(i, zoom)
-            if cell_width >= GridState.MIN_CELL_WIDTH_IN_PX:
-                return i
 
     def copy(self):
         return GridState(self.beat_count, self.beat_unit, self.subdiv,
@@ -64,29 +55,34 @@ class GridState(object):
         return to_ticks(bpb=self.beat_count, bu=self.beat_unit,
             tpq=QUARTER_NOTE_WIDTH) * zoomx
 
-    def cell_width(self, subdiv=CUR_SUBDIV, zoom=True):
-        if subdiv in [GridState.CUR_SUBDIV, 'cur_subdiv']:
+    def cell_width(self, subdiv=SUBDIV_CUR, zoom=True):
+        if subdiv in [GridState.SUBDIV_CUR, 'cur_subdiv']:
             _subdiv = self.subdiv
-        elif subdiv in [GridState.BU_SUBDIV, 'bu_subdiv']:
+        elif subdiv in [GridState.SUBDIV_BU, 'bu_subdiv']:
             _subdiv = math.log(float(self.beat_unit), 2)
         else:
             _subdiv = subdiv
 
-        if _subdiv in [GridState.BAR_SUBDIV, 'bar_subdiv']:
+        if _subdiv in [GridState.SUBDIV_BAR, 'bar_subdiv']:
             return self.bar_width(zoom)
         else:
             zoomx = self.zoomx if zoom else 1
             return 2 ** (2 - _subdiv) * QUARTER_NOTE_WIDTH * zoomx
+
+    def min_cell_width(self, min_width, zoom=True):
+        min_cell_width = self.cell_width(0, zoom)
+        for i in range(1, len(SNAP_DICT)):
+            cw = self.cell_width(i, zoom)
+            if cw >= min_width:
+               min_cell_width = cw
+
+        return min_cell_width
 
     def cell_height(self, zoom=True):
         if zoom:
             return CELL_HEIGHT_IN_PX * self.zoomy
         else:
             return CELL_HEIGHT_IN_PX
-
-    def max_cell_width(self, zoom=True):
-        max_subdiv = self._calc_max_subdiv(zoom=zoom)
-        return self.cell_width(min(self.subdiv, max_subdiv), zoom=zoom)
         
     def row(self, x, zoom=True):
         return int(x / self.cell_width(zoom=zoom))
