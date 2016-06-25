@@ -1,5 +1,6 @@
 from Tkinter import *
-from ..helper import dummy
+from src.helper import dummy
+
 
 class PianoRollMenu(Menu):
 

@@ -1,7 +1,7 @@
 from Tkinter import *
 from ttk import Combobox
-from ..const import SNAP_DICT
-from ..helper import dummy
+from src.const import SNAP_DICT
+from src.helper import dummy
 
 
 class SnapFrame(Frame):

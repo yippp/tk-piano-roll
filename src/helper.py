@@ -49,10 +49,10 @@ def save_song(filename, song_data):
     f = open(filename, 'w')
 
     notes = song_data['notes']
-    length = song_data['length']
+    end = song_data['end']
     timesig = song_data['timesig']
 
-    f.write("{0} {1} {2};\n".format(*[str(x) for x in length]))
+    f.write("{0} {1} {2};\n".format(*[str(x) for x in end]))
     f.write("{0} {1};\n".format(*timesig))
 
     for note in notes:
@@ -70,7 +70,7 @@ def load_song(filename):
 
     with open(filename, 'r') as f:
         try:
-            length = map(
+            end = map(
                 lambda n: int(n),
                 f.readline().strip()[:-1].split(" "))
 
@@ -98,7 +98,7 @@ def load_song(filename):
 
             return {
                 'notes': notes,
-                'length': length,
+                'end': end,
                 'timesig': timesig
             }
 

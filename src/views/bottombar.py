@@ -1,5 +1,5 @@
 from Tkinter import *
-from length_frame import LengthFrame
+from end_frame import EndFrame
 from timesig_frame import TimeSigFrame
 
 
@@ -13,20 +13,20 @@ class BottomBar(Frame):
 
     def _init_ui(self, callbacks):
         self.timesig_frame = TimeSigFrame(self, callbacks['timesig'])
-        self.length_frame = LengthFrame(self, callbacks['length'])
+        self.end_frame = EndFrame(self, callbacks['end'])
 
         self.timesig_frame.grid(row=0, column=0, sticky=W)
-        self.length_frame.grid(row=0, column=2, sticky=E)
+        self.end_frame.grid(row=0, column=2, sticky=E)
         self.grid_columnconfigure(0, weight=1)
 
-    def set_length(self, length):
-        self.length_frame.set_length(length)
+    def set_end(self, end):
+        self.end_frame.set_end(end)
 
     def set_timesig(self, timesig):
         self.timesig_frame.set_timesig(timesig)
 
     def set_max_beat(self, max_beat):
-        self.length_frame.set_max_beat(max_beat)
+        self.end_frame.set_max_beat(max_beat)
 
     def set_max_tick(self, max_tick):
-        self.length_frame.set_max_tick(max_tick)
+        self.end_frame.set_max_tick(max_tick)

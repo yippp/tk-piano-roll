@@ -14,13 +14,13 @@ class GridState(object):
     SUBDIV_BU = -2
     
     def __init__(self, subdiv, beat_count, beat_unit,
-        length, zoomx, zoomy):
+        end, zoomx, zoomy):
         self.beat_count = beat_count
         self.beat_unit = beat_unit
         self.subdiv = subdiv
         self.zoomx = zoomx
         self.zoomy = zoomy
-        self.length = length
+        self.end = end
 
     def __sub__(self, other):
         if not isinstance(other, GridState):
@@ -35,12 +35,12 @@ class GridState(object):
 
     def copy(self):
         return GridState(self.subdiv, self.beat_count, self.beat_unit,
-            self.length, self.zoomx, self.zoomy)
+            self.end, self.zoomx, self.zoomy)
         
     def width(self, zoom=True):
         from helper import to_ticks
 
-        bar, beat, tick = self.length
+        bar, beat, tick = self.end
         zoomx = self.zoomx if zoom else 1
         return to_ticks(
             bar - 1, beat - 1, tick_to_px(tick),

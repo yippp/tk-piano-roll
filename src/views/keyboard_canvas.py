@@ -1,15 +1,15 @@
 from Tkinter import *
 from tkFont import Font
-from ..rect import Rect
+from src.rect import Rect
 from include.custom_canvas import CustomCanvas
-from .. helper import to_pitchname
-from ..const import (KEYS_IN_OCTAVE,
+from src.helper import to_pitchname
+from src.const import (KEYS_IN_OCTAVE,
     KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
 
 
 class KeyboardCanvas(CustomCanvas):
 
-    CANVAS_WIDTH = 128
+    CANVAS_WIDTH = 100
 
     LAYER_KEY_BLACK = 0
     LAYER_KEY_WHITE = 1
@@ -34,15 +34,19 @@ class KeyboardCanvas(CustomCanvas):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self.config(width=KeyboardCanvas.CANVAS_WIDTH)
         self._init_data(gstate)
+        self._init_ui()
         self._update_scrollregion()
-        self._draw()
         self.yview_moveto(0)
+        self._draw()
 
     def _init_data(self, state):
         self._gstate = state
         self._font = Font(family='sans-serif', size=9)
+
+    def _init_ui(self):
+        self.config(
+            width=KeyboardCanvas.CANVAS_WIDTH, bg='white')
 
     def _draw(self):
         cell_height = self._gstate.cell_height()

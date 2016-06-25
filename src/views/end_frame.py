@@ -1,36 +1,37 @@
 from sys import maxsize
 from Tkinter import *
 from include.custom_spinbox import CustomSpinbox
-from ..const import TICKS_PER_QUARTER_NOTE
+from src.const import TICKS_PER_QUARTER_NOTE
 
 
-
-class LengthFrame(LabelFrame):
+class EndFrame(LabelFrame):
 
     SPINBOX_WIDTH = 5
 
     def __init__(self, parent, cb=lambda *args: None):
-        LabelFrame.__init__(self, parent, text="Length", padx=4, pady=4)
+        LabelFrame.__init__(self, parent)
         self.parent = parent
         self._cb = cb
 
         self._init_ui()
 
     def _init_ui(self):
+        self.config(text="End", padx=4, pady=4)
+
         self.bar_spinbox = CustomSpinbox(
             self, from_=1, to=maxsize,
-            width=LengthFrame.SPINBOX_WIDTH)
+            width=EndFrame.SPINBOX_WIDTH)
         self.bar_spinbox.set('2')
         self.bar_spinbox.on_value_change(self._forward)
 
         self.beat_spinbox = CustomSpinbox(
             self, from_=1, to=4,
-            width=LengthFrame.SPINBOX_WIDTH)
+            width=EndFrame.SPINBOX_WIDTH)
         self.beat_spinbox.on_value_change(self._forward)
 
         self.tick_spinbox = CustomSpinbox(
             self, from_=0, to= TICKS_PER_QUARTER_NOTE - 1,
-            width=LengthFrame.SPINBOX_WIDTH)
+            width=EndFrame.SPINBOX_WIDTH)
         self.tick_spinbox.on_value_change(self._forward)
 
         self.after_idle(Widget.nametowidget(
@@ -50,8 +51,8 @@ class LengthFrame(LabelFrame):
         tick = int(self.tick_spinbox.get())
         self._cb((bar, beat, tick))
 
-    def set_length(self, length):
-        bar, beat, tick = length
+    def set_end(self, end):
+        bar, beat, tick = end
         self.bar_spinbox.set(bar)
         self.beat_spinbox.set(beat)
         self.tick_spinbox.set(tick)

@@ -1,12 +1,12 @@
 import math
 from Tkinter import *
 from include.custom_canvas import CustomCanvas
-from ..note import Note
-from ..note_list import NoteList
-from ..rect import Rect
-from ..mouse_state import MouseState
-from ..helper import (get_image_path, px_to_tick)
-from ..const import (
+from src.note import Note
+from src.note_list import NoteList
+from src.rect import Rect
+from src.mouse_state import MouseState
+from src.helper import (get_image_path, px_to_tick)
+from src.const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
 
@@ -463,7 +463,7 @@ class GridCanvas(CustomCanvas):
             self._update_visibleregion()
             self.delete(ALL)
             self._draw_all()
-        if any(x in diff for x in ['beat_count', 'beat_unit', 'length']):
+        if any(x in diff for x in ['beat_count', 'beat_unit', 'end']):
             self._update_scrollregion()
             self.delete(*self.find_withtags('line'))
             self.delete(*self.find_withtags('sharp_row'))

@@ -5,7 +5,7 @@ from keyboard_canvas import KeyboardCanvas
 from grid_canvas import GridCanvas
 from scrollbar_frame import ScrollbarFrame
 from include.with_border import WithBorder
-from ..grid import Grid
+from src.grid import Grid
 
 
 class PianoRollFrame(Frame):
@@ -123,25 +123,25 @@ class PianoRollFrame(Frame):
         timesig = (self._grid.beat_count, self._grid.beat_unit)
         return {
             'notes': self.grid_canvas.note_list.notes,
-            'length': self._grid.length,
+            'end': self._grid.end,
             'timesig': timesig
         }
 
-    def set_subdiv(self, value):
-        if self._grid.subdiv != value:
-            self._grid.subdiv = value
+    def set_subdiv(self, subdiv):
+        if self._grid.subdiv != subdiv:
+            self._grid.subdiv = subdiv
 
-    def set_zoomx(self, value):
-        if self._grid.zoomx != value:
-            self._grid.zoomx = value
+    def set_zoomx(self, zoomx):
+        if self._grid.zoomx != zoomx:
+            self._grid.zoomx = zoomx
 
-    def set_zoomy(self, value):
-        if self._grid.zoomy != value:
-            self._grid.zoomy = value
+    def set_zoomy(self, zoomy):
+        if self._grid.zoomy != zoomy:
+            self._grid.zoomy = zoomy
 
-    def set_length(self, value):
-        if self._grid.length != value:
-            self._grid.length = value
+    def set_end(self, end):
+        if self._grid.end != end:
+            self._grid.end = end
 
             dirty_cb = self._callbacks.get('dirty')
             if dirty_cb: dirty_cb(True)

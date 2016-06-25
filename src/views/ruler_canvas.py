@@ -44,7 +44,7 @@ class RulerCanvas(CustomCanvas):
         canvas_height = int(self.config('height')[4])
         grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
-        bar = self._gstate.length[0]
+        bar = self._gstate.end[0]
         beat_count = self._gstate.beat_count
 
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
@@ -82,7 +82,7 @@ class RulerCanvas(CustomCanvas):
         canvas_height = int(self.config('height')[4])
         grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
-        bar = self._gstate.length[0]
+        bar = self._gstate.end[0]
         beat_count = self._gstate.beat_count
 
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')

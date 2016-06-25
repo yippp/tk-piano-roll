@@ -1,7 +1,7 @@
 from Tkinter import *
 from ttk import Combobox
 from include.custom_spinbox import CustomSpinbox
-from ..helper import dummy
+from src.helper import dummy
 
 
 class TimeSigFrame(LabelFrame):

@@ -6,9 +6,9 @@ from piano_roll_menu import PianoRollMenu
 from piano_roll_frame import PianoRollFrame
 from toolbar import Toolbar
 from bottombar import BottomBar
-from ..helper import (make_title,
+from src.helper import (make_title,
     save_song, load_song, to_ticks)
-from ..paths import ICON_IMG_PATH
+from src.paths import ICON_IMG_PATH
 
 
 class PianoRoll(Frame):
@@ -40,7 +40,7 @@ class PianoRoll(Frame):
         }
 
         bottombar_cb = {
-            'length': self.set_canvas_length,
+            'end': self.set_canvas_end,
             'timesig': self.set_canvas_timesig
         }
 
@@ -87,7 +87,7 @@ class PianoRoll(Frame):
                 else:
                     clear_notes = self._save_as_cmd()
 
-        self.set_bottombar_length((2, 1, 0))
+        self.set_bottombar_end((2, 1, 0))
         self.set_bottombar_timesig((4, 4))
         if clear_notes:
             self.piano_roll_frame.grid_canvas.remove_note('all')
@@ -117,7 +117,7 @@ class PianoRoll(Frame):
         self._filepath = filename
 
         song_data = load_song(filename)
-        self.set_bottombar_length(song_data['length'])
+        self.set_bottombar_end(song_data['end'])
         self.set_bottombar_timesig(song_data['timesig'])
         self.piano_roll_frame.setup(song_data['notes'])
 
@@ -177,11 +177,11 @@ class PianoRoll(Frame):
     def set_zoomy(self, zoomy):
         self.piano_roll_frame.set_zoomy(zoomy)
 
-    def set_canvas_length(self, length):
-        self.piano_roll_frame.set_length(length)
+    def set_canvas_end(self, end):
+        self.piano_roll_frame.set_end(end)
 
-    def set_bottombar_length(self, length):
-        self.bottombar.set_length(length)
+    def set_bottombar_end(self, end):
+        self.bottombar.set_end(end)
 
     def set_canvas_tool(self, tool):
         self.piano_roll_frame.grid_canvas.set_tool(tool)
