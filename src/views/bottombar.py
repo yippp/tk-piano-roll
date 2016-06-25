@@ -25,5 +25,8 @@ class BottomBar(Frame):
     def set_timesig(self, timesig):
         self.timesig_frame.set_timesig(timesig)
 
-    def set_max_beat_count(self, value):
-        self.length_frame.set_max_beat(value)
+    def set_max_beat(self, max_beat):
+        self.length_frame.set_max_beat(max_beat)
+
+    def set_max_tick(self, max_tick):
+        self.length_frame.set_max_tick(max_tick)

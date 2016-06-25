@@ -17,9 +17,9 @@ class Toolbar(Frame):
         self.zoom_frame = ZoomFrame(self, callbacks['zoom'])
         self.toolbox = Toolbox(self, callbacks['tool'])
 
-        self.snap_frame.pack(side=LEFT)
-        self.toolbox.pack(side=LEFT)
         self.zoom_frame.pack(side=RIGHT)
+        self.snap_frame.pack(side=LEFT)
+        self.toolbox.pack(side=LEFT, padx=10)
 
     def set_tool(self, value):
         self.toolbox.set(value)

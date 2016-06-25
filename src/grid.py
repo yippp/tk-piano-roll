@@ -5,10 +5,10 @@ TMP_LENGTH = (2, 1, 0)
 class Grid(object):
 
     def __init__(self, beat_count=4, beat_unit=4, subdiv=0, zoomx=1,
-        zoomy=1, length=TMP_LENGTH):
+        zoomy=0.5, length=TMP_LENGTH):
         self._listeners = []
-        self._state = GridState(beat_count, beat_unit, subdiv,
-            zoomx, zoomy, length)
+        self._state = GridState(subdiv, beat_count, beat_unit,
+            length, zoomx, zoomy)
 
     @property
     def beat_count(self):

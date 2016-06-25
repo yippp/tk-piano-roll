@@ -2,21 +2,26 @@ import math
 from Tkinter import *
 from tkFont import Font
 from include.custom_canvas import CustomCanvas
+from src.rect import Rect
 
 
 class RulerCanvas(CustomCanvas):
 
-    CANVAS_HEIGHT = 32
+    CANVAS_HEIGHT = 36
     TEXT_OFFSET = 4
 
-    LAYER_LINE = 0
-    LAYER_TEXT = 0
+    LAYER_LINE_END = 0
+    LAYER_MARKER_TEXT = 1
+    LAYER_MARKER_RECT = 2
+    LAYER_LINE_NORMAL = 3
+    LAYER_TEXT = 3
 
-    COLOR_LINE_NORMAL = '#CCCCCC'
-    COLOR_LINE_BAR = '#808080'
-    COLOR_LINE_END = '#0000FF'
     COLOR_CANVAS_OUTLINE_NORMAL = "#000000"
     COLOR_CANVAS_OUTLINE_HIGHLIGHT = "#3399FF"
+    COLOR_LINE_NORMAL = '#CCCCCC'
+    COLOR_LINE_BAR = '#000000'
+    COLOR_LINE_END = '#FF0000'
+    COLOR_MARKER_RECT = '#FFCCCC'
 
     def __init__(self, parent, gstate, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
@@ -35,10 +40,6 @@ class RulerCanvas(CustomCanvas):
     def _bind_event_handlers(self):
         self.bind('<Configure>', self._on_window_resize)
 
-    def _draw_all(self):
-        self._draw_lines()
-        self._draw_text()
-
     def _draw_lines(self):
         canvas_height = int(self.config('height')[4])
         grid_width = self._gstate.width()
@@ -46,12 +47,11 @@ class RulerCanvas(CustomCanvas):
         bar = self._gstate.length[0]
         beat_count = self._gstate.beat_count
 
-        normal_cell_width = self._gstate.cell_width()
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
         text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
         min_cell_width = self._gstate.min_cell_width(
             text_width + RulerCanvas.TEXT_OFFSET)
-        cell_width = max(normal_cell_width, bu_cell_width, min_cell_width)
+        cell_width = max(bu_cell_width, min_cell_width)
 
         bar_start = int(self._visibleregion[0] / bar_width)
         nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
@@ -69,12 +69,12 @@ class RulerCanvas(CustomCanvas):
                     color = RulerCanvas.COLOR_LINE_NORMAL
 
                 self.add_to_layer(
-                    RulerCanvas.LAYER_LINE, self.create_line,
+                    RulerCanvas.LAYER_LINE_NORMAL, self.create_line,
                     (x, 0, x, canvas_height), fill=color)
 
 
         self.add_to_layer(
-            RulerCanvas.LAYER_LINE, self.create_line,
+            RulerCanvas.LAYER_LINE_END, self.create_line,
             (grid_width, 0, grid_width, RulerCanvas.CANVAS_HEIGHT),
             fill=RulerCanvas.COLOR_LINE_END)
 
@@ -85,12 +85,14 @@ class RulerCanvas(CustomCanvas):
         bar = self._gstate.length[0]
         beat_count = self._gstate.beat_count
 
-        normal_cell_width = self._gstate.cell_width()
         bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
         text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
         min_cell_width = self._gstate.min_cell_width(
             text_width + RulerCanvas.TEXT_OFFSET)
-        cell_width = max(normal_cell_width, bu_cell_width, min_cell_width)
+        cell_width = max(bu_cell_width, min_cell_width)
+
+        if cell_width < text_width + RulerCanvas.TEXT_OFFSET:
+            return
 
         bar_start = int(self._visibleregion[0] / bar_width)
         nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
@@ -108,12 +110,31 @@ class RulerCanvas(CustomCanvas):
                 self.add_to_layer(RulerCanvas.LAYER_TEXT, self.create_text,
                     (x, canvas_height), text=text, anchor=SW, font=self._font)
 
+    def _draw_end_marker(self):
+        grid_width = self._gstate.width()
+
+        marker_rect = Rect(
+            right=grid_width, top=0, width=12, height=16)
+        x1 = marker_rect.left
+        y1 = marker_rect.top
+        x2 = marker_rect.right
+        y2 = marker_rect.bottom
+        self.add_to_layer(
+            RulerCanvas.LAYER_MARKER_RECT, self.create_rectangle,
+            (x1, y1, x2, y2), fill=RulerCanvas.COLOR_MARKER_RECT,
+            outline=RulerCanvas.COLOR_LINE_END, tags='marker')
+
+        self.add_to_layer(
+            RulerCanvas.LAYER_MARKER_TEXT, self.create_text,
+                (x1 + 3, y1 + 1), text='E', anchor=NW, tags='marker')
+
     def _update(self):
         self._update_visibleregion()
         self._update_scrollregion()
         self.delete(ALL)
         self._draw_lines()
         self._draw_text()
+        self._draw_end_marker()
 
     def _update_visibleregion(self):
         vr_left = self.canvasx(0)

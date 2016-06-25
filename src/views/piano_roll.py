@@ -7,7 +7,7 @@ from piano_roll_frame import PianoRollFrame
 from toolbar import Toolbar
 from bottombar import BottomBar
 from ..helper import (make_title,
-    save_song, load_song)
+    save_song, load_song, to_ticks)
 from ..paths import ICON_IMG_PATH
 
 
@@ -95,7 +95,7 @@ class PianoRoll(Frame):
 
     def _open_cmd(self):
         if self._dirty:
-            title = "New Score"
+            title = "Open Score"
             msg = "Save changes before opening a new score?"
             answer = askyesnocancel(title, msg)
 
@@ -152,7 +152,7 @@ class PianoRoll(Frame):
 
     def _exit_cmd(self):
         if self._dirty:
-            title = "New Score"
+            title = "Exit"
             msg = "Save changes before exiting?"
             answer = askyesnocancel(title, msg)
 
@@ -189,7 +189,10 @@ class PianoRoll(Frame):
 
     def set_canvas_timesig(self, timesig):
         self.piano_roll_frame.set_timesig(timesig)
-        self.bottombar.set_max_beat_count(timesig[0])
+        self.bottombar.set_max_beat(timesig[0])
+
+        max_tick = to_ticks(bars=0, beats=1, bu=timesig[1])
+        self.bottombar.set_max_tick(max_tick)
 
     def set_bottombar_timesig(self, timesig):
         self.bottombar.set_timesig(timesig)

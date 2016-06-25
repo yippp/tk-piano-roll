@@ -5,9 +5,7 @@ from ..note import Note
 from ..note_list import NoteList
 from ..rect import Rect
 from ..mouse_state import MouseState
-from ..helper import px_to_tick
-from ..paths import (CURSOR_SEL_IMG_PATH,
-    CURSOR_PEN_IMG_PATH, CURSOR_ERASER_IMG_PATH)
+from ..helper import (get_image_path, px_to_tick)
 from ..const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
@@ -38,8 +36,8 @@ class GridCanvas(CustomCanvas):
     TOOL_ERASER = 2
 
     COLOR_LINE_NORMAL = "#CCCCCC"
-    COLOR_LINE_BAR = "#808080"
-    COLOR_LINE_END = "#0000FF"
+    COLOR_LINE_BAR = "#000000"
+    COLOR_LINE_END = "#FF0000"
     COLOR_NOTE_OUTLINE_NORMAL = "#000000"
     COLOR_NOTE_OUTLINE_SEL = "#FF0000"
     COLOR_NOTE_FILL_NORMAL = "#FF0000"
@@ -56,14 +54,6 @@ class GridCanvas(CustomCanvas):
 
         self.xview_moveto(0)
         self.yview_moveto(0)
-
-    def _init_ui(self):
-        cursor_img_path = "@{} black".format(CURSOR_SEL_IMG_PATH)
-
-        self.config(
-            width=GridCanvas.CANVAS_WIDTH,
-            height=GridCanvas.CANVAS_HEIGHT,
-            bg='white', cursor=cursor_img_path)
 
     def _init_data(self, gstate, callbacks):
         self._gstate = gstate
@@ -82,6 +72,17 @@ class GridCanvas(CustomCanvas):
         self._visibleregion = [0, 0, vs_width, vs_height]
         scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=scrollregion)
+
+    def _init_ui(self):
+        self.config(
+            width=GridCanvas.CANVAS_WIDTH,
+            height=GridCanvas.CANVAS_HEIGHT,
+            bg='white')
+
+        if sys.platform in ['linux', 'linux2']:
+            cursor_spec = "@{} black".format(
+                get_image_path('cursor_sel.xbm'))
+            self.config(cursor=cursor_spec)
 
     def _bind_event_handlers(self):
         self.bind('<Configure>', self._on_window_resize)
@@ -476,13 +477,14 @@ class GridCanvas(CustomCanvas):
     def set_tool(self, value):
         self._tool = value
 
-        paths = {
-            0: CURSOR_SEL_IMG_PATH,
-            1: CURSOR_PEN_IMG_PATH,
-            2: CURSOR_ERASER_IMG_PATH
-        }
-        cursor_img_path = "@{} black".format(paths[value])
-        self.config(cursor=cursor_img_path)
+        if sys.platform in ['linux', 'linux2']:
+            paths = {
+                0: get_image_path('cursor_sel.xbm'),
+                1: get_image_path('cursor_pen.xbm'),
+                2: get_image_path('cursor_eraser.xbm')
+            }
+            cursor_img_path = "@{} black".format(paths[value])
+            self.config(cursor=cursor_img_path)
 
     def add_note(self, note):
         note.id = self._draw_notes(note)[0][1]

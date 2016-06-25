@@ -1,4 +1,5 @@
 import math
+from helper import tick_to_px
 from const import *
 
 TMP_LENGTH = (2, 1, 0)
@@ -12,8 +13,8 @@ class GridState(object):
     SUBDIV_CUR = -1
     SUBDIV_BU = -2
     
-    def __init__(self, beat_count=4, beat_unit=4, subdiv=0, zoomx=1,
-        zoomy=1, length=TMP_LENGTH):
+    def __init__(self, subdiv, beat_count, beat_unit,
+        length, zoomx, zoomy):
         self.beat_count = beat_count
         self.beat_unit = beat_unit
         self.subdiv = subdiv
@@ -33,15 +34,16 @@ class GridState(object):
         return diff
 
     def copy(self):
-        return GridState(self.beat_count, self.beat_unit, self.subdiv,
-            self.zoomx, self.zoomy, self.length)
+        return GridState(self.subdiv, self.beat_count, self.beat_unit,
+            self.length, self.zoomx, self.zoomy)
         
     def width(self, zoom=True):
         from helper import to_ticks
 
         bar, beat, tick = self.length
         zoomx = self.zoomx if zoom else 1
-        return to_ticks(bar - 1, beat - 1, tick,
+        return to_ticks(
+            bar - 1, beat - 1, tick_to_px(tick),
             self.beat_count, self.beat_unit,
             tpq=QUARTER_NOTE_WIDTH) * zoomx
 
@@ -52,7 +54,8 @@ class GridState(object):
         from helper import to_ticks
         zoomx = self.zoomx if zoom else 1
 
-        return to_ticks(bpb=self.beat_count, bu=self.beat_unit,
+        return to_ticks(
+            bpb=self.beat_count, bu=self.beat_unit,
             tpq=QUARTER_NOTE_WIDTH) * zoomx
 
     def cell_width(self, subdiv=SUBDIV_CUR, zoom=True):
@@ -63,16 +66,20 @@ class GridState(object):
         else:
             _subdiv = subdiv
 
+        bar_width = self.bar_width(zoom)
+
         if _subdiv in [GridState.SUBDIV_BAR, 'bar_subdiv']:
-            return self.bar_width(zoom)
+            return bar_width
         else:
             zoomx = self.zoomx if zoom else 1
-            return 2 ** (2 - _subdiv) * QUARTER_NOTE_WIDTH * zoomx
+            return min(
+                2 ** (2 - _subdiv) * QUARTER_NOTE_WIDTH *
+                zoomx, bar_width)
 
     def min_cell_width(self, min_width, zoom=True):
         min_cell_width = self.cell_width(0, zoom)
         for i in range(1, len(SNAP_DICT)):
-            cw = self.cell_width(i, zoom)
+            cw = self.cell_width(subdiv=i)
             if cw >= min_width:
                min_cell_width = cw
 

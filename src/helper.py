@@ -1,3 +1,5 @@
+import os
+import sys
 from const import *
 
 def dummy(*args, **kwargs):
@@ -13,6 +15,11 @@ def isint(string):
 def make_title(name, dirty):
     return "{0}{1} - Piano Roll".format(
         "*" if dirty else "", name)
+
+def get_image_path(filename):
+    this_path = os.path.dirname(os.path.abspath(__file__))
+    return "{1}{0}..{0}images{0}{2}".format(
+        os.sep, this_path, filename)
 
 def to_pitchname(midinumber):
     return PITCHNAMES[midinumber % 12]

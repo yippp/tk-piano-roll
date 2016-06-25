@@ -107,7 +107,7 @@ class PianoRollFrame(Frame):
         self.grid_canvas.yview(*args)
 
     def setup(self, notes):
-        self.grid_canvas.remove_notes(GridCanvas.ALL)
+        self.grid_canvas.remove_note(GridCanvas.ALL)
         for note in notes:
             self.grid_canvas.add_note(note)
 
