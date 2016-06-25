@@ -36,16 +36,18 @@ class PianoRoll(Frame):
 
         toolbar_cb = {
             'snap': self.set_snap,
-            'zoom': {
-                'zoomx': self.set_zoomx,
-                'zoomy': self.set_zoomy
-            },
             'tool': self.set_canvas_tool
         }
 
         bottombar_cb = {
             'length': self.set_canvas_length,
             'timesig': self.set_canvas_timesig
+        }
+
+        piano_roll_frame_cb = {
+            'dirty': self.set_dirty,
+            'zoomx': self.set_zoomx,
+            'zoomy': self.set_zoomy,
         }
 
         root = self._root()
@@ -61,7 +63,7 @@ class PianoRoll(Frame):
 
         self.toolbar = Toolbar(self, toolbar_cb)
         self.piano_roll_frame = PianoRollFrame(
-            self, lambda *args, **kwargs: self.set_dirty(True))
+            self, piano_roll_frame_cb)
         self.bottombar = BottomBar(self, bottombar_cb)
 
         self.toolbar.pack(side=TOP, fill=X)

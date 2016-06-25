@@ -1,6 +1,5 @@
 from Tkinter import *
 from snap_frame import SnapFrame
-from zoom_frame import ZoomFrame
 from toolbox import Toolbox
 
 
@@ -14,10 +13,8 @@ class Toolbar(Frame):
 
     def _init_ui(self, callbacks):
         self.snap_frame = SnapFrame(self, callbacks['snap'])
-        self.zoom_frame = ZoomFrame(self, callbacks['zoom'])
         self.toolbox = Toolbox(self, callbacks['tool'])
 
-        self.zoom_frame.pack(side=RIGHT)
         self.snap_frame.pack(side=LEFT)
         self.toolbox.pack(side=LEFT, padx=10)
 

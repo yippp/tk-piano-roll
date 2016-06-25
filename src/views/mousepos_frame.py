@@ -54,6 +54,5 @@ class MousePosFrame(Frame):
 
     def on_update(self, gstate):
         self._gstate = gstate
-        self.set_mousepos(*self._mouse_pos)
 
 

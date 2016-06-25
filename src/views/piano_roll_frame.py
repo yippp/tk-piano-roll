@@ -1,9 +1,9 @@
 from Tkinter import *
+from mousepos_frame import MousePosFrame
 from ruler_canvas import RulerCanvas
 from keyboard_canvas import KeyboardCanvas
 from grid_canvas import GridCanvas
-from mousepos_frame import MousePosFrame
-from include.auto_scrollbar import AutoScrollbar
+from scrollbar_frame import ScrollbarFrame
 from include.with_border import WithBorder
 from ..grid import Grid
 
@@ -15,21 +15,25 @@ class PianoRollFrame(Frame):
     COLOR_BORDER_DEFAULT = "#000000"
     COLOR_BORDER_SELECTED = "#3399FF"
 
-    def __init__(self, parent, dirty_cb, **kwargs):
+    def __init__(self, parent, callbacks, **kwargs):
         Frame.__init__(self, parent, **kwargs)
         self.parent = parent
-        self._on_state_change = dirty_cb
 
-        self._init_data()
-        self._init_ui(dirty_cb)
+        self._init_data(callbacks)
+        self._init_ui()
         self._bind_event_handlers()
 
-    def _init_data(self):
+    def _init_data(self, callbacks):
         self._grid = Grid()
+        self._callbacks = callbacks
 
-    def _init_ui(self, dirty_cb):
-        self.hbar = AutoScrollbar(self, orient=HORIZONTAL)
-        self.vbar = AutoScrollbar(self, orient=VERTICAL)
+    def _init_ui(self):
+        self.hbar_frame = ScrollbarFrame(
+            self, HORIZONTAL,
+            self._callbacks.get('zoomx'))
+        self.vbar_frame = ScrollbarFrame(
+            self, VERTICAL,
+            self._callbacks.get('zoomy'))
 
         gstate = self._grid.get_state()
         self.mousepos_frame = WithBorder(
@@ -38,45 +42,49 @@ class PianoRollFrame(Frame):
             bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
         self.ruler_canvas = WithBorder(
             self, RulerCanvas, gstate, borderwidth=2, padding=3,
+            xscrollcommand=self.hbar_frame.scrollbar.set,
             bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
-            xscrollcommand=self.hbar.set)
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
         self.keyboard_canvas = WithBorder(
             self, KeyboardCanvas, gstate, borderwidth=2, padding=3,
+            yscrollcommand=self.vbar_frame.scrollbar.set,
             bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
-            yscrollcommand=self.vbar.set)
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
 
-        callbacks = {
+        grid_canvas_callbacks = {
             'mousepos': self._on_mouse_motion,
-            'dirty': dirty_cb,
+            'dirty': self._callbacks.get('dirty'),
         }
 
         self.grid_canvas = WithBorder(
-            self, GridCanvas, gstate, callbacks, borderwidth=2, padding=3,
+            self, GridCanvas, gstate, grid_canvas_callbacks,
+            borderwidth=2, padding=3,
+            xscrollcommand=self.hbar_frame.scrollbar.set,
+            yscrollcommand=self.vbar_frame.scrollbar.set,
             bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED,
-            xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
+            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
+
+        self.hbar_frame.scrollbar.config(command=self._xview)
+        self.vbar_frame.scrollbar.config(command=self._yview)
 
         self._grid.register_listener(self.mousepos_frame.on_update)
         self._grid.register_listener(self.keyboard_canvas.on_update)
         self._grid.register_listener(self.ruler_canvas.on_update)
         self._grid.register_listener(self.grid_canvas.on_update)
 
-        self.hbar.config(command=self._xview)
-        self.vbar.config(command=self._yview)
+        self.mousepos_frame.grid(row=0, column=0,
+            sticky=W+N+E+S, padx=8, pady=8)
+        self.ruler_canvas.grid(row=0, column=1,
+            sticky=W+N+E+S, padx=(0, 8), pady=8)
+        self.keyboard_canvas.grid(row=1, column=0,
+            sticky=W+N+E+S, padx=8, pady=(0, 8))
+        self.grid_canvas.grid(row=1, column=1,
+            sticky=W+N+E+S, padx=(0, 8), pady=(0, 8))
 
-        self.mousepos_frame.grid(row=0, column=0, sticky=W+N+E+S,
-            padx=8, pady=8)
-        self.ruler_canvas.grid(row=0, column=1, sticky=W+N+E+S,
-            padx=(0, 8), pady=8)
-        self.keyboard_canvas.grid(row=1, column=0, sticky=W+N+E+S,
-            padx=8, pady=(0, 8))
-        self.grid_canvas.grid(row=1, column=1, sticky=W+N+E+S,
-            padx=(0, 8), pady=(0, 8))
-
-        self.hbar.grid(row=2, column=0, columnspan=3, sticky=E+W)
-        self.vbar.grid(row=0, column=2, sticky=N+S, rowspan=2)
+        self.vbar_frame.grid(
+            row=0, column=2, rowspan=2, sticky=N+S, pady=8)
+        self.hbar_frame.grid(
+            row=2, column=0, columnspan=2, sticky=E+W, padx=8)
 
         self.grid_rowconfigure(1, weight=2)
         self.grid_columnconfigure(0, weight=0)
@@ -134,7 +142,9 @@ class PianoRollFrame(Frame):
     def set_length(self, value):
         if self._grid.length != value:
             self._grid.length = value
-            self._on_state_change()
+
+            dirty_cb = self._callbacks.get('dirty')
+            if dirty_cb: dirty_cb(True)
 
     def set_timesig(self, timesig):
         beat_count, beat_unit = timesig
@@ -142,4 +152,6 @@ class PianoRollFrame(Frame):
             self._grid.beat_unit != beat_unit):
             self._grid.beat_count = beat_count
             self._grid.beat_unit = beat_unit
-            self._on_state_change()
+
+            dirty_cb = self._callbacks.get('dirty')
+            if dirty_cb: dirty_cb(True)
