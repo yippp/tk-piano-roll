@@ -4,14 +4,15 @@ from src.helper import dummy, isint
 
 class CustomSpinbox(Spinbox):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, cb=dummy, **kwargs):
         start = kwargs.pop('start','')
-        Spinbox.__init__(self, *args, **kwargs)
+        Spinbox.__init__(self, parent, **kwargs)
+        self.parent = parent
 
-        self._init_data(str(start))
+        self._init_data(str(start), cb)
         self._bind_event_handlers()
 
-    def _init_data(self, start):
+    def _init_data(self, start, callback):
         from_ = str(int(self.config()['from'][4]))
         self._curr_value = start if start else from_
         self._prev_value = self._curr_value
@@ -22,7 +23,8 @@ class CustomSpinbox(Spinbox):
         self.config(textvariable=self._var, state='readonly')
         self.set(self._curr_value)
 
-        self._on_value_change = dummy
+        self._on_value_change = callback
+        self.config(command=self._on_value_change)
 
     def _update(self, *args):
         self._curr_value = self._var.get()
@@ -60,17 +62,24 @@ class CustomSpinbox(Spinbox):
         self.after_idle(self.icursor, END)
 
     def _validate(self):
-        if isint(self._curr_value):
-            value = int(self._curr_value)
-            to = int(self.config()['to'][4])
-            from_ = int(self.config()['from'][4])
-
-            if value < from_:
-                value = from_
-            elif value > to:
-                value = to
+        values = self.config('values')[4]
+        if values:
+            if self._curr_value in values:
+                value = self._curr_value
+            else:
+                value = self._prev_value
         else:
-            value = self._prev_value
+            if isint(self._curr_value):
+                value = int(self._curr_value)
+                to = int(self.config()['to'][4])
+                from_ = int(self.config()['from'][4])
+
+                if value < from_:
+                    value = from_
+                elif value > to:
+                    value = to
+            else:
+                value = self._prev_value
 
         return str(value)
 
@@ -87,7 +96,3 @@ class CustomSpinbox(Spinbox):
         if self._curr_value > to:
             self._curr_value = str(to)
         self.config(to=to)
-
-    def on_value_change(self, callback):
-        self._on_value_change = callback
-        self.config(command=self._on_value_change)

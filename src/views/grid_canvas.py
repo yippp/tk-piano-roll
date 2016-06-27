@@ -5,7 +5,8 @@ from src.note import Note
 from src.note_list import NoteList
 from src.rect import Rect
 from src.mouse_state import MouseState
-from src.helper import (get_image_path, px_to_tick)
+from src.helper import (get_image_path,
+    velocity_to_color, px_to_tick)
 from src.const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
@@ -38,10 +39,8 @@ class GridCanvas(CustomCanvas):
     COLOR_LINE_NORMAL = "#CCCCCC"
     COLOR_LINE_BAR = "#000000"
     COLOR_LINE_END = "#FF0000"
-    COLOR_NOTE_OUTLINE_NORMAL = "#000000"
-    COLOR_NOTE_OUTLINE_SEL = "#FF0000"
-    COLOR_NOTE_FILL_NORMAL = "#FF0000"
-    COLOR_NOTE_FILL_SEL = "#990000"
+    COLOR_NOTE_OUTLINE = "#000000"
+    COLOR_NOTE_FILL = "#0080FF"
     COLOR_SHARP_ROW = "#F1F3F3"
 
     def __init__(self, parent, gstate, callbacks={}, **kwargs):
@@ -191,15 +190,15 @@ class GridCanvas(CustomCanvas):
             y2 = y1 + rect.height * self._gstate.zoomy
             coords = (x1, y1, x2, y2)
 
-            outline_color = (GridCanvas.COLOR_NOTE_OUTLINE_SEL if
-                note.selected else GridCanvas.COLOR_NOTE_OUTLINE_NORMAL)
-            fill_color = (GridCanvas.COLOR_NOTE_FILL_SEL if
-                note.selected else GridCanvas.COLOR_NOTE_FILL_NORMAL)
+            outline_color = GridCanvas.COLOR_NOTE_OUTLINE
+            fill_color = velocity_to_color(
+                note.velocity, GridCanvas.COLOR_NOTE_FILL,
+                0.7 if note.selected else 1)
 
             new_id = self.add_to_layer(
                 GridCanvas.LAYER_RECT, self.create_rectangle,
                 coords, outline=outline_color,
-                fill=fill_color, tags='note')
+                fill=fill_color, width=1, tags='note')
 
             old_ids.append(note.id)
             new_ids.append(new_id)
@@ -486,10 +485,14 @@ class GridCanvas(CustomCanvas):
             cursor_img_path = "@{} black".format(paths[value])
             self.config(cursor=cursor_img_path)
 
-    def add_note(self, note):
-        note.id = self._draw_notes(note)[0][1]
-        self.note_list.add(note)
-        self._notes_on_click.add(note)
+    def add_note(self, *notes):
+        if not notes:
+            return
+
+        for note in notes:
+            note.id = self._draw_notes(note)[0][1]
+            self.note_list.add(note)
+            self._notes_on_click.add(note)
 
         if 'dirty' in self._callbacks:
             self._callbacks['dirty'](self.note_list.copy())
@@ -523,9 +526,16 @@ class GridCanvas(CustomCanvas):
         else:
             notes = (self.note_list.from_id(id) for id in args)
 
-        for note in notes:
-            self.itemconfig(note.id, fill=GridCanvas.COLOR_NOTE_FILL_SEL,
-                            outline=GridCanvas.COLOR_NOTE_OUTLINE_SEL)
+        key = lambda note: (note.onset, note.midinumber)
+        sorted_notes = sorted(notes, key=key)
+        velocity_cb = self._callbacks.get('velocity')
+        if velocity_cb:
+            velocity_cb(sorted_notes[0].velocity)
+
+        for note in sorted_notes:
+            fill_color = velocity_to_color(
+                note.velocity, GridCanvas.COLOR_NOTE_FILL, 0.7)
+            self.itemconfig(note.id, fill=fill_color)
             note.selected = True
 
     def deselect_note(self, *args):
@@ -539,9 +549,34 @@ class GridCanvas(CustomCanvas):
             notes = (self.note_list.from_id(id) for id in args)
 
         for note in notes:
-            self.itemconfig(note.id, fill=GridCanvas.COLOR_NOTE_FILL_NORMAL,
-                            outline=GridCanvas.COLOR_NOTE_OUTLINE_NORMAL)
+            fill_color = velocity_to_color(
+                note.velocity, GridCanvas.COLOR_NOTE_FILL, 1)
+            self.itemconfig(note.id, fill=fill_color)
             note.selected = False
+
+    def set_midinumber(self, midinumber):
+        pass
+
+    def set_velocity(self, velocity, *args):
+        argc = len(args)
+        if argc == 0:
+            return
+        if argc == 1 and args[0] in [GridCanvas.SEL, 'sel']:
+            note_list = self.note_list.copy_selected()
+        elif argc == 1 and args[0] in [GridCanvas.ALL, 'all']:
+            note_list = self.note_list.copy()
+        else:
+            notes = (self.note_list.from_id(id) for id in args)
+            note_list = NoteList(notes)
+
+        if note_list:
+            for note in note_list:
+                self.note_list.remove(note)
+                self.delete(note.id)
+                note.velocity = velocity
+                note.id = self._draw_notes(note)[0][1]
+                self.note_list.add(note)
+                self._notes_on_click.add(note)
 
     def xview(self, *args):
         self.delete(*self.find_withtags('line'))

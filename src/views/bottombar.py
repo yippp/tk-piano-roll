@@ -18,15 +18,3 @@ class BottomBar(Frame):
         self.timesig_frame.grid(row=0, column=0, sticky=W)
         self.end_frame.grid(row=0, column=2, sticky=E)
         self.grid_columnconfigure(0, weight=1)
-
-    def set_end(self, end):
-        self.end_frame.set_end(end)
-
-    def set_timesig(self, timesig):
-        self.timesig_frame.set_timesig(timesig)
-
-    def set_max_beat(self, max_beat):
-        self.end_frame.set_max_beat(max_beat)
-
-    def set_max_tick(self, max_tick):
-        self.end_frame.set_max_tick(max_tick)

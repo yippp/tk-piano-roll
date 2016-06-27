@@ -8,7 +8,7 @@ from include.with_border import WithBorder
 from src.grid import Grid
 
 
-class PianoRollFrame(Frame):
+class MainFrame(Frame):
 
     CTRL_MASK = 0x0004
 
@@ -38,22 +38,23 @@ class PianoRollFrame(Frame):
         gstate = self._grid.get_state()
         self.mousepos_frame = WithBorder(
             self, MousePosFrame, gstate, borderwidth=2, padding=3,
-            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
         self.ruler_canvas = WithBorder(
             self, RulerCanvas, gstate, borderwidth=2, padding=3,
             xscrollcommand=self.hbar_frame.scrollbar.set,
-            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
         self.keyboard_canvas = WithBorder(
             self, KeyboardCanvas, gstate, borderwidth=2, padding=3,
             yscrollcommand=self.vbar_frame.scrollbar.set,
-            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
 
         grid_canvas_callbacks = {
-            'mousepos': self._on_mouse_motion,
             'dirty': self._callbacks.get('dirty'),
+            'velocity': self._callbacks.get('velocity'),
+            'mousepos': self._on_mouse_motion,
         }
 
         self.grid_canvas = WithBorder(
@@ -61,8 +62,8 @@ class PianoRollFrame(Frame):
             borderwidth=2, padding=3,
             xscrollcommand=self.hbar_frame.scrollbar.set,
             yscrollcommand=self.vbar_frame.scrollbar.set,
-            bordercolordefault=PianoRollFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=PianoRollFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
+            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
 
         self.hbar_frame.scrollbar.config(command=self._xview)
         self.vbar_frame.scrollbar.config(command=self._yview)
@@ -98,8 +99,8 @@ class PianoRollFrame(Frame):
         self.bind_all('3', self._on_ctrl_num)
 
     def _on_ctrl_num(self, event):
-        ctrl_pressed = (event.state & PianoRollFrame.CTRL_MASK ==
-            PianoRollFrame.CTRL_MASK)
+        ctrl_pressed = (event.state & MainFrame.CTRL_MASK ==
+                        MainFrame.CTRL_MASK)
         if ctrl_pressed:
             self.parent.set_toolbox_tool(int(event.keysym) - 1)
 

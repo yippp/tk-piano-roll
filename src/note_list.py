@@ -6,15 +6,18 @@ class NoteList(object):
     def __init__(self, notes=()):
         self.notes = list(notes)
 
-    def __iter__(self):
-        for note in self.notes:
-            yield note
+    def __nonzero__(self):
+        return not not self.notes
 
     def __contains__(self, arg):
         if isinstance(arg, Note):
             return arg in self.notes
         elif isinstance(arg, (int, long)):
             return self.from_id(arg) != None
+
+    def __iter__(self):
+        for note in self.notes:
+            yield note
 
     def copy(self):
         return NoteList([note.copy() for note in self.notes])

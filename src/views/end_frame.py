@@ -19,20 +19,18 @@ class EndFrame(LabelFrame):
         self.config(text="End", padx=4, pady=4)
 
         self.bar_spinbox = CustomSpinbox(
-            self, from_=1, to=maxsize,
+            self, self._forward, from_=1, to=maxsize,
             width=EndFrame.SPINBOX_WIDTH)
         self.bar_spinbox.set('2')
-        self.bar_spinbox.on_value_change(self._forward)
 
         self.beat_spinbox = CustomSpinbox(
-            self, from_=1, to=4,
+            self, self._forward, from_=1, to=4,
             width=EndFrame.SPINBOX_WIDTH)
-        self.beat_spinbox.on_value_change(self._forward)
 
         self.tick_spinbox = CustomSpinbox(
-            self, from_=0, to= TICKS_PER_QUARTER_NOTE - 1,
+            self, self._forward, from_=0,
+            to= TICKS_PER_QUARTER_NOTE - 1,
             width=EndFrame.SPINBOX_WIDTH)
-        self.tick_spinbox.on_value_change(self._forward)
 
         self.after_idle(Widget.nametowidget(
             self.beat_spinbox, str(self.beat_spinbox)).config,

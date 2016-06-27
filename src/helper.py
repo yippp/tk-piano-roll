@@ -1,5 +1,4 @@
 import os
-import sys
 from const import *
 
 def dummy(*args, **kwargs):
@@ -12,6 +11,9 @@ def isint(string):
     except ValueError:
         return False
 
+def clamp(x, minimum, maximum):
+    return max(minimum, min(x, maximum))
+
 def make_title(name, dirty):
     return "{0}{1} - Piano Roll".format(
         "*" if dirty else "", name)
@@ -23,6 +25,31 @@ def get_image_path(filename):
 
 def to_pitchname(midinumber):
     return PITCHNAMES[midinumber % 12]
+
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16)
+        for i in range(0, lv, lv // 3))
+
+def rgb_to_hex(r, g, b):
+    from functools import partial
+    clp = partial(clamp, minimum=0, maximum=255)
+    return "#{0:02x}{1:02x}{2:02x}".format(
+        clp(r), clp(g), clp(b))
+
+def velocity_to_color(velocity, maxcolor, value):
+    from colorsys import rgb_to_hsv, hsv_to_rgb
+
+    to_percentage = lambda x: x / 255.0
+    from_percentage = lambda x: int(round(x * 255.0))
+
+    r, g, b = map(to_percentage, hex_to_rgb(maxcolor))
+    h, s, v = rgb_to_hsv(r, g, b)
+    s = velocity * 0.006299213 + 0.30
+    v *= value
+    r, g, b = map(from_percentage, hsv_to_rgb(h, s, v))
+    return rgb_to_hex(r, g, b)
 
 def to_ticks(bars=1, beats=0, ticks=0, bpb=4, bu=4,
     tpq=TICKS_PER_QUARTER_NOTE):

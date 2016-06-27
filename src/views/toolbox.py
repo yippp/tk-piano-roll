@@ -1,6 +1,6 @@
 from Tkinter import *
 
-from src.paths import *
+from src.helper import get_image_path
 
 
 class Toolbox(Frame):
@@ -18,21 +18,22 @@ class Toolbox(Frame):
     def _init_ui(self):
         self._var = IntVar()
 
-        self._bttn_images = {
-            'cursor': PhotoImage(file=SEL_IMG_PATH),
-            'eraser': PhotoImage(file=ERASER_IMG_PATH),
-            'pen':    PhotoImage(file=PEN_IMG_PATH)
-        }
+        self._cursor_image = PhotoImage(
+            file=get_image_path('sel.gif'))
+        self._pen_image = PhotoImage(
+            file=get_image_path('pen.gif'))
+        self._eraser_image = PhotoImage(
+            file=get_image_path('eraser.gif'))
 
-        self.cursor_bttn =  Radiobutton(self, value=0, variable=self._var,
-            indicatoron=0, image=self._bttn_images['cursor'],
-            offrelief=FLAT)
-        self.pen_bttn = Radiobutton(self, value=1, variable=self._var,
-            indicatoron=0, image=self._bttn_images['pen'],
-            offrelief=FLAT)
-        self.eraser_bttn = Radiobutton(self, value=2, variable=self._var,
-            indicatoron=0, image=self._bttn_images['eraser'],
-            offrelief=FLAT)
+        self.cursor_bttn =  Radiobutton(
+            self, value=0, variable=self._var, indicatoron=0,
+            image=self._cursor_image, offrelief=FLAT)
+        self.pen_bttn = Radiobutton(
+            self, value=1, variable=self._var, indicatoron=0,
+            image=self._pen_image, offrelief=FLAT)
+        self.eraser_bttn = Radiobutton(
+            self, value=2, variable=self._var, indicatoron=0,
+            image=self._eraser_image, offrelief=FLAT)
 
         self._var.trace("w", self._cb)
 
