@@ -22,7 +22,8 @@ class VelocityFrame(Frame):
         self.velocity_spinbox.pack(side=LEFT)
 
     def _forward(self):
-        self.cb(int(self.velocity_spinbox.get()))
+        value = int(self.velocity_spinbox.get())
+        self.cb('velocity', value)
 
-    def set_value(self, value):
+    def set_velocity(self, value):
         self.velocity_spinbox.set(value)

@@ -24,7 +24,14 @@ def get_image_path(filename):
         os.sep, this_path, filename)
 
 def to_pitchname(midinumber):
-    return PITCHNAMES[midinumber % 12]
+    note = PITCHNAMES[midinumber % 12]
+    octave = int(midinumber / 12) - 2
+    return "{0}{1}".format(note, octave)
+
+def to_midinumber(pitchname):
+    note = pitchname[:-1]
+    octave = int(pitchname[-1:])
+    return PITCHNAMES.index(note) + (octave + 2) * 12
 
 def hex_to_rgb(value):
     value = value.lstrip('#')

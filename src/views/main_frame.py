@@ -52,8 +52,8 @@ class MainFrame(Frame):
             bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
 
         grid_canvas_callbacks = {
-            'dirty': self._callbacks.get('dirty'),
-            'velocity': self._callbacks.get('velocity'),
+            'dirty': self._callbacks['dirty'],
+            'note': self._callbacks['note'],
             'mousepos': self._on_mouse_motion,
         }
 
@@ -102,7 +102,7 @@ class MainFrame(Frame):
         ctrl_pressed = (event.state & MainFrame.CTRL_MASK ==
                         MainFrame.CTRL_MASK)
         if ctrl_pressed:
-            self.parent.set_toolbox_tool(int(event.keysym) - 1)
+            self._callbacks['tool'](int(event.keysym) - 1)
 
     def _on_mouse_motion(self, x, y):
         self.mousepos_frame.set_mousepos(x, y)

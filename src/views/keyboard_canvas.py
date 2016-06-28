@@ -151,12 +151,12 @@ class KeyboardCanvas(CustomCanvas):
         keys_in_octaves = [KEYS_IN_LAST_OCTAVE] +[KEYS_IN_OCTAVE] * 10
 
         for nth_octave, keys_in_octave in zip(range(11), keys_in_octaves):
-            y_offset = sum(keys_in_octaves[:nth_octave + 1]) * cell_height
+            key_sum = sum(keys_in_octaves[:nth_octave + 1])
+            y_offset = key_sum * cell_height
             y_offset -= 7 if on_octave else cell_height / 2
             for i in range(keys_in_octave):
                 y = y_offset - i * cell_height
-                octave = KEYS_IN_LAST_OCTAVE - nth_octave
-                text = "{0}{1}".format(to_pitchname(i), octave)
+                text = to_pitchname(128 - i - key_sum)
                 self.add_to_layer(KeyboardCanvas.LAYER_TEXT,
                     self.create_text, (lpad - 4, y),
                     text=text, anchor=E, font=self._font)

@@ -7,7 +7,7 @@ from src.rect import Rect
 
 class RulerCanvas(CustomCanvas):
 
-    CANVAS_HEIGHT = 36
+    CANVAS_HEIGHT = 40
     TEXT_OFFSET = 4
 
     LAYER_LINE_END = 0

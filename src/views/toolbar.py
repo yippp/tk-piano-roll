@@ -1,7 +1,8 @@
 from Tkinter import *
+from ttk import Separator
 from snap_frame import SnapFrame
 from toolbox import Toolbox
-from velocity_frame import VelocityFrame
+from note_data_frame import NoteDataFrame
 
 
 class Toolbar(Frame):
@@ -15,12 +16,14 @@ class Toolbar(Frame):
     def _init_ui(self, callbacks):
         self.snap_frame = SnapFrame(self, callbacks['snap'])
         self.toolbox = Toolbox(self, callbacks['tool'])
-        self.velocity_frame = VelocityFrame(
-            self, callbacks['velocity'])
+        self.note_data_frame = NoteDataFrame(
+            self, callbacks['note'])
+        self.separator = Separator(self, orient=VERTICAL)
 
         self.snap_frame.pack(side=LEFT)
         self.toolbox.pack(side=LEFT, padx=10)
-        self.velocity_frame.pack(side=LEFT, padx=10)
+        self.separator.pack(side=LEFT, fill=Y)
+        self.note_data_frame.pack(side=LEFT, padx=10)
 
     def set_tool(self, value):
         self.toolbox.set(value)

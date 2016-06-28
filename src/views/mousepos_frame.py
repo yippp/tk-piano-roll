@@ -5,8 +5,6 @@ from src.helper import to_pitchname, to_notedur, px_to_tick
 
 class MousePosFrame(Frame):
 
-    FRAME_WIDTH = 128
-
     def __init__(self, parent, gstate):
         Frame.__init__(self, parent)
 
@@ -20,8 +18,6 @@ class MousePosFrame(Frame):
         self._font = Font(family='sens-serif', size=9)
 
     def _init_ui(self):
-        self.config(width=MousePosFrame.FRAME_WIDTH)
-
         self._pos_label = Label(
             self, bg='white', font=self._font)
         self._midinote_label = Label(
@@ -54,13 +50,10 @@ class MousePosFrame(Frame):
         pos[1] += 1
 
         midinumber = int((grid_height - y - 1) / cell_height)
-        octave = int(midinumber / 12) - 2
         pitchname = to_pitchname(midinumber)
 
         self._pos_label.config(text="{0}.{1}.{2}".format(*pos))
-        self._midinote_label.config(text=str("{0}{1}".format(
-                pitchname, octave)))
-
+        self._midinote_label.config(text=pitchname)
         self._mouse_pos = (x, y)
 
     def on_update(self, gstate):

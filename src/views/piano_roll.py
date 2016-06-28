@@ -170,8 +170,8 @@ class PianoRoll(Frame):
 
             self.quit()
 
-        def main_set_velocity(value):
-            self.toolbar.velocity_frame.set_value(value)
+        def main_set_note(note):
+            self.toolbar.note_data_frame.update_note_data(note)
 
         def main_set_zoomx(zoomx):
             self.main_frame.set_zoomx(zoomx)
@@ -179,15 +179,18 @@ class PianoRoll(Frame):
         def main_set_zoomy(zoomy):
             self.main_frame.set_zoomy(zoomy)
 
+        def main_set_tool(tool):
+            self.toolbar.set_tool(tool)
+
         def toolbar_set_snap(snap):
             self.main_frame.set_subdiv(snap)
 
         def toolbar_set_tool(tool):
             self.main_frame.grid_canvas.set_tool(tool)
 
-        def toolbar_set_velocity(velocity):
-            self.main_frame.grid_canvas.set_velocity(
-                velocity, 'sel')
+        def toolbar_set_note(attr, value):
+            self.main_frame.grid_canvas.set_note(
+                attr, value, 'sel')
 
         def bottombar_set_end(end):
             self.main_frame.set_end(end)
@@ -204,15 +207,16 @@ class PianoRoll(Frame):
                 'exit': menu_exit
             },
             'main': {
-                'velocity': main_set_velocity,
+                'note': main_set_note,
                 'dirty': self.set_dirty,
                 'zoomx': main_set_zoomx,
-                'zoomy': main_set_zoomy
+                'zoomy': main_set_zoomy,
+                'tool': main_set_tool
             },
             'toolbar': {
                 'snap': toolbar_set_snap,
                 'tool': toolbar_set_tool,
-                'velocity': toolbar_set_velocity
+                'note': toolbar_set_note
             },
             'bottombar': {
                 'end': bottombar_set_end,

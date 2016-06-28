@@ -57,6 +57,8 @@ class NoteList(object):
             raise ValueError
 
         self.notes.append(note)
+        self.notes.sort(key=lambda note:
+            (note.onset, -note.midinumber))
 
     def remove(self, note):
         self.notes.remove(note)
