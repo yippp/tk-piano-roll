@@ -138,14 +138,20 @@ class RulerCanvas(CustomCanvas):
 
     def _update_visibleregion(self):
         vr_left = self.canvasx(0)
-        vr_top = self.canvasx(0)
+        vr_top = self.canvasy(0)
         vr_width = self.winfo_width()
         vr_height = self.winfo_height()
-        self._visibleregion = vr_left, vr_top, vr_width, vr_height
+        self._visibleregion = (vr_left, vr_top,
+            vr_width, vr_height)
 
     def _update_scrollregion(self):
-        sr_width = self._gstate.width()
-        sr_height = self.winfo_height()
+        grid_width = self._gstate.width()
+        grid_height = self._gstate.height()
+        vr_width = self._visibleregion[2]
+        vr_height = self._visibleregion[3]
+
+        sr_width = max(grid_width, vr_width)
+        sr_height = max(grid_height, vr_height)
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 

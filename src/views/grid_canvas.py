@@ -224,13 +224,15 @@ class GridCanvas(CustomCanvas):
             self._mouse_state.click = MouseState.SELECTED_NOTE
 
     def _update_scrollregion(self):
-        scrollregion_width = max(
-            self._gstate.width(), self._visibleregion[2])
-        scrollregion_height = max(
-            self._gstate.height() + 1, self._visibleregion[3])
+        grid_width = self._gstate.width()
+        grid_height = self._gstate.height()
+        vr_width = self._visibleregion[2]
+        vr_height = self._visibleregion[3]
 
-        scrollregion = (0, 0, scrollregion_width,
-            scrollregion_height)
+        sr_width = max(grid_width, vr_width)
+        sr_height = max(grid_height, vr_height)
+        scrollregion = (0, 0, sr_width, sr_height)
+
         self.config(scrollregion=scrollregion)
 
     def _update_visibleregion(self):
@@ -326,8 +328,8 @@ class GridCanvas(CustomCanvas):
         return None
 
     def _on_window_resize(self, event):
-        self._update_scrollregion()
         self._update_visibleregion()
+        self._update_scrollregion()
         self.delete(*self.find_withtags('line'))
         self._draw_all()
 
@@ -511,7 +513,7 @@ class GridCanvas(CustomCanvas):
             self.itemconfig(note.id, fill=fill_color)
             note.selected = True
 
-        self._callbacks['note'](self.note_list.notes[0])
+        self._callbacks['note'](self.note_list.selected()[0])
 
     def deselect_note(self, *args):
         if not args:
