@@ -9,11 +9,11 @@ class NoteList(object):
     def __nonzero__(self):
         return not not self.notes
 
-    def __contains__(self, arg):
-        if isinstance(arg, Note):
-            return arg in self.notes
-        elif isinstance(arg, (int, long)):
-            return self.from_id(arg) != None
+    def __contains__(self, value):
+        if isinstance(value, Note):
+            return value in self.notes
+        elif isinstance(value, (int, long)):
+            return self.from_id(value) != None
 
     def __iter__(self):
         for note in self.notes:

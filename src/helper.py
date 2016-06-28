@@ -29,9 +29,17 @@ def to_pitchname(midinumber):
     return "{0}{1}".format(note, octave)
 
 def to_midinumber(pitchname):
-    note = pitchname[:-1]
-    octave = int(pitchname[-1:])
-    return PITCHNAMES.index(note) + (octave + 2) * 12
+    import re
+
+    m = re.search('[-\d]', pitchname)
+    if (not m or pitchname[:m.start()].upper()
+        not in PITCHNAMES):
+        raise ValueError("{} is not a valid pitchname".format(
+            pitchname))
+
+    pitch = pitchname[:m.start()]
+    octave = int(pitchname[m.start():])
+    return PITCHNAMES.index(pitch) + (octave + 2) * 12
 
 def hex_to_rgb(value):
     value = value.lstrip('#')

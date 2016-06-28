@@ -19,7 +19,8 @@ class PitchFrame(Frame):
         values = ["{0}{1}".format(PITCHNAMES[i % 12],
             int(i / 12) - 2) for i in range(128)]
         self.pitch_spinbox = CustomSpinbox(
-            self, self._forward, values=values, width=4)
+            self, callback=self._forward, values=values,
+            width=4, match_case=False, convert=1)
         self.pitch_spinbox.set("C4")
 
         self.pitch_label.pack(side=LEFT)
