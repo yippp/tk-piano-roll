@@ -46,17 +46,21 @@ class RulerCanvas(CustomCanvas):
         bar_width = self._gstate.bar_width()
         bar = self._gstate.end[0]
         beat_count = self._gstate.beat_count
-
-        bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
-        text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
+        bu_cell_width = self._gstate.cell_width(
+            subdiv='bu_subdiv')
+        text_width = self._font.measure(
+            "{0}.{1}".format(bar, beat_count))
         min_cell_width = self._gstate.min_cell_width(
             text_width + RulerCanvas.TEXT_OFFSET)
         cell_width = max(bu_cell_width, min_cell_width)
 
-        bar_start = int(self._visibleregion[0] / bar_width)
-        nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
 
-        for bar in range(bar_start, bar_start + nbars):
+        bar_start = int(vr_left / bar_width)
+        bars = int(math.ceil(
+            min(vr_width, grid_width) / float(bar_width))) + 1
+
+        for bar in range(bar_start, bar_start + bars):
             x_offset = bar_width * bar
             bar_left = grid_width - x_offset
             cells_in_bar = int(math.ceil(min(bar_width, bar_left) / cell_width))
@@ -94,10 +98,13 @@ class RulerCanvas(CustomCanvas):
         if cell_width < text_width + RulerCanvas.TEXT_OFFSET:
             return
 
-        bar_start = int(self._visibleregion[0] / bar_width)
-        nbars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
 
-        for bar in range(bar_start, bar_start + nbars):
+        bar_start = int(vr_left / bar_width)
+        bars = int(math.ceil(
+            min(vr_width, grid_width) / float(bar_width))) + 1
+
+        for bar in range(bar_start, bar_start + bars):
             x_offset = bar_width * bar
             x_left = grid_width - x_offset
             cells_in_bar = int(math.ceil(min(bar_width, x_left) / cell_width))

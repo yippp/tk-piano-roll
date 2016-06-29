@@ -123,13 +123,17 @@ class GridCanvas(CustomCanvas):
         min_cell_width =self._gstate.min_cell_width(
             GridCanvas.MIN_CELL_WIDTH)
         cell_width = max(min_cell_width, self._gstate.cell_width())
-        y1 = self._visibleregion[1]
-        y2 = self.canvasy(y1 + min(self._visibleregion[3], grid_height))
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
 
-        bars_start = int(self._visibleregion[0] / bar_width)
-        bars = int(min(self._visibleregion[2], grid_width) / bar_width) + 1
+        bars_start = int(vr_left / bar_width)
+        bars = int(math.ceil(
+            min(vr_width, grid_width) / float(bar_width))) + 1
 
-        for n in range(bars_start, bars_start + int(math.ceil(bars))):
+        y1 = vr_top
+        y2 = self.canvasy(
+            y1 + min(vr_height, grid_height))
+
+        for n in range(bars_start, bars_start + bars):
             x_offset = n * bar_width
             x_left = grid_width - x_offset
             lines_per_bar = int(min(bar_width, x_left) / cell_width)
@@ -140,7 +144,7 @@ class GridCanvas(CustomCanvas):
                     fill=GridCanvas.COLOR_LINE_NORMAL,
                     tags=('line', 'vertical'))
 
-        for i in range(bars_start, bars_start + int(math.floor(bars))):
+        for i in range(bars_start, bars_start + bars):
             x = i * bar_width
             self.add_to_layer(GridCanvas.LAYER_VL,
                 self.create_line, (x, y1, x, y2),
