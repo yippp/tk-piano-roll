@@ -6,14 +6,12 @@ from grid_canvas import GridCanvas
 from scrollbar_frame import ScrollbarFrame
 from include.with_border import WithBorder
 from src.grid import Grid
+from src.const import COLOR_BORDER_DEFAULT, COLOR_BORDER_SELECTED
 
 
 class MainFrame(Frame):
 
     CTRL_MASK = 0x0004
-
-    COLOR_BORDER_DEFAULT = "#000000"
-    COLOR_BORDER_SELECTED = "#3399FF"
 
     def __init__(self, parent, callbacks, **kwargs):
         Frame.__init__(self, parent, **kwargs)
@@ -38,22 +36,19 @@ class MainFrame(Frame):
         gstate = self._grid.get_state()
         self.mousepos_frame = WithBorder(
             self, MousePosFrame, gstate, borderwidth=2, padding=3,
-            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=COLOR_BORDER_DEFAULT)
         self.ruler_canvas = WithBorder(
             self, RulerCanvas, gstate, borderwidth=2, padding=3,
             xscrollcommand=self.hbar_frame.scrollbar.set,
-            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=COLOR_BORDER_DEFAULT)
         self.keyboard_canvas = WithBorder(
             self, KeyboardCanvas, gstate, borderwidth=2, padding=3,
             yscrollcommand=self.vbar_frame.scrollbar.set,
-            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=COLOR_BORDER_DEFAULT)
 
         grid_canvas_callbacks = {
-            'dirty': self._callbacks['dirty'],
             'note': self._callbacks['note'],
+            'dirty': self._callbacks['dirty'],
             'mousepos': self._on_mouse_motion,
         }
 
@@ -62,8 +57,8 @@ class MainFrame(Frame):
             borderwidth=2, padding=3,
             xscrollcommand=self.hbar_frame.scrollbar.set,
             yscrollcommand=self.vbar_frame.scrollbar.set,
-            bordercolordefault=MainFrame.COLOR_BORDER_DEFAULT,
-            bordercolorselected=MainFrame.COLOR_BORDER_SELECTED)
+            bordercolordefault=COLOR_BORDER_DEFAULT,
+            bordercolorselected=COLOR_BORDER_SELECTED)
 
         self.hbar_frame.scrollbar.config(command=self._xview)
         self.vbar_frame.scrollbar.config(command=self._yview)

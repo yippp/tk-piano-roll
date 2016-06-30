@@ -7,7 +7,7 @@ from src.rect import Rect
 
 class RulerCanvas(CustomCanvas):
 
-    CANVAS_HEIGHT = 40
+    CANVAS_HEIGHT = 45
     TEXT_OFFSET = 4
 
     LAYER_LINE_END = 0
@@ -41,41 +41,31 @@ class RulerCanvas(CustomCanvas):
         self.bind('<Configure>', self._on_window_resize)
 
     def _draw_lines(self):
-        canvas_height = int(self.config('height')[4])
+        canvas_height = self.winfo_reqheight()
         grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
-        bar = self._gstate.end[0]
         beat_count = self._gstate.beat_count
-        bu_cell_width = self._gstate.cell_width(
-            subdiv='bu_subdiv')
+        beat_unit = self._gstate.beat_unit
+        bu_subdiv = math.log(float(beat_unit), 2)
         text_width = self._font.measure(
-            "{0}.{1}".format(bar, beat_count))
-        min_cell_width = self._gstate.min_cell_width(
+            "{0}.{1}".format(self._gstate.end[0], beat_count))
+        min_subdiv = self._gstate.min_subdiv(
             text_width + RulerCanvas.TEXT_OFFSET)
-        cell_width = max(bu_cell_width, min_cell_width)
 
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
 
-        bar_start = int(vr_left / bar_width)
-        bars = int(math.ceil(
-            min(vr_width, grid_width) / float(bar_width))) + 1
+        for x in self._gstate.xcoords(
+            start=vr_left, end=vr_left + vr_width,
+            subdiv=min(bu_subdiv, min_subdiv)):
+            if x % bar_width:
+                color = RulerCanvas.COLOR_LINE_NORMAL
+            else:
+                color = RulerCanvas.COLOR_LINE_BAR
 
-        for bar in range(bar_start, bar_start + bars):
-            x_offset = bar_width * bar
-            bar_left = grid_width - x_offset
-            cells_in_bar = int(math.ceil(min(bar_width, bar_left) / cell_width))
-            for cell in range(max(1, cells_in_bar)):
-                x = x_offset + cell * cell_width
-
-                if x % bar_width == 0:
-                    color = RulerCanvas.COLOR_LINE_BAR
-                else:
-                    color = RulerCanvas.COLOR_LINE_NORMAL
-
-                self.add_to_layer(
-                    RulerCanvas.LAYER_LINE_NORMAL, self.create_line,
-                    (x, 0, x, canvas_height), fill=color)
-
+            coords = (x, 0, x, canvas_height)
+            self.add_to_layer(
+                RulerCanvas.LAYER_LINE_NORMAL, self.create_line,
+                coords, fill=color, tags='line')
 
         self.add_to_layer(
             RulerCanvas.LAYER_LINE_END, self.create_line,
@@ -84,15 +74,18 @@ class RulerCanvas(CustomCanvas):
 
     def _draw_text(self):
         canvas_height = int(self.config('height')[4])
-        grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
         bar = self._gstate.end[0]
         beat_count = self._gstate.beat_count
-
-        bu_cell_width = self._gstate.cell_width(subdiv='bu_subdiv')
-        text_width = self._font.measure("{0}.{1}".format(bar, beat_count))
-        min_cell_width = self._gstate.min_cell_width(
+        beat_unit = self._gstate.beat_unit
+        bu_subdiv = math.log(float(beat_unit), 2)
+        bu_cell_width = self._gstate.cell_width(
+            subdiv=bu_subdiv)
+        text_width = self._font.measure(
+            "{0}.{1}".format(bar, beat_count))
+        min_subdiv = self._gstate.min_subdiv(
             text_width + RulerCanvas.TEXT_OFFSET)
+        min_cell_width = self._gstate.cell_width(min_subdiv)
         cell_width = max(bu_cell_width, min_cell_width)
 
         if cell_width < text_width + RulerCanvas.TEXT_OFFSET:
@@ -100,22 +93,17 @@ class RulerCanvas(CustomCanvas):
 
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
 
-        bar_start = int(vr_left / bar_width)
-        bars = int(math.ceil(
-            min(vr_width, grid_width) / float(bar_width))) + 1
-
-        for bar in range(bar_start, bar_start + bars):
-            x_offset = bar_width * bar
-            x_left = grid_width - x_offset
-            cells_in_bar = int(math.ceil(min(bar_width, x_left) / cell_width))
-            for cell in range(max(1, cells_in_bar)):
-                cell_offset = cell * cell_width
-                x = x_offset + RulerCanvas.TEXT_OFFSET + cell_offset
-                u = cell_offset / bu_cell_width
-                text = "{0}.{1}".format(bar + 1, int(u + 1))
-
-                self.add_to_layer(RulerCanvas.LAYER_TEXT, self.create_text,
-                    (x, canvas_height), text=text, anchor=SW, font=self._font)
+        for x in self._gstate.xcoords(
+            start=vr_left, end=vr_left + vr_width,
+            subdiv=min(bu_subdiv, min_subdiv)):
+            bar = int(x / bar_width)
+            u = int(x / bu_cell_width) % beat_count
+            text = '{0}.{1}'.format(bar + 1, int(u + 1))
+            coords = (x + RulerCanvas.TEXT_OFFSET,
+                canvas_height)
+            self.add_to_layer(
+                RulerCanvas.LAYER_TEXT, self.create_text,
+                coords, text=text, anchor=SW, font=self._font)
 
     def _draw_end_marker(self):
         grid_width = self._gstate.width()
@@ -126,14 +114,20 @@ class RulerCanvas(CustomCanvas):
         y1 = marker_rect.top
         x2 = marker_rect.right
         y2 = marker_rect.bottom
+        coords = (x1, y1, x2, y2)
         self.add_to_layer(
-            RulerCanvas.LAYER_MARKER_RECT, self.create_rectangle,
-            (x1, y1, x2, y2), fill=RulerCanvas.COLOR_MARKER_RECT,
-            outline=RulerCanvas.COLOR_LINE_END, tags='marker')
+            RulerCanvas.LAYER_MARKER_RECT,
+            self.create_rectangle, coords,
+            fill=RulerCanvas.COLOR_MARKER_RECT,
+            outline=RulerCanvas.COLOR_LINE_END,
+            tags='marker')
 
+        coords = (x1 + 3, y1 + 1)
         self.add_to_layer(
-            RulerCanvas.LAYER_MARKER_TEXT, self.create_text,
-                (x1 + 3, y1 + 1), text='E', anchor=NW, tags='marker')
+            RulerCanvas.LAYER_MARKER_TEXT,
+            self.create_text, coords,
+            text='E', anchor=NW,
+            tags='marker')
 
     def _update(self):
         self._update_visibleregion()

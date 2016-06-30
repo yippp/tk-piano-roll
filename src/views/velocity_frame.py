@@ -15,9 +15,8 @@ class VelocityFrame(Frame):
     def _init_ui(self):
         self.velocity_label = Label(self, text='Velocity')
         self.velocity_spinbox = CustomSpinbox(
-            self, from_=0, to=127, width=4,
-            callback=self._forward)
-        self.velocity_spinbox.set(100)
+            self, from_=0, to=127, start=100,
+            width=4, callback=self._forward)
 
         self.velocity_label.pack(side=LEFT)
         self.velocity_spinbox.pack(side=LEFT)

@@ -61,7 +61,7 @@ def velocity_to_color(velocity, maxcolor, value):
 
     r, g, b = map(to_percentage, hex_to_rgb(maxcolor))
     h, s, v = rgb_to_hsv(r, g, b)
-    s = velocity * 0.006299213 + 0.30
+    s = velocity * 0.007086614 + 0.30
     v *= value
     r, g, b = map(from_percentage, hsv_to_rgb(h, s, v))
     return rgb_to_hex(r, g, b)

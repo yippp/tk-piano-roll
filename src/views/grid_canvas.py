@@ -98,58 +98,40 @@ class GridCanvas(CustomCanvas):
         self._update_note_ids(self._draw_notes(*visible_notes))
 
     def _draw_horizontal_lines(self):
-        cell_height = self._gstate.cell_height()
-        visibleregion_height = self._visibleregion[3]
-        grid_height = self._gstate.height() + 1
-        n = int(min(visibleregion_height, grid_height) / cell_height) + 1
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
+        grid_width = self._gstate.width()
 
-        x1 = self.canvasx(0)
-        x2 = min(self.canvasx(self._visibleregion[2]), self._gstate.width())
+        x1 = vr_left
+        x2 = self.canvasx(x1 + min(vr_width, grid_width))
 
-        yorigin = self.canvasy(0)
-        offset = cell_height * math.ceil(yorigin / cell_height)
-
-        for j in range(n):
-            y = j * cell_height + offset
-            color = GridCanvas.COLOR_LINE_NORMAL
+        for y in self._gstate.ycoords(
+            vr_top, vr_top + vr_height):
+            coords = (x1, y, x2, y)
             self.add_to_layer(
-                GridCanvas.LAYER_HL, self.create_line, (x1, y, x2, y),
-                fill=color, tags=('line', 'horizontal'))
+                GridCanvas.LAYER_HL, self.create_line, coords,
+                fill=GridCanvas.COLOR_LINE_NORMAL,
+                tags=('line', 'vertical'))
 
     def _draw_vertical_lines(self):
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
         grid_width = self._gstate.width()
         grid_height = self._gstate.height() + 1
         bar_width = self._gstate.bar_width()
-        min_cell_width =self._gstate.min_cell_width(
-            GridCanvas.MIN_CELL_WIDTH)
-        cell_width = max(min_cell_width, self._gstate.cell_width())
-        vr_left, vr_top, vr_width, vr_height = self._visibleregion
-
-        bars_start = int(vr_left / bar_width)
-        bars = int(math.ceil(
-            min(vr_width, grid_width) / float(bar_width))) + 1
 
         y1 = vr_top
-        y2 = self.canvasy(
-            y1 + min(vr_height, grid_height))
+        y2 = self.canvasy(y1 + min(vr_height, grid_height))
 
-        for n in range(bars_start, bars_start + bars):
-            x_offset = n * bar_width
-            x_left = grid_width - x_offset
-            lines_per_bar = int(min(bar_width, x_left) / cell_width)
-            for i in range(lines_per_bar):
-                x = i * cell_width + x_offset + cell_width
-                self.add_to_layer(GridCanvas.LAYER_VL,
-                    self.create_line, (x, y1, x, y2),
-                    fill=GridCanvas.COLOR_LINE_NORMAL,
-                    tags=('line', 'vertical'))
+        for x in self._gstate.xcoords(
+            vr_left, vr_left + vr_width):
+            if x % bar_width:
+                color = GridCanvas.COLOR_LINE_NORMAL
+            else:
+                color = GridCanvas.COLOR_LINE_BAR
 
-        for i in range(bars_start, bars_start + bars):
-            x = i * bar_width
-            self.add_to_layer(GridCanvas.LAYER_VL,
-                self.create_line, (x, y1, x, y2),
-                fill=GridCanvas.COLOR_LINE_BAR,
-                tags=('line', 'vertical'))
+            coords = (x, y1, x, y2)
+            self.add_to_layer(
+                GridCanvas.LAYER_VL, self.create_line, coords,
+                fill=color, tags=('line', 'vertical'))
 
         self.add_to_layer(
             GridCanvas.LAYER_VL, self.create_line,
@@ -351,7 +333,7 @@ class GridCanvas(CustomCanvas):
                         self._draw_notes(*selected))
 
                     self._callbacks['note'](
-                        self.note_list.notes[0])
+                        self.note_list.selected()[0])
 
         if 'mousepos' in self._callbacks:
             x = self.canvasx(event.x)
@@ -368,7 +350,7 @@ class GridCanvas(CustomCanvas):
         elif self._tool == GridCanvas.TOOL_ERASER:
             self._do_eraser(event)
 
-        self._notes_on_click = self.note_list.copy_selected()
+        self._notes_on_click = self.note_list.selected().copy()
         self._selection_bounds = self._calc_selection_bounds()
 
     def _on_bttnone_release(self, event):
@@ -391,7 +373,7 @@ class GridCanvas(CustomCanvas):
             rects = self.find_withtags('note')
             overlapping_rects = set(overlapping).intersection(rects)
             self.select_note(*overlapping_rects)
-            self._notes_on_click = self.note_list.copy_selected()
+            self._notes_on_click = self.note_list.selected().copy()
             self.delete(sel_region_id)
 
     def _on_ctrl_a(self, event):
@@ -407,7 +389,7 @@ class GridCanvas(CustomCanvas):
         if ctrl_pressed:
             if self._mouse_state.click != MouseState.EMPTY_AREA:
                 self.select_note(self._mouse_state.item)
-                self._notes_on_click = self.note_list.copy_selected()
+                self._notes_on_click = self.note_list.selected().copy()
                 self._selection_bounds = self._calc_selection_bounds()
         else:
             if self._mouse_state.click == MouseState.EMPTY_AREA:

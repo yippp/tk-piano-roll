@@ -5,15 +5,23 @@ class NoteList(object):
 
     def __init__(self, notes=()):
         self.notes = list(notes)
+        self.notes.sort(key=lambda note:
+            (note.onset, -note.midinumber))
 
     def __nonzero__(self):
         return not not self.notes
+
+    def __len__(self):
+        return len(self.notes)
 
     def __contains__(self, value):
         if isinstance(value, Note):
             return value in self.notes
         elif isinstance(value, (int, long)):
             return self.from_id(value) != None
+
+    def __getitem__(self, index):
+        return self.notes[index]
 
     def __iter__(self):
         for note in self.notes:
@@ -22,8 +30,9 @@ class NoteList(object):
     def copy(self):
         return NoteList([note.copy() for note in self.notes])
 
-    def copy_selected(self):
-        return NoteList([note.copy() for note in self.selected()])
+    def selected(self):
+        return NoteList(
+            filter(lambda note: note.selected, self.notes))
 
     def select(self, *ids):
         for id in ids:
@@ -34,9 +43,6 @@ class NoteList(object):
         for id in ids:
             note = self.from_id(id)
             note.selected = False
-
-    def selected(self):
-        return filter(lambda note: note.selected, self.notes)
 
     def ids(self):
         return [note.id for note in self.notes]
@@ -56,11 +62,14 @@ class NoteList(object):
         if not isinstance(note, Note):
             raise ValueError
 
-        self.notes.append(note)
-        """
-        self.notes.sort(key=lambda note:
-            (note.onset, -note.midinumber))
-        """
+        insert_at = len(self.notes)
+        for i, n in enumerate(self.notes):
+            if (note.midinumber > n.midinumber and
+                note.onset < n.onset):
+                insert_at = i
+                break
+
+        self.notes.insert(insert_at, note)
 
     def remove(self, note):
         self.notes.remove(note)

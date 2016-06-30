@@ -36,6 +36,10 @@ class GridState(object):
     def copy(self):
         return GridState(self.subdiv, self.beat_count, self.beat_unit,
             self.end, self.zoomx, self.zoomy)
+
+    def contains(self, x, y, zoom=True):
+        return (x >= 0 and y >= 0 and x <= self.width(zoom=zoom
+            and y <= self.height(zoom=zoom)))
         
     def width(self, zoom=True):
         from helper import to_ticks
@@ -76,27 +80,50 @@ class GridState(object):
                 2 ** (2 - _subdiv) * QUARTER_NOTE_WIDTH *
                 zoomx, bar_width)
 
-    def min_cell_width(self, min_width, zoom=True):
-        min_cell_width = self.cell_width(0, zoom)
-        for i in range(1, len(SNAP_DICT)):
-            cw = self.cell_width(subdiv=i)
-            if cw >= min_width:
-               min_cell_width = cw
-
-        return min_cell_width
-
     def cell_height(self, zoom=True):
         if zoom:
             return CELL_HEIGHT_IN_PX * self.zoomy
         else:
             return CELL_HEIGHT_IN_PX
-        
-    def row(self, x, zoom=True):
-        return int(x / self.cell_width(zoom=zoom))
 
-    def col(self, y, zoom=True):
-        return int(y / self.cell_height(zoom=False))
+    def xcoords(self, start=None, end=None,
+        subdiv=SUBDIV_CUR, zoom=True):
+        grid_width = self.width(zoom)
+        bar_width = self.bar_width(zoom)
+        cell_width = self.cell_width(subdiv, zoom)
 
-    def contains(self, x, y, zoom=True):
-        return (x >= 0 and y >= 0 and x <= self.width(zoom=zoom
-            and y <= self.height(zoom=zoom)))
+        bar_start = int(start / bar_width)
+        start = min(start, 0) if start else 0
+        end = min(end, grid_width) if end else grid_width
+
+        for bar in range(bar_start, self.end[0]):
+            bar_left = bar * bar_width + start * (not bar)
+            bar_right = min((bar + 1) * bar_width, grid_width)
+            cells_in_bar = int(
+                (bar_right - bar_left) / cell_width)
+            for cell in range(cells_in_bar):
+                x = (cell * cell_width + bar * bar_width +
+                    start * (not bar))
+                if x > end: return
+                yield x
+
+    def ycoords(self, start=None, end=None, zoom=True):
+        grid_height = self.height(zoom)
+        cell_height = self.cell_height(zoom)
+
+        start = min(start, 0) if start else 0
+        end = min(end, grid_height) if end else grid_height
+
+        for i in range(
+            int(start / cell_height),
+            int(end / cell_height)):
+            yield i * cell_height
+
+    def min_subdiv(self, min_width, zoom=True):
+        min_subdiv = 0
+        for i in range(1, len(SNAP_DICT)):
+            cw = self.cell_width(subdiv=i)
+            if cw >= min_width:
+               min_subdiv = i
+
+        return min_subdiv

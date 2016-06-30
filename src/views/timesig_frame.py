@@ -16,8 +16,8 @@ class TimeSigFrame(LabelFrame):
         self.config(text="Time Signature", padx=4, pady=5)
 
         self.beat_count_spinbox = CustomSpinbox(
-            self, start=4, from_=1,
-            to=99, width=3, callback=self._forward)
+            self, start=4, from_=1, to=99, width=3,
+            callback=self._forward)
 
         self._beat_unit_var = StringVar()
         values = [str(2 ** i) for i in range(1, 6)]

@@ -53,7 +53,9 @@ class MousePosFrame(Frame):
         pitchname = to_pitchname(midinumber)
 
         self._pos_label.config(text="{0}.{1}.{2}".format(*pos))
-        self._midinote_label.config(text=pitchname)
+        self._midinote_label.config(
+            text=str("{0}".format(pitchname)))
+
         self._mouse_pos = (x, y)
 
     def on_update(self, gstate):

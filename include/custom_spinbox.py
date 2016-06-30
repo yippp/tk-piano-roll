@@ -63,8 +63,9 @@ class CustomSpinbox(Spinbox):
         values = self.config()['values'][4].split()
         if values:
             self._values = _ValueList(values, match_case)
-            self._curr_value = start
+            self._curr_value = start if start else values[0]
         else:
+            self._values = None
             from_ = str(int(self.config()['from'][4]))
             self._curr_value = start if start else from_
 
@@ -95,6 +96,7 @@ class CustomSpinbox(Spinbox):
         if state == 'readonly':
             self.config(state='normal')
         else:
+            self.icursor(END)
             value = self.validate()
             self._curr_value = value
             self._prev_value = self._curr_value

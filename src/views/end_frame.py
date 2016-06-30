@@ -19,13 +19,13 @@ class EndFrame(LabelFrame):
         self.config(text="End", padx=4, pady=4)
 
         self.bar_spinbox = CustomSpinbox(
-            self, callback=self._forward, from_=1,
-            to=maxsize, width=EndFrame.SPINBOX_WIDTH)
-        self.bar_spinbox.set('2')
+            self, callback=self._forward,
+            from_=1, to=maxsize, start=2,
+            width=EndFrame.SPINBOX_WIDTH)
 
         self.beat_spinbox = CustomSpinbox(
-            self, callback=self._forward, from_=1,
-            to=4, width=EndFrame.SPINBOX_WIDTH)
+            self, callback=self._forward,
+            from_=1, to=4, width=EndFrame.SPINBOX_WIDTH)
 
         self.tick_spinbox = CustomSpinbox(
             self, callback=self._forward, from_=0,
