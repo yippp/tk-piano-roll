@@ -130,8 +130,8 @@ class RulerCanvas(CustomCanvas):
             tags='marker')
 
     def _update(self):
-        self._update_visibleregion()
         self._update_scrollregion()
+        self._update_visibleregion()
         self.delete(ALL)
         self._draw_lines()
         self._draw_text()
@@ -148,13 +148,10 @@ class RulerCanvas(CustomCanvas):
     def _update_scrollregion(self):
         grid_width = self._gstate.width()
         grid_height = self._gstate.height()
-        vr_width = self._visibleregion[2]
-        vr_height = self._visibleregion[3]
-
-        sr_width = max(grid_width, vr_width)
-        sr_height = max(grid_height, vr_height)
-        self._scrollregion = (0, 0, sr_width, sr_height)
-        self.config(scrollregion=self._scrollregion)
+        sr_width = max(grid_width, self.winfo_reqwidth())
+        sr_height = max(grid_height, self.winfo_reqheight())
+        scrollregion = (0, 0, sr_width, sr_height)
+        self.config(scrollregion=scrollregion)
 
     def _on_window_resize(self, event=None):
         self._update()

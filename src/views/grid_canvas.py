@@ -59,14 +59,6 @@ class GridCanvas(CustomCanvas):
         self._mouse_state = MouseState()
         self._selection_bounds = None
 
-        vs_height = int(self.config()['height'][4])
-        vs_width = int(self.config()['width'][4])
-        sr_width = self._gstate.width()
-        sr_height = self._gstate.height() + 1
-        self._visibleregion = [0, 0, vs_width, vs_height]
-        scrollregion = (0, 0, sr_width, sr_height)
-        self.config(scrollregion=scrollregion)
-
     def _init_ui(self):
         self.config(
             width=GridCanvas.CANVAS_WIDTH,
@@ -101,8 +93,8 @@ class GridCanvas(CustomCanvas):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
         grid_width = self._gstate.width()
 
-        x1 = vr_left
-        x2 = self.canvasx(x1 + min(vr_width, grid_width))
+        x1 = self.canvasx(0)
+        x2 = self.canvasx(x1 + min(grid_width, vr_width))
 
         for y in self._gstate.ycoords(
             vr_top, vr_top + vr_height):
@@ -117,12 +109,15 @@ class GridCanvas(CustomCanvas):
         grid_width = self._gstate.width()
         grid_height = self._gstate.height() + 1
         bar_width = self._gstate.bar_width()
+        cur_subdiv = self._gstate.subdiv
+        min_subdiv = self._gstate.min_subdiv(15)
 
         y1 = vr_top
         y2 = self.canvasy(y1 + min(vr_height, grid_height))
 
         for x in self._gstate.xcoords(
-            vr_left, vr_left + vr_width):
+            vr_left, vr_left + vr_width,
+            subdiv=min(cur_subdiv, min_subdiv)):
             if x % bar_width:
                 color = GridCanvas.COLOR_LINE_NORMAL
             else:
@@ -140,24 +135,26 @@ class GridCanvas(CustomCanvas):
             tags=('line', 'vertical'))
 
     def _draw_sharp_rows(self):
-        pattern = KEY_PATTERN[::-1]
+        vr_width = self._visibleregion[2]
         grid_width = self._gstate.width()
         cell_height = self._gstate.cell_height()
 
-        x1 = 0
-        x2 = grid_width
-        for row in range(128):
-            i = ((row + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) %
-                KEYS_IN_OCTAVE)
+        pattern = KEY_PATTERN[::-1]
+
+        x1 = self.canvasx(0)
+        x2 = self.canvasx(x1 + min(grid_width, vr_width))
+
+        for i, y in enumerate(self._gstate.ycoords()):
+            i = (i + KEYS_IN_OCTAVE - KEYS_IN_LAST_OCTAVE) % 12
             key = pattern[i]
-            if key == '0':
-                y1 = row * cell_height
-                y2 = y1 + cell_height
-                coords = (x1, y1, x2, y2)
-                self.add_to_layer(
-                    GridCanvas.LAYER_SHARP_ROW, self.create_rectangle,
-                    coords, fill=GridCanvas.COLOR_SHARP_ROW, width=0,
-                    tags='sharp_row')
+            if key == '1': continue
+
+            coords = (x1, y, x2, y + cell_height)
+            self.add_to_layer(
+                GridCanvas.LAYER_SHARP_ROW,
+                self.create_rectangle, coords,
+                fill=GridCanvas.COLOR_SHARP_ROW,
+                width=0, tags='sharp_row')
 
     def _draw_notes(self, *notes):
         old_ids = []
@@ -212,13 +209,9 @@ class GridCanvas(CustomCanvas):
     def _update_scrollregion(self):
         grid_width = self._gstate.width()
         grid_height = self._gstate.height()
-        vr_width = self._visibleregion[2]
-        vr_height = self._visibleregion[3]
-
-        sr_width = max(grid_width, vr_width)
-        sr_height = max(grid_height, vr_height)
+        sr_width = max(grid_width, self.winfo_reqwidth())
+        sr_height = max(grid_height, self.winfo_reqheight())
         scrollregion = (0, 0, sr_width, sr_height)
-
         self.config(scrollregion=scrollregion)
 
     def _update_visibleregion(self):
@@ -314,8 +307,8 @@ class GridCanvas(CustomCanvas):
         return None
 
     def _on_window_resize(self, event):
-        self._update_visibleregion()
         self._update_scrollregion()
+        self._update_visibleregion()
         self.delete(*self.find_withtags('line'))
         self._draw_all()
 
@@ -335,7 +328,10 @@ class GridCanvas(CustomCanvas):
                     self._callbacks['note'](
                         self.note_list.selected()[0])
 
-        if 'mousepos' in self._callbacks:
+        grid_width = self._gstate.width()
+        grid_height = self._gstate.height()
+        grid_rect = Rect.at_origin(grid_width, grid_height)
+        if grid_rect.collide_point(event.x, event.y):
             x = self.canvasx(event.x)
             y = self.canvasy(event.y)
             self._callbacks['mousepos'](x, y)
@@ -438,14 +434,15 @@ class GridCanvas(CustomCanvas):
             self._draw_horizontal_lines()
             self._draw_vertical_lines()
         if any(x in diff for x in ['zoomx', 'zoomy']):
+            self.delete(ALL)
             self._update_scrollregion()
             self._update_visibleregion()
-            self.delete(ALL)
             self._draw_all()
         if any(x in diff for x in ['beat_count', 'beat_unit', 'end']):
-            self._update_scrollregion()
             self.delete(*self.find_withtags('line'))
             self.delete(*self.find_withtags('sharp_row'))
+            self._update_scrollregion()
+            self._update_visibleregion()
             self._draw_horizontal_lines()
             self._draw_vertical_lines()
             self._draw_sharp_rows()
@@ -537,12 +534,14 @@ class GridCanvas(CustomCanvas):
 
     def xview(self, *args):
         self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('sharp_row'))
         self.delete(*self.find_withtags('note'))
         CustomCanvas.xview(self, *args)
         self._update_visibleregion()
 
         self._draw_horizontal_lines()
         self._draw_vertical_lines()
+        self._draw_sharp_rows()
         visible_notes = filter(
             lambda note: self._is_note_visible(note),
             self.note_list.notes)

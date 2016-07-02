@@ -1,33 +1,42 @@
 from vector2d import Vector2d
 
+def _isnumber(object):
+    return isinstance(object, (int, long, float))
+
+def _is_vector2d(object):
+    return isinstance(object, Vector2d)
+
+def _is_rect(object):
+    return isinstance(object, Rect)
+
 
 class Rect(object):
 
     def __init__(self, *args, **kwargs):
-        if (len(args) == 2 and isinstance(args[0], Vector2d) and
-            isinstance(args[1], Vector2d)):
-                self.coords = args[0].copy()
-                self.width = args[1].x
-                self.height = args[1].y
-        elif (len(args) == 3 and isinstance(args[0], Vector2d) and
-            all(isinstance(arg, (int, long, float)) for arg in args[1:])):
+        if not args:
+            x = kwargs.pop('x', 0)
+            y = kwargs.pop('y', 0)
+            self.coords = Vector2d(x, y)
+            self.width = kwargs.pop('width', 1)
+            self.height = kwargs.pop('height', 1)
+        elif len(args) == 2 and all(map(_is_vector2d, args)):
+            self.coords = args[0].copy()
+            self.width = args[1].x
+            self.height = args[1].y
+        elif (len(args) == 3 and _is_vector2d(args[0]) and
+            all(map(_isnumber, args[1:]))):
             self.coords = args[0].copy()
             self.width = args[1]
             self.height = args[2]
-        elif (len(args) == 4 and
-            all(isinstance(arg, (int, long, float)) for arg in args[1:])):
+        elif len(args) == 4 and all(map(_isnumber, args)):
             self.coords = Vector2d(args[0], args[1])
             self.width = args[2]
             self.height = args[3]
         else:
-            self.coords = Vector2d(0, 0)
-            if 'x' in kwargs: self.coords.x = kwargs.pop('x')
-            if 'y' in kwargs: self.coords.y = kwargs.pop('y')
-            self.width = kwargs['width'] if 'width' in kwargs else 1
-            self.height = kwargs['height'] if 'height' in kwargs else 1
+            raise ValueError
 
-            for key in kwargs.keys():
-                self.__setattr__(key, kwargs[key])
+        for key in kwargs.keys():
+            self.__setattr__(key, kwargs[key])
 
     def __eq__(self, rect):
         return (rect.coords == self.coords and
@@ -35,8 +44,12 @@ class Rect(object):
                 rect.height == self.height)
 
     @staticmethod
-    def at_origin(*args):
-        return Rect(0, 0, *args)
+    def at_origin(width=1, height=1, **kwargs):
+        remove = ['x', 'y', 'width', 'height']
+        for key in remove:
+            kwargs.pop(key, None)
+
+        return Rect(0, 0, width, height, **kwargs)
 
     @property
     def width(self):
@@ -55,7 +68,7 @@ class Rect(object):
 
     @height.setter
     def height(self, height):
-        if height > 1:
+        if height > 0:
             self.__height = height
         else:
             raise ValueError
@@ -155,17 +168,38 @@ class Rect(object):
         self.height *= yfactor
 
     def collide_point(self, *args):
-        if (len(args) == 1 and isinstance(args[0], Vector2d)):
+        if len(args) == 1 and _is_vector2d(args[0]):
             p1 = args[0]
-        elif(len(args) == 2 and isinstance(args[0], (int, long, float)) and
-            isinstance(args[1], (int, long, float))):
+        elif len(args) == 2 and all(map(_isnumber, args)):
             p1 = Vector2d(args[0], args[1])
         else:
             raise ValueError
 
-        return (p1.x >= self.left and p1.y >= self.top and
-            p1.x <= self.right and p1.y <= self.bottom)
+        return (self.right > p1.x >= self.left and
+            self.bottom > p1.y >= self.top)
 
-    def collide_rect(self, rect):
-        return (self.right >= rect.left and rect.right >= self.left and
-            self.bottom >= rect.top and rect.bottom >= self.top)
+    def collide_rect(self, *args):
+        if len(args) == 1 and _is_rect(args[0]):
+            rect = args[0]
+        elif len(args) == 4 and all(map(_isnumber, args)):
+            rect = Rect(*args)
+        else:
+            raise ValueError
+
+        return not (rect.left >= self.right or
+            rect.right < self.left or
+            rect.top >= self.bottom or
+            rect.bottom < self.top)
+
+    def contains_rect(self, *args):
+        if len(args) == 1 and _is_rect(args[0]):
+            rect = args[0]
+        elif len(args) == 4 and all(map(_isnumber, args)):
+            rect = Rect(*args)
+        else:
+            raise ValueError
+
+        return (rect.left >= self.left and
+                rect.right < self.right and
+                rect.top >= self.top and
+                rect.bottom < self.bottom)
