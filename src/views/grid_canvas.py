@@ -6,7 +6,7 @@ from src.note_list import NoteList
 from src.rect import Rect
 from src.mouse_state import MouseState
 from src.helper import (clamp, get_image_path,
-    velocity_to_color, px_to_tick)
+    velocity_to_color, px_to_tick, tick_to_px)
 from src.const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
@@ -21,12 +21,6 @@ class GridCanvas(CustomCanvas):
     SEL = -1
     ALL = -2
 
-    LAYER_SEL_REGION = 0
-    LAYER_RECT = 1
-    LAYER_VL = 2
-    LAYER_HL = 3
-    LAYER_SHARP_ROW = 4
-
     TOOL_SEL = 0
     TOOL_PEN = 1
     TOOL_ERASER = 2
@@ -34,6 +28,7 @@ class GridCanvas(CustomCanvas):
     COLOR_LINE_NORMAL = "#CCCCCC"
     COLOR_LINE_BAR = "#000000"
     COLOR_LINE_END = "#FF0000"
+    COLOR_LINE_PLAY = "#00BFFF"
     COLOR_NOTE_OUTLINE = "#000000"
     COLOR_NOTE_FILL = "#0080FF"
     COLOR_SHARP_ROW = "#F1F3F3"
@@ -53,11 +48,12 @@ class GridCanvas(CustomCanvas):
         self._gstate = gstate
         self._callbacks = callbacks
         self._tool = GridCanvas.TOOL_SEL
-
         self.note_list = NoteList()
         self._notes_on_click = NoteList()
+        self._clipboard = NoteList()
         self._mouse_state = MouseState()
         self._selection_bounds = None
+        self._play_pos = 0
 
     def _init_ui(self):
         self.config(
@@ -76,12 +72,18 @@ class GridCanvas(CustomCanvas):
         self.bind('<B1-Motion>', self._on_mouse_motion)
         self.bind('<ButtonPress-1>', self._on_bttnone_press)
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
+        self.bind('<Double-Button-1>', self._on_play_pos_change)
         self.bind('<Control-a>', self._on_ctrl_a)
+        self.bind('<Control-c>', self._on_ctrl_c)
+        self.bind('<Control-v>', self._on_ctrl_v)
+        self.bind('<Control-x>', self._on_ctrl_x)
         self.bind('<Delete>', self._on_delete)
 
     def _draw_all(self):
         self._draw_horizontal_lines()
         self._draw_vertical_lines()
+        self._draw_end_line()
+        self._draw_play_line()
         self._draw_sharp_rows()
 
         visible_notes = filter(
@@ -96,17 +98,23 @@ class GridCanvas(CustomCanvas):
         x1 = self.canvasx(0)
         x2 = self.canvasx(x1 + min(grid_width, vr_width))
 
-        for y in self._gstate.ycoords(
-            vr_top, vr_top + vr_height):
+        for i, y in enumerate(self._gstate.ycoords(
+            vr_top, vr_top + vr_height)):
+
+            if (i + 4) % 12:
+                fill = GridCanvas.COLOR_LINE_NORMAL
+                layer = 5
+            else:
+                fill = GridCanvas.COLOR_LINE_BAR
+                layer = 3
+
             coords = (x1, y, x2, y)
             self.add_to_layer(
-                GridCanvas.LAYER_HL, self.create_line, coords,
-                fill=GridCanvas.COLOR_LINE_NORMAL,
+                layer, self.create_line, coords, fill=fill,
                 tags=('line', 'vertical'))
 
     def _draw_vertical_lines(self):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
-        grid_width = self._gstate.width()
         grid_height = self._gstate.height() + 1
         bar_width = self._gstate.bar_width()
         cur_subdiv = self._gstate.subdiv
@@ -125,14 +133,35 @@ class GridCanvas(CustomCanvas):
 
             coords = (x, y1, x, y2)
             self.add_to_layer(
-                GridCanvas.LAYER_VL, self.create_line, coords,
-                fill=color, tags=('line', 'vertical'))
+                4, self.create_line, coords, fill=color,
+                tags=('line', 'vertical'))
+
+    def _draw_end_line(self):
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
+        grid_width = self._gstate.width()
+        grid_height = self._gstate.height()
+        y1 = vr_top
+        y2 = self.canvasy(y1 + min(vr_height, grid_height))
+        coords = (grid_width, y1, grid_width, y2)
 
         self.add_to_layer(
-            GridCanvas.LAYER_VL, self.create_line,
-            (grid_width, y1, grid_width, y2),
+            2, self.create_line, coords,
             fill=GridCanvas.COLOR_LINE_END,
             tags=('line', 'vertical'))
+
+    def _draw_play_line(self):
+        vr_left, vr_top, vr_width, vr_height = self._visibleregion
+        grid_height = self._gstate.height()
+        zoomx =  self._gstate.zoomx
+        x = tick_to_px(self._play_pos) * zoomx
+        y1 = vr_top
+        y2 = self.canvasy(y1 + min(vr_height, grid_height))
+        coords = (x, y1, x, y2)
+
+        self.add_to_layer(
+            1, self.create_line, coords,
+            fill=GridCanvas.COLOR_LINE_PLAY,
+            tags=('line', 'vertical', 'play'))
 
     def _draw_sharp_rows(self):
         vr_width = self._visibleregion[2]
@@ -151,8 +180,7 @@ class GridCanvas(CustomCanvas):
 
             coords = (x1, y, x2, y + cell_height)
             self.add_to_layer(
-                GridCanvas.LAYER_SHARP_ROW,
-                self.create_rectangle, coords,
+                6, self.create_rectangle, coords,
                 fill=GridCanvas.COLOR_SHARP_ROW,
                 width=0, tags='sharp_row')
 
@@ -174,9 +202,9 @@ class GridCanvas(CustomCanvas):
                 0.7 if note.selected else 1)
 
             new_id = self.add_to_layer(
-                GridCanvas.LAYER_RECT, self.create_rectangle,
-                coords, outline=outline_color,
-                fill=fill_color, width=1, tags='note')
+                2, self.create_rectangle, coords,
+                outline=outline_color, fill=fill_color,
+                width=1, tags='note')
 
             old_ids.append(note.id)
             new_ids.append(new_id)
@@ -190,9 +218,10 @@ class GridCanvas(CustomCanvas):
         y2 = self.canvasy(mousey)
 
         coords = (x1, y1, x2, y2)
-        self.add_to_layer(GridCanvas.LAYER_SEL_REGION,
-            self.create_rectangle, coords, fill='blue', outline='blue',
-          stipple='gray12', tags='selection_region')
+        self.add_to_layer(
+            0, self.create_rectangle, coords, fill='blue',
+            outline='blue', stipple='gray12',
+            tags='selection_region')
 
     def _update_mouse_state(self, event):
         self._mouse_state.x = self.canvasx(event.x)
@@ -209,8 +238,8 @@ class GridCanvas(CustomCanvas):
     def _update_scrollregion(self):
         grid_width = self._gstate.width()
         grid_height = self._gstate.height()
-        sr_width = max(grid_width, self.winfo_reqwidth())
-        sr_height = max(grid_height, self.winfo_reqheight())
+        sr_width = max(grid_width, self.winfo_width())
+        sr_height = max(grid_height, self.winfo_height())
         scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=scrollregion)
 
@@ -334,7 +363,7 @@ class GridCanvas(CustomCanvas):
         if grid_rect.collide_point(event.x, event.y):
             x = self.canvasx(event.x)
             y = self.canvasy(event.y)
-            self._callbacks['mousepos'](x, y)
+            self._callbacks['mouse_pos'](x, y)
 
     def _on_bttnone_press(self, event):
         self._update_mouse_state(event)
@@ -372,8 +401,37 @@ class GridCanvas(CustomCanvas):
             self._notes_on_click = self.note_list.selected().copy()
             self.delete(sel_region_id)
 
+    def _on_play_pos_change(self, event):
+        cell_width = self._gstate.cell_width()
+        zoomx = self._gstate.zoomx
+        x = (int(self.canvasx(float(event.x)) /
+            cell_width) * cell_width)
+        ticks = px_to_tick(x / zoomx)
+        self._callbacks['play_pos'](ticks)
+
     def _on_ctrl_a(self, event):
         self.select_note(GridCanvas.ALL)
+
+    def _on_ctrl_c(self, event):
+        self._clipboard = self.note_list.selected().copy()
+
+    def _on_ctrl_v(self, event):
+        self.deselect_note('all')
+
+        new = []
+
+        first = self._clipboard[0]
+        for note in self._clipboard:
+            new_note = note.copy()
+            new_note.onset = (note.onset -
+                first.onset + self._play_pos)
+            new.append(new_note)
+
+        self.add_note(*new)
+
+    def _on_ctrl_x(self, event):
+        self._clipboard = self.note_list.selected().copy()
+        self.remove_note(*self.note_list.selected().ids())
 
     def _on_delete(self, event):
         self.remove_note(GridCanvas.SEL)
@@ -433,6 +491,8 @@ class GridCanvas(CustomCanvas):
             self.delete(*self.find_withtags('line', 'vertical'))
             self._draw_horizontal_lines()
             self._draw_vertical_lines()
+            self._draw_end_line()
+            self._draw_play_line()
         if any(x in diff for x in ['zoomx', 'zoomy']):
             self.delete(ALL)
             self._update_scrollregion()
@@ -445,10 +505,9 @@ class GridCanvas(CustomCanvas):
             self._update_visibleregion()
             self._draw_horizontal_lines()
             self._draw_vertical_lines()
+            self._draw_end_line()
+            self._draw_play_line()
             self._draw_sharp_rows()
-
-    def get_note_list(self):
-        return self.note_list.copy()
 
     def get_note(self, *args):
         argc = len(args)
@@ -509,6 +568,38 @@ class GridCanvas(CustomCanvas):
             self.itemconfig(note.id, fill=fill_color)
             note.selected = False
 
+    def xview(self, *args):
+        self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('sharp_row'))
+        self.delete(*self.find_withtags('note'))
+        CustomCanvas.xview(self, *args)
+        self._update_visibleregion()
+
+        self._draw_horizontal_lines()
+        self._draw_vertical_lines()
+        self._draw_end_line()
+        self._draw_play_line()
+        self._draw_sharp_rows()
+        visible_notes = filter(
+            lambda note: self._is_note_visible(note),
+            self.note_list.notes)
+        self._update_note_ids(self._draw_notes(*visible_notes))
+
+    def yview(self, *args):
+        self.delete(*self.find_withtags('line'))
+        self.delete(*self.find_withtags('note'))
+        CustomCanvas.yview(self, *args)
+        self._update_visibleregion()
+
+        self._draw_horizontal_lines()
+        self._draw_vertical_lines()
+        self._draw_end_line()
+        self._draw_play_line()
+        visible_notes = filter(
+            lambda note: self._is_note_visible(note),
+            self.note_list.notes)
+        self._update_note_ids(self._draw_notes(*visible_notes))
+
     def set_note(self, attr, value, *args):
         if not args:
             return
@@ -532,30 +623,7 @@ class GridCanvas(CustomCanvas):
             cursor_img_path = "@{} black".format(paths[value])
             self.config(cursor=cursor_img_path)
 
-    def xview(self, *args):
-        self.delete(*self.find_withtags('line'))
-        self.delete(*self.find_withtags('sharp_row'))
-        self.delete(*self.find_withtags('note'))
-        CustomCanvas.xview(self, *args)
-        self._update_visibleregion()
-
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        self._draw_sharp_rows()
-        visible_notes = filter(
-            lambda note: self._is_note_visible(note),
-            self.note_list.notes)
-        self._update_note_ids(self._draw_notes(*visible_notes))
-
-    def yview(self, *args):
-        self.delete(*self.find_withtags('line'))
-        self.delete(*self.find_withtags('note'))
-        CustomCanvas.yview(self, *args)
-        self._update_visibleregion()
-
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        visible_notes = filter(
-            lambda note: self._is_note_visible(note),
-            self.note_list.notes)
-        self._update_note_ids(self._draw_notes(*visible_notes))
+    def set_play_pos(self, ticks):
+        self._play_pos = ticks
+        self.delete(*self.find_withtags('line', 'play'))
+        self._draw_play_line()

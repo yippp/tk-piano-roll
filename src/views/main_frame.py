@@ -49,7 +49,8 @@ class MainFrame(Frame):
         grid_canvas_callbacks = {
             'note': self._callbacks['note'],
             'dirty': self._callbacks['dirty'],
-            'mousepos': self._on_mouse_motion,
+            'mouse_pos': self._on_mouse_motion,
+            'play_pos': self._on_play_pos_change
         }
 
         self.grid_canvas = WithBorder(
@@ -95,12 +96,16 @@ class MainFrame(Frame):
 
     def _on_ctrl_num(self, event):
         ctrl_pressed = (event.state & MainFrame.CTRL_MASK ==
-                        MainFrame.CTRL_MASK)
+            MainFrame.CTRL_MASK)
         if ctrl_pressed:
             self._callbacks['tool'](int(event.keysym) - 1)
 
     def _on_mouse_motion(self, x, y):
         self.mousepos_frame.set_mousepos(x, y)
+
+    def _on_play_pos_change(self, ticks):
+        self.grid_canvas.set_play_pos(ticks)
+        self.ruler_canvas.set_play_pos(ticks)
 
     def _xview(self, *args):
         self.ruler_canvas.xview(*args)
