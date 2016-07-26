@@ -170,6 +170,15 @@ class PianoRoll(Frame):
 
             self.quit()
 
+        def menu_cut():
+            self.main_frame.grid_canvas.cut_selected()
+
+        def menu_copy():
+            self.main_frame.grid_canvas.copy_selected()
+
+        def menu_paste():
+            self.main_frame.grid_canvas.paste_selected()
+
         def main_set_note(note):
             self.toolbar.note_data_frame.update_note_data(note)
 
@@ -204,7 +213,10 @@ class PianoRoll(Frame):
                 'open': menu_open,
                 'save': menu_save,
                 'save_as': menu_save_as,
-                'exit': menu_exit
+                'exit': menu_exit,
+                'cut': menu_cut,
+                'copy': menu_copy,
+                'paste': menu_paste
             },
             'main': {
                 'note': main_set_note,

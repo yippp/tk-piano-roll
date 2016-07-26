@@ -1,4 +1,3 @@
-import math
 from Tkinter import *
 from include.custom_canvas import CustomCanvas
 from src.note import Note
@@ -11,15 +10,14 @@ from src.const import (
     KEYS_IN_OCTAVE, KEYS_IN_LAST_OCTAVE,
     KEY_PATTERN)
 
+NOTE_SEL = -1
+NOTE_ALL = -2
 
 class GridCanvas(CustomCanvas):
 
     CANVAS_WIDTH = 480
     CANVAS_HEIGHT = 384
     MIN_CELL_WIDTH = 14
-
-    SEL = -1
-    ALL = -2
 
     TOOL_SEL = 0
     TOOL_PEN = 1
@@ -72,11 +70,8 @@ class GridCanvas(CustomCanvas):
         self.bind('<B1-Motion>', self._on_mouse_motion)
         self.bind('<ButtonPress-1>', self._on_bttnone_press)
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
-        self.bind('<Double-Button-1>', self._on_play_pos_change)
+        self.bind('<Double-Button-1>', self._on_bttnone_double)
         self.bind('<Control-a>', self._on_ctrl_a)
-        self.bind('<Control-c>', self._on_ctrl_c)
-        self.bind('<Control-v>', self._on_ctrl_v)
-        self.bind('<Control-x>', self._on_ctrl_x)
         self.bind('<Delete>', self._on_delete)
 
     def _draw_all(self):
@@ -111,7 +106,7 @@ class GridCanvas(CustomCanvas):
             coords = (x1, y, x2, y)
             self.add_to_layer(
                 layer, self.create_line, coords, fill=fill,
-                tags=('line', 'vertical'))
+                tags=('line', 'vertical', 'grid'))
 
     def _draw_vertical_lines(self):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
@@ -134,7 +129,7 @@ class GridCanvas(CustomCanvas):
             coords = (x, y1, x, y2)
             self.add_to_layer(
                 4, self.create_line, coords, fill=color,
-                tags=('line', 'vertical'))
+                tags=('line', 'vertical', 'grid'))
 
     def _draw_end_line(self):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
@@ -147,7 +142,7 @@ class GridCanvas(CustomCanvas):
         self.add_to_layer(
             2, self.create_line, coords,
             fill=GridCanvas.COLOR_LINE_END,
-            tags=('line', 'vertical'))
+            tags=('line', 'vertical', 'end'))
 
     def _draw_play_line(self):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
@@ -385,7 +380,7 @@ class GridCanvas(CustomCanvas):
 
         if (notes_selected > 1 and self._mouse_state.click ==
             MouseState.SELECTED_NOTE and not dragged):
-            self.deselect_note(GridCanvas.SEL)
+            self.deselect_note(NOTE_SEL)
             self.select_note(self._rect_at(event))
 
         selregion_id = self.find_withtags('selection_region')
@@ -401,40 +396,20 @@ class GridCanvas(CustomCanvas):
             self._notes_on_click = self.note_list.selected().copy()
             self.delete(sel_region_id)
 
-    def _on_play_pos_change(self, event):
-        cell_width = self._gstate.cell_width()
-        zoomx = self._gstate.zoomx
-        x = (int(self.canvasx(float(event.x)) /
-            cell_width) * cell_width)
-        ticks = px_to_tick(x / zoomx)
-        self._callbacks['play_pos'](ticks)
+    def _on_bttnone_double(self, event):
+        if self._tool == GridCanvas.TOOL_SEL:
+            cell_width = self._gstate.cell_width()
+            zoomx = self._gstate.zoomx
+            x = (int(self.canvasx(float(event.x)) /
+                cell_width) * cell_width)
+            ticks = px_to_tick(x / zoomx)
+            self._callbacks['play_pos'](ticks)
 
     def _on_ctrl_a(self, event):
-        self.select_note(GridCanvas.ALL)
-
-    def _on_ctrl_c(self, event):
-        self._clipboard = self.note_list.selected().copy()
-
-    def _on_ctrl_v(self, event):
-        self.deselect_note('all')
-
-        new = []
-
-        first = self._clipboard[0]
-        for note in self._clipboard:
-            new_note = note.copy()
-            new_note.onset = (note.onset -
-                first.onset + self._play_pos)
-            new.append(new_note)
-
-        self.add_note(*new)
-
-    def _on_ctrl_x(self, event):
-        self._clipboard = self.note_list.selected().copy()
-        self.remove_note(*self.note_list.selected().ids())
+        self.select_note('all')
 
     def _on_delete(self, event):
-        self.remove_note(GridCanvas.SEL)
+        self.remove_note(NOTE_SEL)
 
     def _do_sel(self, event):
         ctrl_mask = 0x0004
@@ -447,9 +422,9 @@ class GridCanvas(CustomCanvas):
                 self._selection_bounds = self._calc_selection_bounds()
         else:
             if self._mouse_state.click == MouseState.EMPTY_AREA:
-                self.deselect_note(GridCanvas.SEL)
+                self.deselect_note(NOTE_SEL)
             elif self._mouse_state.click == MouseState.UNSELECTED_NOTE:
-                self.deselect_note(GridCanvas.SEL)
+                self.deselect_note(NOTE_SEL)
                 self.select_note(self._mouse_state.item)
 
     def _do_pen(self, event):
@@ -459,7 +434,7 @@ class GridCanvas(CustomCanvas):
         cell_width_z = self._gstate.cell_width()
         cell_height_z = self._gstate.cell_height()
 
-        self.deselect_note(GridCanvas.ALL)
+        self.deselect_note(NOTE_ALL)
 
         canvasx = self.canvasx(event.x)
         canvasy = self.canvasy(event.y)
@@ -479,7 +454,7 @@ class GridCanvas(CustomCanvas):
             self.select_note(note.id)
 
     def _do_eraser(self, event):
-        self.deselect_note(GridCanvas.SEL)
+        self.deselect_note(NOTE_SEL)
         if self._mouse_state.item:
             self.remove_note(self._mouse_state.item)
 
@@ -513,9 +488,9 @@ class GridCanvas(CustomCanvas):
         argc = len(args)
         if argc == 0:
             return
-        if argc == 1 and args[0] in [GridCanvas.SEL, 'sel']:
+        if argc == 1 and args[0] in [NOTE_SEL, 'sel']:
             return NoteList(self.note_list.selected())
-        elif argc == 1 and args[0] in [GridCanvas.ALL, 'all']:
+        elif argc == 1 and args[0] in [NOTE_ALL, 'all']:
             return self.note_list
         else:
             return NoteList(
@@ -567,6 +542,37 @@ class GridCanvas(CustomCanvas):
                 note.velocity, GridCanvas.COLOR_NOTE_FILL, 1)
             self.itemconfig(note.id, fill=fill_color)
             note.selected = False
+
+    def cut_selected(self):
+        self._clipboard = self.note_list.selected().copy()
+        self.remove_note(*self.note_list.selected().ids())
+
+    def copy_selected(self):
+        selected = self.note_list.selected()
+        if not selected: return
+        self._clipboard = selected.copy()
+
+        last = self._clipboard[-1]
+        self._callbacks['play_pos'](last.onset + last.duration)
+
+        self.delete(self.find_withtags('line', 'play'))
+        self._draw_play_line()
+
+    def paste_selected(self, *args):
+        self.deselect_note('all')
+
+        new = []
+        first = self._clipboard[0]
+        for note in self._clipboard:
+            new_note = note.copy()
+            new_note.onset = (note.onset -
+                first.onset + self._play_pos)
+            new.append(new_note)
+
+        last = new[-1]
+        self._callbacks['play_pos'](last.onset + last.duration)
+
+        self.add_note(*new)
 
     def xview(self, *args):
         self.delete(*self.find_withtags('line'))
