@@ -35,8 +35,9 @@ class PianoRoll(Frame):
             print "Couldn't load icon file"
 
         callbacks = self._make_callbacks()
+        self._init_global_commands(callbacks)
 
-        menu = PianoRollMenu(root, callbacks['menu'])
+        menu = PianoRollMenu(root, callbacks['global'])
         root.config(menu=menu)
         root.title(make_title("Untitled", self._dirty))
 
@@ -49,6 +50,35 @@ class PianoRoll(Frame):
         self.bottombar.pack(side=BOTTOM, fill=X)
         self.main_frame.pack(fill=BOTH, expand=True)
         self.pack(fill=BOTH, expand=True)
+
+    def _init_global_commands(self, commands):
+        self.bind_all(
+            "<Control-n>",
+            lambda event: commands['global']['new']())
+        self.bind_all(
+            "<Control-o>",
+            lambda event: commands['global']['open']())
+        self.bind_all(
+            "<Control-s>",
+            lambda event: commands['global']['save']())
+        self.bind_all(
+            "<Control-w>",
+            lambda event: commands['global']['exit']())
+        self.bind_all(
+            "<Control-x>",
+            lambda event: commands['global']['cut']())
+        self.bind_all(
+            "<Control-c>",
+            lambda event: commands['global']['copy']())
+        self.bind_all(
+            "<Control-v>",
+            lambda event: commands['global']['paste']())
+        self.bind_all(
+            "<Delete>",
+            lambda event: commands['global']['delete']())
+        self.bind_all(
+            "<Control-a>",
+            lambda event: commands['global']['select_all']())
 
     def _cmd_save_as(self):
         from tkFileDialog import asksaveasfilename
@@ -71,7 +101,7 @@ class PianoRoll(Frame):
         return True
 
     def _make_callbacks(self):
-        def menu_new():
+        def global_new():
             clear_notes = True
 
             if self._dirty:
@@ -84,7 +114,7 @@ class PianoRoll(Frame):
                     return
                 elif answer:
                     if self._filepath:
-                        menu_save()
+                        global_save()
                     else:
                         clear_notes = self._cmd_save_as()
 
@@ -96,7 +126,7 @@ class PianoRoll(Frame):
             self._filepath = None
             self.set_dirty(False)
 
-        def menu_open():
+        def global_open():
             if self._dirty:
                 title = "Open Score"
                 msg = ("Save changes before opening a"
@@ -107,7 +137,7 @@ class PianoRoll(Frame):
                     return
                 elif answer:
                     if self._filepath:
-                        menu_save()
+                        global_save()
                     elif not self._cmd_save_as():
                         return False
 
@@ -125,16 +155,16 @@ class PianoRoll(Frame):
 
             self.set_dirty(False)
 
-        def menu_save():
+        def global_save():
             if not self._filepath:
-                menu_save_as()
+                global_save_as()
             else:
                 data = self.main_frame.get_song_state()
                 save_song(self._filepath, data)
 
                 self.set_dirty(False)
 
-        def menu_save_as():
+        def global_save_as():
             from tkFileDialog import asksaveasfilename
 
             initial_file = os.path.basename(
@@ -154,7 +184,7 @@ class PianoRoll(Frame):
 
             return True
 
-        def menu_exit():
+        def global_exit():
             if self._dirty:
                 title = "Exit"
                 msg = "Save changes before exiting?"
@@ -164,20 +194,29 @@ class PianoRoll(Frame):
                     return
                 elif answer:
                     if self._filepath:
-                        menu_save()
+                        global_save()
                     elif not self._cmd_save_as():
                         return False
 
             self.quit()
 
-        def menu_cut():
+        def global_cut():
             self.main_frame.grid_canvas.cut_selected()
 
-        def menu_copy():
+        def global_copy():
             self.main_frame.grid_canvas.copy_selected()
 
-        def menu_paste():
+        def global_paste():
             self.main_frame.grid_canvas.paste_selected()
+
+        def global_delete():
+            self.main_frame.grid_canvas.remove_note('sel')
+
+        def global_clear():
+            self.main_frame.grid_canvas.remove_note('all')
+
+        def global_select_all():
+            self.main_frame.grid_canvas.select_note('all')
 
         def main_set_note(note):
             self.toolbar.note_data_frame.update_note_data(note)
@@ -208,15 +247,18 @@ class PianoRoll(Frame):
             self.main_frame.set_timesig(timesig)
 
         return {
-            'menu': {
-                'new': menu_new,
-                'open': menu_open,
-                'save': menu_save,
-                'save_as': menu_save_as,
-                'exit': menu_exit,
-                'cut': menu_cut,
-                'copy': menu_copy,
-                'paste': menu_paste
+            'global': {
+                'new': global_new,
+                'open': global_open,
+                'save': global_save,
+                'save_as': global_save_as,
+                'exit': global_exit,
+                'cut': global_cut,
+                'copy': global_copy,
+                'paste': global_paste,
+                'delete': global_delete,
+                'clear': global_clear,
+                'select_all': global_select_all
             },
             'main': {
                 'note': main_set_note,

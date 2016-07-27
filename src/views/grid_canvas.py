@@ -13,6 +13,7 @@ from src.const import (
 NOTE_SEL = -1
 NOTE_ALL = -2
 
+
 class GridCanvas(CustomCanvas):
 
     CANVAS_WIDTH = 480
@@ -71,8 +72,6 @@ class GridCanvas(CustomCanvas):
         self.bind('<ButtonPress-1>', self._on_bttnone_press)
         self.bind('<ButtonRelease-1>', self._on_bttnone_release)
         self.bind('<Double-Button-1>', self._on_bttnone_double)
-        self.bind('<Control-a>', self._on_ctrl_a)
-        self.bind('<Delete>', self._on_delete)
 
     def _draw_all(self):
         self._draw_horizontal_lines()
@@ -405,12 +404,6 @@ class GridCanvas(CustomCanvas):
             ticks = px_to_tick(x / zoomx)
             self._callbacks['play_pos'](ticks)
 
-    def _on_ctrl_a(self, event):
-        self.select_note('all')
-
-    def _on_delete(self, event):
-        self.remove_note(NOTE_SEL)
-
     def _do_sel(self, event):
         ctrl_mask = 0x0004
         ctrl_pressed = (event.state & ctrl_mask == ctrl_mask)
@@ -484,17 +477,16 @@ class GridCanvas(CustomCanvas):
             self._draw_play_line()
             self._draw_sharp_rows()
 
-    def get_note(self, *args):
+    def get_ids(self, *args):
         argc = len(args)
         if argc == 0:
             return
         if argc == 1 and args[0] in [NOTE_SEL, 'sel']:
-            return NoteList(self.note_list.selected())
+            return self.note_list.selected().ids()
         elif argc == 1 and args[0] in [NOTE_ALL, 'all']:
-            return self.note_list
+            return self.note_list.ids()
         else:
-            return NoteList(
-                (self.note_list.from_id(id) for id in args))
+            return args
 
     def add_note(self, *notes):
         if not notes:
@@ -511,10 +503,10 @@ class GridCanvas(CustomCanvas):
         if not args:
             return
 
-        notes = self.get_note(*args)
-        for note in notes:
-            self.note_list.remove(note)
-            self.delete(note.id)
+        ids = self.get_ids(*args)
+        for id in ids:
+            self.note_list.remove(id)
+            self.delete(id)
 
         if 'dirty' in self._callbacks:
             self._callbacks['dirty'](True)
@@ -523,11 +515,12 @@ class GridCanvas(CustomCanvas):
         if not args or args[0] == 'sel':
             return
 
-        notes = self.get_note(*args)
-        for note in notes:
+        id = self.get_ids(*args)
+        for id in id:
+            note = self.note_list.from_id(id)
             fill_color = velocity_to_color(
                 note.velocity, GridCanvas.COLOR_NOTE_FILL, 0.7)
-            self.itemconfig(note.id, fill=fill_color)
+            self.itemconfig(id, fill=fill_color)
             note.selected = True
 
         self._callbacks['note'](self.note_list.selected()[0])
@@ -536,11 +529,12 @@ class GridCanvas(CustomCanvas):
         if not args:
             return
 
-        notes = self.get_note(*args)
-        for note in notes:
+        ids = self.get_ids(*args)
+        for id in ids:
+            note = self.note_list.from_id(id)
             fill_color = velocity_to_color(
                 note.velocity, GridCanvas.COLOR_NOTE_FILL, 1)
-            self.itemconfig(note.id, fill=fill_color)
+            self.itemconfig(id, fill=fill_color)
             note.selected = False
 
     def cut_selected(self):
@@ -610,7 +604,8 @@ class GridCanvas(CustomCanvas):
         if not args:
             return
 
-        notes = self.get_note(*args).copy()
+        ids = self.get_ids(*args)
+        notes = [self.note_list.from_id(id).copy() for id in ids]
         self.remove_note(*args)
         for note in notes:
             setattr(note, attr, value)

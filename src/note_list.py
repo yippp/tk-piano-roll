@@ -71,5 +71,11 @@ class NoteList(object):
 
         self.notes.insert(insert_at, note)
 
-    def remove(self, note):
-        self.notes.remove(note)
+    def remove(self, note_or_id):
+        if isinstance(note_or_id, Note):
+            self.notes.remove(note_or_id)
+        elif isinstance(note_or_id, (int, long, float)):
+            note = self.from_id(note_or_id)
+            self.notes.remove(note)
+        else:
+            raise ValueError

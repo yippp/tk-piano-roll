@@ -21,18 +21,14 @@ class PianoRollMenu(Menu):
             activebackground=PianoRollMenu.COLOR1,
             activeforeground=PianoRollMenu.COLOR2)
         self.file_menu.add_command(
-            label="New", underline=0,
-            accelerator="Ctrl+N")
+            label="New", accelerator="Ctrl+N")
         self.file_menu.add_command(
-            label='Open', underline=0,
-            accelerator="Ctrl+O")
+            label='Open', accelerator="Ctrl+O")
         self.file_menu.add_command(
-            label='Save', underline=0,
-            accelerator="Ctrl+S")
+            label='Save', accelerator="Ctrl+S")
         self.file_menu.add_command(label='Save as...')
         self.file_menu.add_command(
-            label='Exit', underline=1,
-            accelerator="Ctrl+W")
+            label='Exit', accelerator="Ctrl+W")
 
         self.edit_menu = Menu(
             self, tearoff=0, bg=PianoRollMenu.COLOR2,
@@ -40,11 +36,21 @@ class PianoRollMenu(Menu):
             activebackground=PianoRollMenu.COLOR1,
             activeforeground=PianoRollMenu.COLOR2)
         self.edit_menu.add_command(
-            label='Cut', underline=0, accelerator='Ctrl+X')
+            label='Undo', accelerator='Ctrl+Z')
         self.edit_menu.add_command(
-            label='Copy', underline=0, accelerator='Ctrl+C')
+            label='Redo', accelerator='Ctrl+Shift+Z')
+        self.edit_menu.add_separator()
         self.edit_menu.add_command(
-            label='Paste', underline=0, accelerator='Ctrl+V')
+            label='Cut', accelerator='Ctrl+X')
+        self.edit_menu.add_command(
+            label='Copy', accelerator='Ctrl+C')
+        self.edit_menu.add_command(
+            label='Paste', accelerator='Ctrl+V')
+        self.edit_menu.add_command(label='Delete')
+        self.edit_menu.add_command(label='Clear')
+        self.edit_menu.add_separator()
+        self.edit_menu.add_command(
+            label='Select All', accelerator='Ctrl+A')
 
         self.add_cascade(
             label='File', menu=self.file_menu, underline=0)
@@ -58,29 +64,27 @@ class PianoRollMenu(Menu):
             activeforeground=PianoRollMenu.COLOR2)
 
     def _config_commands(self, callbacks):
-        new_cmd = callbacks.get('new', dummy)
-        open_cmd = callbacks.get('open', dummy)
-        save_cmd = callbacks.get('save', dummy)
-        save_as_cmd = callbacks.get('save_as', dummy)
-        exit_cmd = callbacks.get('exit', dummy)
-        cut_cmd = callbacks.get('cut', dummy)
-        copy_cmd = callbacks.get('copy', dummy)
-        paste_cmd = callbacks.get('paste', dummy)
+        new = callbacks.get('new', dummy)
+        open = callbacks.get('open', dummy)
+        save = callbacks.get('save', dummy)
+        save_as = callbacks.get('save_as', dummy)
+        exit = callbacks.get('exit', dummy)
+        cut = callbacks.get('cut', dummy)
+        copy = callbacks.get('copy', dummy)
+        paste = callbacks.get('paste', dummy)
+        delete = callbacks.get('delete', dummy)
+        clear = callbacks.get('clear', dummy)
+        select_all = callbacks.get('select_all', dummy)
 
-        self.file_menu.entryconfig(0, command=new_cmd)
-        self.file_menu.entryconfig(1, command=open_cmd)
-        self.file_menu.entryconfig(2, command=save_cmd)
-        self.file_menu.entryconfig(3, command=save_as_cmd)
-        self.file_menu.entryconfig(4, command=exit_cmd)
+        self.file_menu.entryconfig(0, command=new)
+        self.file_menu.entryconfig(1, command=open)
+        self.file_menu.entryconfig(2, command=save)
+        self.file_menu.entryconfig(3, command=save_as)
+        self.file_menu.entryconfig(4, command=exit)
 
-        self.edit_menu.entryconfig(0, command=cut_cmd)
-        self.edit_menu.entryconfig(1, command=copy_cmd)
-        self.edit_menu.entryconfig(2, command=paste_cmd)
-
-        self.bind_all("<Control-n>", lambda event: new_cmd())
-        self.bind_all("<Control-o>", lambda event: open_cmd())
-        self.bind_all("<Control-s>", lambda event: save_cmd())
-        self.bind_all("<Control-w>", lambda event: exit_cmd())
-        self.bind_all("<Control-x>", lambda event: cut_cmd())
-        self.bind_all("<Control-c>", lambda event: copy_cmd())
-        self.bind_all("<Control-v>", lambda event: paste_cmd())
+        self.edit_menu.entryconfig(3, command=cut)
+        self.edit_menu.entryconfig(4, command=copy)
+        self.edit_menu.entryconfig(5, command=paste)
+        self.edit_menu.entryconfig(6, command=delete)
+        self.edit_menu.entryconfig(7, command=clear)
+        self.edit_menu.entryconfig(9, command=select_all)
