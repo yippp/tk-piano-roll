@@ -13,10 +13,8 @@ class GridState(object):
     SUBDIV_CUR = -1
     SUBDIV_BU = -2
     
-    def __init__(self, subdiv, beat_count, beat_unit,
-        end, zoomx, zoomy):
-        self.beat_count = beat_count
-        self.beat_unit = beat_unit
+    def __init__(self, subdiv, timesig, end, zoomx, zoomy):
+        self.timesig = timesig
         self.subdiv = subdiv
         self.zoomx = zoomx
         self.zoomy = zoomy
@@ -34,7 +32,7 @@ class GridState(object):
         return diff
 
     def copy(self):
-        return GridState(self.subdiv, self.beat_count, self.beat_unit,
+        return GridState(self.subdiv, self.timesig,
             self.end, self.zoomx, self.zoomy)
 
     def contains(self, x, y, zoom=True):
@@ -45,28 +43,32 @@ class GridState(object):
         from helper import to_ticks
 
         bar, beat, tick = self.end
+        beat_count, beat_unit = self.timesig
         zoomx = self.zoomx if zoom else 1
         return to_ticks(
-            bar - 1, beat - 1, tick_to_px(tick),
-            self.beat_count, self.beat_unit,
-            tpq=QUARTER_NOTE_WIDTH) * zoomx
+            bar - 1, beat - 1, tick_to_px(tick), beat_count,
+            beat_unit, tpq=QUARTER_NOTE_WIDTH) * zoomx
 
     def height(self, zoom=True):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
 
     def bar_width(self, zoom=True):
         from helper import to_ticks
+
+        beat_count, beat_unit = self.timesig
         zoomx = self.zoomx if zoom else 1
 
         return to_ticks(
-            bpb=self.beat_count, bu=self.beat_unit,
+            bpb=beat_count, bu=beat_unit,
             tpq=QUARTER_NOTE_WIDTH) * zoomx
 
     def cell_width(self, subdiv=SUBDIV_CUR, zoom=True):
+        beat_unit = self.timesig[1]
+
         if subdiv in [GridState.SUBDIV_CUR, 'cur_subdiv']:
             _subdiv = self.subdiv
         elif subdiv in [GridState.SUBDIV_BU, 'bu_subdiv']:
-            _subdiv = math.log(float(self.beat_unit), 2)
+            _subdiv = math.log(float(beat_unit), 2)
         else:
             _subdiv = subdiv
 

@@ -40,9 +40,6 @@ class GridCanvas(CustomCanvas):
         self._init_ui()
         self._bind_event_handlers()
 
-        self.xview_moveto(0)
-        self.yview_moveto(0)
-
     def _init_data(self, gstate, callbacks):
         self._gstate = gstate
         self._callbacks = callbacks
@@ -466,7 +463,7 @@ class GridCanvas(CustomCanvas):
             self._update_scrollregion()
             self._update_visibleregion()
             self._draw_all()
-        if any(x in diff for x in ['beat_count', 'beat_unit', 'end']):
+        if any(x in diff for x in ['timesig', 'end']):
             self.delete(*self.find_withtags('line'))
             self.delete(*self.find_withtags('sharp_row'))
             self._update_scrollregion()

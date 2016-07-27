@@ -42,10 +42,8 @@ class RulerCanvas(CustomCanvas):
 
     def _draw_grid_lines(self):
         canvas_height = self.winfo_reqheight()
-        grid_width = self._gstate.width()
         bar_width = self._gstate.bar_width()
-        beat_count = self._gstate.beat_count
-        beat_unit = self._gstate.beat_unit
+        beat_count, beat_unit = self._gstate.timesig
         bu_subdiv = math.log(float(beat_unit), 2)
         text_width = self._font.measure(
             "{0}.{1}".format(self._gstate.end[0], beat_count))
@@ -93,8 +91,7 @@ class RulerCanvas(CustomCanvas):
         canvas_height = int(self.config('height')[4])
         bar_width = self._gstate.bar_width()
         bar = self._gstate.end[0]
-        beat_count = self._gstate.beat_count
-        beat_unit = self._gstate.beat_unit
+        beat_count, beat_unit = self._gstate.timesig
         bu_subdiv = math.log(float(beat_unit), 2)
         bu_cell_width = self._gstate.cell_width(
             subdiv=bu_subdiv)

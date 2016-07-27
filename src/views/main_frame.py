@@ -121,7 +121,9 @@ class MainFrame(Frame):
             self.grid_canvas.add_note(note)
 
     def get_song_state(self):
-        timesig = (self._grid.beat_count, self._grid.beat_unit)
+        beat_count, beat_unit = self._grid.timesig
+        timesig = (beat_count, beat_unit)
+
         return {
             'notes': self.grid_canvas.note_list.notes,
             'end': self._grid.end,
@@ -129,30 +131,24 @@ class MainFrame(Frame):
         }
 
     def set_subdiv(self, subdiv):
-        if self._grid.subdiv != subdiv:
-            self._grid.subdiv = subdiv
+        self._grid.subdiv = subdiv
 
     def set_zoomx(self, zoomx):
-        if self._grid.zoomx != zoomx:
-            self._grid.zoomx = zoomx
+        self._grid.zoomx = zoomx
 
     def set_zoomy(self, zoomy):
-        if self._grid.zoomy != zoomy:
-            self._grid.zoomy = zoomy
+        self._grid.zoomy = zoomy
 
     def set_end(self, end):
-        if self._grid.end != end:
-            self._grid.end = end
+        self._grid.end = end
 
-            dirty_cb = self._callbacks.get('dirty')
-            if dirty_cb: dirty_cb(True)
+        dirty_cb = self._callbacks.get('dirty')
+        if dirty_cb:
+            dirty_cb(True)
 
     def set_timesig(self, timesig):
-        beat_count, beat_unit = timesig
-        if (self._grid.beat_count != beat_count or
-            self._grid.beat_unit != beat_unit):
-            self._grid.beat_count = beat_count
-            self._grid.beat_unit = beat_unit
+        self._grid.timesig = timesig
 
-            dirty_cb = self._callbacks.get('dirty')
-            if dirty_cb: dirty_cb(True)
+        dirty_cb = self._callbacks.get('dirty')
+        if dirty_cb:
+            dirty_cb(True)

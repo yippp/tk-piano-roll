@@ -40,8 +40,7 @@ class MousePosFrame(Frame):
     def set_mousepos(self, x, y):
         grid_height = self._gstate.height()
         cell_height = self._gstate.cell_height()
-        beat_count = self._gstate.beat_count
-        beat_unit = self._gstate.beat_unit
+        beat_count, beat_unit = self._gstate.timesig
         zoomx = self._gstate.zoomx
 
         pos = to_notedur(
