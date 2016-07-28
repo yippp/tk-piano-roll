@@ -1,9 +1,12 @@
 from Tkinter import *
-from tkFont import Font
+from include.custom_canvas import CustomCanvas
 from src.helper import to_pitchname, to_notedur, px_to_tick
 
 
 class MousePosFrame(Frame):
+
+    CANVAS_WIDTH = 100
+    CANVAS_HEIGHT = 45
 
     def __init__(self, parent, gstate):
         Frame.__init__(self, parent)
@@ -15,34 +18,30 @@ class MousePosFrame(Frame):
     def _init_data(self, gstate):
         self._gstate = gstate
         self._mouse_pos = (0, 0)
-        self._font = Font(family='sens-serif', size=9)
 
     def _init_ui(self):
-        self._pos_label = Label(
-            self, bg='white', font=self._font)
-        self._midinote_label = Label(
-            self, bg='white', font=self._font)
-
-        self._pos_label.pack(fill=BOTH, expand=True, pady=(0, 3))
-        self._midinote_label.pack(fill=BOTH, expand=True)
+        self.canvas = CustomCanvas(
+            self, width=MousePosFrame.CANVAS_WIDTH,
+            height=MousePosFrame.CANVAS_HEIGHT,
+            bg='white')
+        self.canvas.pack()
 
         self.set_mousepos(*self._mouse_pos)
 
     def _bind_event_handlers(self):
-        self._pos_label.bind(
-            '<ButtonPress-1>', self._on_bttnone_press)
-        self._midinote_label.bind(
-            '<ButtonPress-1>', self._on_bttnone_press)
+        self.canvas.bind('<ButtonPress-1>', self._on_bttnone_press)
 
-    def _on_bttnone_press(self, event):
-        self.focus_set()
+    def _draw(self):
+        self._draw_text()
+        self._draw_line()
 
-    def set_mousepos(self, x, y):
+    def _draw_text(self):
         grid_height = self._gstate.height()
         cell_height = self._gstate.cell_height()
         beat_count, beat_unit = self._gstate.timesig
         zoomx = self._gstate.zoomx
 
+        x, y = self._mouse_pos
         pos = to_notedur(
             px_to_tick(x / zoomx), beat_count, beat_unit)
         pos[0] += 1
@@ -51,11 +50,38 @@ class MousePosFrame(Frame):
         midinumber = int((grid_height - y - 1) / cell_height)
         pitchname = to_pitchname(midinumber)
 
-        self._pos_label.config(text="{0}.{1}.{2}".format(*pos))
-        self._midinote_label.config(
-            text=str("{0}".format(pitchname)))
+        id = self.canvas.add_to_layer(
+            0, self.canvas.create_text, (0, 3),
+            text="{0}.{1}.{2}".format(*pos),
+            anchor=NW)
+        offset = self._calc_offset(id)
+        self.canvas.move(id, offset, 0)
 
+        id = self.canvas.add_to_layer(
+            0, self.canvas.create_text, (0, 27),
+            text=pitchname, anchor=NW)
+        offset = self._calc_offset(id)
+        self.canvas.move(id, offset, 0)
+
+    def _draw_line(self):
+        x1 = 0
+        x2 = MousePosFrame.CANVAS_WIDTH
+        y = MousePosFrame.CANVAS_HEIGHT / 2
+        self.canvas.add_to_layer(
+            0, self.canvas.create_line, (x1, y, x2, y))
+
+    def _calc_offset(self, id):
+        coords = self.canvas.bbox(id)
+        return ((MousePosFrame.CANVAS_WIDTH / 2) -
+            ((coords[2] - coords[0]) / 2))
+
+    def _on_bttnone_press(self, event):
+        self.focus_set()
+
+    def set_mousepos(self, x, y):
         self._mouse_pos = (x, y)
+        self.canvas.delete(ALL)
+        self._draw()
 
     def on_update(self, gstate):
         self._gstate = gstate
