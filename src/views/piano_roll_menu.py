@@ -38,15 +38,19 @@ class PianoRollMenu(Menu):
         self.edit_menu.add_command(
             label='Undo', accelerator='Ctrl+Z')
         self.edit_menu.add_command(
-            label='Redo', accelerator='Ctrl+Shift+Z')
+            label='Redo', accelerator='Ctrl+Y')
         self.edit_menu.add_separator()
         self.edit_menu.add_command(
-            label='Cut', accelerator='Ctrl+X')
+            label='Cut', accelerator='Ctrl+X',
+            state=DISABLED)
         self.edit_menu.add_command(
-            label='Copy', accelerator='Ctrl+C')
+            label='Copy', accelerator='Ctrl+C',
+            state=DISABLED)
         self.edit_menu.add_command(
-            label='Paste', accelerator='Ctrl+V')
-        self.edit_menu.add_command(label='Delete')
+            label='Paste', accelerator='Ctrl+V',
+            state=DISABLED)
+        self.edit_menu.add_command(label='Delete',
+            state=DISABLED)
         self.edit_menu.add_command(label='Clear')
         self.edit_menu.add_separator()
         self.edit_menu.add_command(
@@ -64,27 +68,38 @@ class PianoRollMenu(Menu):
             activeforeground=PianoRollMenu.COLOR2)
 
     def _config_commands(self, callbacks):
-        new = callbacks.get('new', dummy)
-        open = callbacks.get('open', dummy)
-        save = callbacks.get('save', dummy)
-        save_as = callbacks.get('save_as', dummy)
-        exit = callbacks.get('exit', dummy)
-        cut = callbacks.get('cut', dummy)
-        copy = callbacks.get('copy', dummy)
-        paste = callbacks.get('paste', dummy)
-        delete = callbacks.get('delete', dummy)
-        clear = callbacks.get('clear', dummy)
-        select_all = callbacks.get('select_all', dummy)
+        def get_callback(name):
+            return callbacks.get(name, dummy)
 
-        self.file_menu.entryconfig(0, command=new)
-        self.file_menu.entryconfig(1, command=open)
-        self.file_menu.entryconfig(2, command=save)
-        self.file_menu.entryconfig(3, command=save_as)
-        self.file_menu.entryconfig(4, command=exit)
+        self.file_menu.entryconfig(
+            0, command=get_callback('new'))
+        self.file_menu.entryconfig(
+            1, command=get_callback('open'))
+        self.file_menu.entryconfig(
+            2, command=get_callback('save'))
+        self.file_menu.entryconfig(
+            3, command=get_callback('save_as'))
+        self.file_menu.entryconfig(
+            4, command=get_callback('exit'))
 
-        self.edit_menu.entryconfig(3, command=cut)
-        self.edit_menu.entryconfig(4, command=copy)
-        self.edit_menu.entryconfig(5, command=paste)
-        self.edit_menu.entryconfig(6, command=delete)
-        self.edit_menu.entryconfig(7, command=clear)
-        self.edit_menu.entryconfig(9, command=select_all)
+        self.edit_menu.entryconfig(
+            0, command=get_callback('undo'),
+            state=DISABLED)
+        self.edit_menu.entryconfig(
+            1, command=get_callback('redo'),
+            state=DISABLED)
+        self.edit_menu.entryconfig(
+            3, command=get_callback('cut'))
+        self.edit_menu.entryconfig(
+            4, command=get_callback('copy'))
+        self.edit_menu.entryconfig(
+            5, command=get_callback('paste'))
+        self.edit_menu.entryconfig(
+            6, command=get_callback('delete'))
+        self.edit_menu.entryconfig(
+            7, command=get_callback('clear'))
+        self.edit_menu.entryconfig(
+            9, command=get_callback('select_all'))
+
+    def set_entry_state(self, entry, state):
+        self.edit_menu.entryconfig(entry, state=state)

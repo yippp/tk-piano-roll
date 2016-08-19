@@ -127,8 +127,7 @@ class Rect(object):
     def move(self, *args):
         if len(args) == 1 and isinstance(args[0], Vector2d):
             coords = self.coords + args[0]
-        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
-            isinstance(args[1], (int, long, float))):
+        elif len(args) == 2 and all(map(_isnumber, args)):
             x = self.coords.x + args[0]
             y = self.coords.y + args[1]
             coords = Vector2d(x, y)
@@ -140,8 +139,7 @@ class Rect(object):
     def move_ip(self, *args):
         if len(args) == 1 and isinstance(args[0], Vector2d):
             self.coords += args[0]
-        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
-            isinstance(args[1], (int, long, float))):
+        elif len(args) == 2 and all(map(_isnumber, args)):
             self.left += args[0]
             self.top += args[1]
 
@@ -200,6 +198,6 @@ class Rect(object):
             raise ValueError
 
         return (rect.left >= self.left and
-                rect.right < self.right and
+                rect.right <= self.right and
                 rect.top >= self.top and
-                rect.bottom < self.bottom)
+                rect.bottom <= self.bottom)

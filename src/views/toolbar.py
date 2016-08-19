@@ -2,7 +2,7 @@ from Tkinter import *
 from ttk import Separator
 from snap_frame import SnapFrame
 from toolbox import Toolbox
-from note_data_frame import NoteDataFrame
+from note_edit_frame import NoteEditFrame
 
 
 class Toolbar(Frame):
@@ -16,7 +16,7 @@ class Toolbar(Frame):
     def _init_ui(self, callbacks):
         self.snap_frame = SnapFrame(self, callbacks['snap'])
         self.toolbox = Toolbox(self, callbacks['tool'])
-        self.note_data_frame = NoteDataFrame(
+        self.note_data_frame = NoteEditFrame(
             self, callbacks['note'])
         self.separator = Separator(self, orient=VERTICAL)
 

@@ -10,13 +10,20 @@ class CustomCanvas(Canvas):
         if not kwargs.get('highlightthickness'):
             self.config(highlightthickness=0)
 
+    def _adjust_layers(self):
+        for layer in sorted(self._layers, reverse=True):
+            self.lift(layer)
+
     def add_to_layer(self, layer, command, coords, **kwargs):
         layer_tag = "layer {}".format(layer)
-        if layer_tag not in self._layers: self._layers.append(layer_tag)
+        if layer_tag not in self._layers:
+            self._layers.append(layer_tag)
         tags = kwargs.setdefault("tags", [])
 
-        if (isinstance(tags, str)): tags = [tags]
-        else: tags = list(tags)
+        if (isinstance(tags, str)):
+            tags = [tags]
+        else:
+            tags = list(tags)
 
         tags.append(layer_tag)
         kwargs['tags'] = tags
@@ -24,10 +31,6 @@ class CustomCanvas(Canvas):
         self._adjust_layers()
 
         return item_id
-
-    def _adjust_layers(self):
-        for layer in sorted(self._layers, reverse=True):
-            self.lift(layer)
 
     def find_withtags(self, *args):
         itrsec = self.find_withtag(ALL)

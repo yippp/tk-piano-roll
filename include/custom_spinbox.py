@@ -1,8 +1,10 @@
 from Tkinter import *
-from src.helper import dummy, isint
+from src.helper import isint
 
 
-class _ValueList():
+READONLY = 'readonly'
+
+class _ValueList(object):
 
     def __init__(self, values, match_case=True):
         self._values = values
@@ -39,9 +41,10 @@ class _ValueList():
         self._match_case = match_case
 
 
-class CustomSpinbox(Spinbox):
+class CustomSpinbox(Spinbox, object):
 
     def __init__(self, parent, **kwargs):
+        state = kwargs.pop('state', 'readonly')
         start = kwargs.pop('start', None)
         convert = kwargs.pop('convert', None)
         match_case = kwargs.pop('match_case', None)
@@ -50,15 +53,21 @@ class CustomSpinbox(Spinbox):
         Spinbox.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self._init_data(start=start, convert=convert,
-            match_case=match_case, callback=callback)
+        self._init_data(state=state, start=start,
+            convert=convert, match_case=match_case,
+            callback=callback)
         self._bind_event_handlers()
 
     def _init_data(self, **kwargs):
+        state = kwargs['state']
         start = kwargs['start']
         convert = kwargs['convert']
         match_case = kwargs['match_case']
         callback = kwargs['callback']
+
+        if state not in [DISABLED, READONLY]:
+            raise ValueError("state should be either "
+                "'disabled' or 'readonly'")
 
         values = self.config()['values'][4].split()
         if values:
@@ -80,16 +89,16 @@ class CustomSpinbox(Spinbox):
         self.config(
             command=self._callback,
             textvariable=self._var,
-            state='readonly')
-
-    def _update(self, *args):
-        self._curr_value = self._var.get()
+            state=state)
 
     def _bind_event_handlers(self):
         self.bind('<Return>', self._on_return)
         self.bind('<KP_Enter>', self._on_return)
         self.bind('<FocusOut>', self._on_lost_focus)
         self.bind('<Key>', self._after_keypress)
+
+    def _update(self, *args):
+        self._curr_value = self._var.get()
 
     def _on_return(self, event):
         state = self.config()['state'][4]
@@ -173,7 +182,6 @@ class CustomSpinbox(Spinbox):
 
     def set(self, value):
         self._var.set(value)
-        self._update()
 
     def validate(self):
         if self._values:

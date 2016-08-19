@@ -1,4 +1,5 @@
 from Tkinter import *
+from src.models.grid_model import GridModel
 from include.custom_canvas import CustomCanvas
 from src.helper import to_pitchname, to_notedur, px_to_tick
 
@@ -8,15 +9,15 @@ class MousePosFrame(Frame):
     CANVAS_WIDTH = 100
     CANVAS_HEIGHT = 45
 
-    def __init__(self, parent, gstate):
+    def __init__(self, parent):
         Frame.__init__(self, parent)
 
-        self._init_data(gstate)
+        self._init_data()
         self._init_ui()
         self._bind_event_handlers()
 
-    def _init_data(self, gstate):
-        self._gstate = gstate
+    def _init_data(self):
+        self._grid_state = GridModel()
         self._mouse_pos = (0, 0)
 
     def _init_ui(self):
@@ -36,10 +37,10 @@ class MousePosFrame(Frame):
         self._draw_line()
 
     def _draw_text(self):
-        grid_height = self._gstate.height()
-        cell_height = self._gstate.cell_height()
-        beat_count, beat_unit = self._gstate.timesig
-        zoomx = self._gstate.zoomx
+        grid_height = self._grid_state.height()
+        cell_height = self._grid_state.cell_height()
+        beat_count, beat_unit = self._grid_state.timesig
+        zoomx = self._grid_state.zoom[0]
 
         x, y = self._mouse_pos
         pos = to_notedur(
@@ -83,7 +84,7 @@ class MousePosFrame(Frame):
         self.canvas.delete(ALL)
         self._draw()
 
-    def on_update(self, gstate):
-        self._gstate = gstate
+    def on_state_change(self, new_grid_state):
+        self._grid_state = new_grid_state
 
 

@@ -4,7 +4,7 @@ from velocity_frame import VelocityFrame
 from src.helper import dummy
 
 
-class NoteDataFrame(Frame):
+class NoteEditFrame(Frame):
 
     def __init__(self, parent, cb=dummy):
         Frame.__init__(self, parent)
@@ -20,6 +20,10 @@ class NoteDataFrame(Frame):
         self.pitch_frame.pack(side=LEFT)
         self.vel_frame.pack(side=LEFT, padx=4)
 
-    def update_note_data(self, note):
+    def set_note(self, note):
         self.pitch_frame.set_pitch(note.midinumber)
         self.vel_frame.set_velocity(note.velocity)
+
+    def set_state(self, state):
+        self.pitch_frame.pitch_spinbox.config(state=state)
+        self.vel_frame.velocity_spinbox.config(state=state)

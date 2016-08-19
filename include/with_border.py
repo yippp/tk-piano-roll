@@ -6,8 +6,7 @@ class WithBorder(Frame):
         Frame.__init__(self, parent)
         self.parent = parent
         self._widget_class = widget_class
-        self._args = args
-        self._kwargs = kwargs
+        self._init_data(args, kwargs)
 
         self._init_ui()
         self._bind_event_handlers()
@@ -17,6 +16,10 @@ class WithBorder(Frame):
 
     def __getattr__(self, name):
         return getattr(self._widget, name)
+
+    def _init_data(self, args, kwargs):
+        self._args = args
+        self._kwargs = kwargs
 
     def _init_ui(self):
         # dispose of canvas highlight options

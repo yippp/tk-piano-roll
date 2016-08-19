@@ -21,7 +21,7 @@ class PitchFrame(Frame):
         self.pitch_spinbox = CustomSpinbox(
             self, callback=self._forward, values=values,
             start='C4', width=4, match_case=False,
-            convert=1)
+            convert=1, state=DISABLED)
 
         self.pitch_label.pack(side=LEFT)
         self.pitch_spinbox.pack(side=LEFT)

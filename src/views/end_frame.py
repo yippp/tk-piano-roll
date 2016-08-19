@@ -19,16 +19,16 @@ class EndFrame(LabelFrame):
         self.config(text="End", padx=4, pady=4)
 
         self.bar_spinbox = CustomSpinbox(
-            self, callback=self._forward,
+            self, callback=self._notify,
             from_=1, to=maxsize, start=2,
             width=EndFrame.SPINBOX_WIDTH)
 
         self.beat_spinbox = CustomSpinbox(
-            self, callback=self._forward,
-            from_=1, to=4, width=EndFrame.SPINBOX_WIDTH)
+            self, callback=self._notify, from_=1,
+            to=4, width=EndFrame.SPINBOX_WIDTH)
 
         self.tick_spinbox = CustomSpinbox(
-            self, callback=self._forward, from_=0,
+            self, callback=self._notify, from_=0,
             to= TICKS_PER_QUARTER_NOTE - 1,
             width=EndFrame.SPINBOX_WIDTH)
 
@@ -43,23 +43,26 @@ class EndFrame(LabelFrame):
         self.beat_spinbox.pack(side=LEFT, padx=4)
         self.tick_spinbox.pack(side=LEFT)
 
-    def _forward(self):
+    def _notify(self):
         bar = int(self.bar_spinbox.get())
         beat = int(self.beat_spinbox.get())
         tick = int(self.tick_spinbox.get())
         self._cb((bar, beat, tick))
 
-    def set_end(self, end):
+    def set_end(self, end, notify=True):
         bar, beat, tick = end
         self.bar_spinbox.set(bar)
         self.beat_spinbox.set(beat)
         self.tick_spinbox.set(tick)
-        self._forward()
 
-    def set_max_beat(self, max_beat):
+        if notify: self._notify()
+
+    def set_max_beat(self, max_beat, notify=True):
         self.beat_spinbox.to = max_beat
-        self._forward()
 
-    def set_max_tick(self, max_tick):
+        if notify: self._notify()
+
+    def set_max_tick(self, max_tick, notify=True):
         self.tick_spinbox.to = max_tick
-        self._forward()
+
+        if notify: self._notify()

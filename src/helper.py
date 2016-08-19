@@ -1,6 +1,7 @@
 import os
 from const import *
 
+
 def dummy(*args, **kwargs):
     pass
 
@@ -87,13 +88,13 @@ def tick_to_px(ticks, qw=QUARTER_NOTE_WIDTH, tpq=TICKS_PER_QUARTER_NOTE):
 def px_to_tick(px, qw=QUARTER_NOTE_WIDTH, tpq=TICKS_PER_QUARTER_NOTE):
     return float(px) / qw * tpq
 
-def save_song(filename, song_data):
+def save_composition(filename, comp_state):
+    grid = comp_state.grid
+    notes = comp_state.notes
+    end = grid.end
+    timesig = grid.timesig
+
     f = open(filename, 'w')
-
-    notes = song_data['notes']
-    end = song_data['end']
-    timesig = song_data['timesig']
-
     f.write("{0} {1} {2};\n".format(*[str(x) for x in end]))
     f.write("{0} {1};\n".format(*timesig))
 
@@ -107,8 +108,11 @@ def save_song(filename, song_data):
             note.midinumber, note.velocity, onset[0], onset[1],
             onset[2], dur[0], dur[1], dur[2]))
 
-def load_song(filename):
-    from note import Note
+def load_composition(filename):
+    from models.piano_roll_model import PianoRollModel
+    from models.grid_model import GridModel
+    from models.note_list_model import NoteListModel
+    from models.note_model import NoteModel
 
     with open(filename, 'r') as f:
         try:
@@ -136,13 +140,13 @@ def load_song(filename):
                     dur_bar, dur_beat, dur_tick,
                     *timesig)
 
-                notes.append(Note(midinumber, velocity, onset, dur))
+                notes.append(NoteModel(midinumber, velocity, onset, dur))
 
-            return {
-                'notes': notes,
-                'end': end,
-                'timesig': timesig
-            }
+            return PianoRollModel(
+                GridModel(timesig=timesig, end=end),
+                NoteListModel(notes)
+            )
 
         except IOError:
             print "Could not read file '{0}'".format(filename)
+

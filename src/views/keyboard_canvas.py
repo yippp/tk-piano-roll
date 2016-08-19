@@ -1,10 +1,10 @@
 from Tkinter import *
 from tkFont import Font
+from src.models.grid_model import GridModel
 from src.rect import Rect
 from include.custom_canvas import CustomCanvas
 from src.helper import to_pitchname
-from src.const import (KEYS_IN_OCTAVE,
-    KEYS_IN_LAST_OCTAVE, KEY_PATTERN)
+from src.const import KEYS_IN_OCTAVE
 
 
 class KeyboardCanvas(CustomCanvas):
@@ -30,18 +30,18 @@ class KeyboardCanvas(CustomCanvas):
 
     WHITE_KEYS_IN_OCTAVE = 7
 
-    def __init__(self, parent, gstate, **kwargs):
+    def __init__(self, parent, **kwargs):
         CustomCanvas.__init__(self, parent, **kwargs)
         self.parent = parent
 
-        self._init_data(gstate)
+        self._init_data()
         self._init_ui()
         self._update_scrollregion()
         self.yview_moveto(0)
         self._draw()
 
-    def _init_data(self, state):
-        self._gstate = state
+    def _init_data(self):
+        self._grid_state = GridModel()
         self._font = Font(family='sans-serif', size=9)
 
     def _init_ui(self):
@@ -49,7 +49,7 @@ class KeyboardCanvas(CustomCanvas):
             width=KeyboardCanvas.CANVAS_WIDTH, bg='white')
 
     def _draw(self):
-        cell_height = self._gstate.cell_height()
+        cell_height = self._grid_state.cell_height()
         on_octave = cell_height < 14
 
         self._draw_keys()
@@ -61,14 +61,15 @@ class KeyboardCanvas(CustomCanvas):
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
         keyboard_width = canvas_width - lpad
 
-        pattern = "1201220"
-        cell_height = self._gstate.cell_height()
+        cell_height = self._grid_state.cell_height()
         wbk_height = round(cell_height * KeyboardCanvas.RATIO_WIDE_KEY_WHITE)
         wsk_height = round(cell_height * KeyboardCanvas.RATIO_NARROW_KEY_WHITE)
 
         height_of_octaves_in_white_keys = [5] + [KeyboardCanvas.WHITE_KEYS_IN_OCTAVE] * 10
         height_of_octaves_in_px = [4 * wsk_height + wbk_height]
         height_of_octaves_in_px += [KEYS_IN_OCTAVE * cell_height] * 10
+
+        pattern = "1201220"
 
         for nth_octave in range(11):
             y_offset = sum(height_of_octaves_in_px[:nth_octave])
@@ -108,10 +109,10 @@ class KeyboardCanvas(CustomCanvas):
 
     def _draw_lines(self, on_octave=False):
         canvas_width = self.winfo_reqwidth()
-        cell_height = self._gstate.cell_height()
+        cell_height = self._grid_state.cell_height()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
-        for i, y in enumerate(self._gstate.ycoords()):
+        for i, y in enumerate(self._grid_state.ycoords()):
             if on_octave and (i + 5) % 12:
                 continue
 
@@ -121,10 +122,10 @@ class KeyboardCanvas(CustomCanvas):
 
     def _draw_text(self, on_octave=False):
         canvas_width = self.winfo_reqwidth()
-        cell_height = self._gstate.cell_height()
+        cell_height = self._grid_state.cell_height()
         lpad = round(KeyboardCanvas.RATIO_LPAD * canvas_width)
 
-        for i, y in enumerate(self._gstate.ycoords()):
+        for i, y in enumerate(self._grid_state.ycoords()):
             if on_octave and (i + 5) % 12:
                 continue
 
@@ -137,18 +138,14 @@ class KeyboardCanvas(CustomCanvas):
 
     def _update_scrollregion(self):
         sr_width = self.winfo_reqwidth()
-        sr_height = self._gstate.height() + 1
+        sr_height = self._grid_state.height() + 1
         self._scrollregion = (0, 0, sr_width, sr_height)
         self.config(scrollregion=self._scrollregion)
 
-    def _on_zoomy_change(self):
-        self.delete(ALL)
-        self._update_scrollregion()
-        self._draw()
+    def on_state_change(self, new_grid_state):
+        if self._grid_state.zoom[1] != new_grid_state.zoom[1]:
+            self._grid_state = new_grid_state
+            self._update_scrollregion()
 
-    def on_update(self, new_gstate):
-        diff = self._gstate - new_gstate
-        self._gstate = new_gstate
-
-        if 'zoomy' in diff:
-            self._on_zoomy_change()
+            self.delete(ALL)
+            self._draw()

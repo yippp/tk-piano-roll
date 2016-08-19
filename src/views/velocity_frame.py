@@ -16,7 +16,8 @@ class VelocityFrame(Frame):
         self.velocity_label = Label(self, text='Velocity')
         self.velocity_spinbox = CustomSpinbox(
             self, from_=0, to=127, start=100,
-            width=4, callback=self._forward)
+            width=4, callback=self._forward,
+            state=DISABLED)
 
         self.velocity_label.pack(side=LEFT)
         self.velocity_spinbox.pack(side=LEFT)

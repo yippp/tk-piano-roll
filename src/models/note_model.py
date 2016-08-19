@@ -1,20 +1,38 @@
-from rect import Rect
-from const import CELL_HEIGHT_IN_PX
+from functools import total_ordering
+from src.rect import Rect
+from src.const import CELL_HEIGHT_IN_PX
 
 
-class Note(object):
+@total_ordering
+class NoteModel(object):
 
-    def __init__(self, midinumber, velocity, onset,
-        duration, id=None, selected=False):
+    def __init__(self, midinumber, velocity,
+        onset, duration, id=None):
         self._id = id
         self._midinumber = midinumber
         self._velocity = velocity
         self._onset = onset
         self._duration = duration
-        self._selected = selected
 
     def __eq__(self, other):
-        return self.id == other.id
+        if isinstance(other, NoteModel):
+            return (self.midinumber == other.midinumber and
+                self.velocity == other.velocity and
+                self.onset == other.onset and
+                self.duration == other.duration)
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, NoteModel):
+            return (self.onset < other.onset or
+                (self.onset == other.onset and
+                self.midinumber > other.midinumber))
+
+    def __repr__(self):
+        return ("<NoteModel (id={0}, midinumber={1}, "
+            "velocity={2}, onset={3}, duration={4})>".format(
+            self.id, self.midinumber, self.velocity,
+            self.onset, self.duration))
 
     @property
     def midinumber(self):
@@ -61,21 +79,8 @@ class Note(object):
         self._id = id
 
     @property
-    def selected(self):
-        return self._selected
-
-    @selected.setter
-    def selected(self, selected):
-        self._selected = selected
-
-    def copy(self):
-        return Note(
-            self.midinumber, self.velocity,
-            self.onset, self.duration,
-            id=self.id, selected=self.selected)
-
     def rect(self):
-        from helper import tick_to_px
+        from src.helper import tick_to_px
 
         x = tick_to_px(self.onset)
         y = (128. - self.midinumber - 1) * CELL_HEIGHT_IN_PX
@@ -83,4 +88,14 @@ class Note(object):
         height = CELL_HEIGHT_IN_PX
 
         return Rect(x, y, width, height)
+
+    def copy(self):
+        return NoteModel(
+            self.midinumber, self.velocity,
+            self.onset, self.duration,
+            self.id)
+
+    def to_tuple(self):
+        return (self.midinumber, self.velocity,
+            self.onset, self.duration)
 
