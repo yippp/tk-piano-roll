@@ -101,20 +101,7 @@ class GridCanvas(CustomCanvas):
     def _on_window_resize(self, event):
         self._update_scrollregion()
         self._update_visibleregion()
-        self.delete(ALL)
-
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        self._draw_end_line()
-        self._draw_cursor_line()
-        self._draw_sharp_rows()
-
-        visible = filter(
-            lambda id: self._is_note_visible(id),
-            self._note_list.state.ids)
-        old_ids, new_ids = self._draw_notes(*visible)
-        self.delete(*old_ids)
-        self._update_note_ids(zip(old_ids, new_ids))
+        self._draw_all()
 
     def _on_mouse_motion(self, event):
         button1_pressed = event.state & 0x0100 == 0x0100
@@ -205,6 +192,21 @@ class GridCanvas(CustomCanvas):
     def _on_clipboard_state_change(self, clipboard_state):
         self._piano_roll_observable.set_clipboard(
             clipboard_state)
+
+    def _draw_all(self):
+        self.delete(ALL)
+        self._draw_horizontal_lines()
+        self._draw_vertical_lines()
+        self._draw_end_line()
+        self._draw_cursor_line()
+        self._draw_sharp_rows()
+
+        visible = filter(
+            lambda id: self._is_note_visible(id),
+            self._note_list.state.ids)
+        old_ids, new_ids = self._draw_notes(*visible)
+        self.delete(*old_ids)
+        self._update_note_ids(zip(old_ids, new_ids))
 
     def _draw_horizontal_lines(self):
         vr_left, vr_top, vr_width, vr_height = self._visibleregion
@@ -619,7 +621,6 @@ class GridCanvas(CustomCanvas):
 
         if move_cursor:
             last_note = self._clipboard.state[-1]
-            print last_note.onset, len(self._clipboard.state)
             self.set_cursor(
                 last_note.onset + last_note.duration)
 
@@ -651,19 +652,7 @@ class GridCanvas(CustomCanvas):
         self._grid.set_zoom(zoom)
         self._update_scrollregion()
         self._update_visibleregion()
-        self.delete(ALL)
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        self._draw_end_line()
-        self._draw_cursor_line()
-        self._draw_sharp_rows()
-
-        visible = filter(
-            lambda id: self._is_note_visible(id),
-            self._note_list.state.ids)
-        old_ids, new_ids = self._draw_notes(*visible)
-        self.delete(*old_ids)
-        self._update_note_ids(zip(old_ids, new_ids))
+        self._draw_all()
 
     def set_timesig(self, timesig):
         self._grid.set_timesig(timesig)
@@ -722,39 +711,11 @@ class GridCanvas(CustomCanvas):
             observer)
 
     def xview(self, *args):
-        self.delete(*self.find_withtags('line'))
-        self.delete(*self.find_withtags('sharp_row'))
-        self.delete(*self.find_withtags('note'))
         CustomCanvas.xview(self, *args)
         self._update_visibleregion()
-
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        self._draw_end_line()
-        self._draw_cursor_line()
-        self._draw_sharp_rows()
-
-        visible = filter(
-            lambda id: self._is_note_visible(id),
-            self._note_list.state.ids)
-        old_ids, new_ids = self._draw_notes(*visible)
-        self.delete(*old_ids)
-        self._update_note_ids(zip(old_ids, new_ids))
+        self._draw_all()
 
     def yview(self, *args):
-        self.delete(*self.find_withtags('line'))
-        self.delete(*self.find_withtags('note'))
         CustomCanvas.yview(self, *args)
         self._update_visibleregion()
-
-        self._draw_horizontal_lines()
-        self._draw_vertical_lines()
-        self._draw_end_line()
-        self._draw_cursor_line()
-
-        visible = filter(
-            lambda id: self._is_note_visible(id),
-            self._note_list.state.ids)
-        old_ids, new_ids = self._draw_notes(*visible)
-        self.delete(*old_ids)
-        self._update_note_ids(zip(old_ids, new_ids))
+        self._draw_all()

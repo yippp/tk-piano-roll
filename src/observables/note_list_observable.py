@@ -25,6 +25,7 @@ class NoteListObservable(Observable):
             insert_at = len(self.state)
             for i, other in enumerate(self.state):
                 if note < other:
+                    insert_at = i
                     break
             self.state.notes.insert(insert_at, note)
 
