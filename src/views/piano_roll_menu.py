@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from ..helper import dummy
 
 class PianoRollMenu(Menu):

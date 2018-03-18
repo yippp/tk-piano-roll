@@ -1,5 +1,5 @@
 import math
-from const import *
+from .const import *
 
 TMP_LENGTH = (2, 1, 0)
 
@@ -29,7 +29,7 @@ class GridState(object):
         def compare(attr):
             return getattr(self, attr) != getattr(other, attr)
 
-        diff = filter(compare, vars(self).keys())
+        diff = list(filter(compare, list(vars(self).keys())))
 
         return diff
 
@@ -46,7 +46,7 @@ class GridState(object):
             self.zoomx, self.zoomy, self.length)
         
     def width(self, zoom=True):
-        from helper import to_ticks
+        from .helper import to_ticks
 
         bar, beat, tick = self.length
         zoomx = self.zoomx if zoom else 1
@@ -58,7 +58,7 @@ class GridState(object):
         return GridState.NUM_OF_KEYS_IN_OCTAVE * self.cell_height(zoom=zoom)
 
     def bar_width(self, zoom=True):
-        from helper import to_ticks
+        from .helper import to_ticks
         zoomx = self.zoomx if zoom else 1
 
         return to_ticks(bpb=self.beat_count, bu=self.beat_unit,

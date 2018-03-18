@@ -1,4 +1,4 @@
-from const import *
+from .const import *
 
 def dummy(*args, **kwargs):
     pass
@@ -59,27 +59,25 @@ def save_song(filename, song_data):
             onset[2], dur[0], dur[1], dur[2]))
 
 def load_song(filename):
-    from note import Note
+    from .note import Note
 
     with open(filename, 'r') as f:
         try:
-            length = map(
-                lambda n: int(n),
-                f.readline().strip()[:-1].split(" "))
+            length = [int(n) for n in f.readline().strip()[:-1].split(" ")]
 
-            timesig = map(
-                int, f.readline().strip()[:-1].split(" "))
+            timesig = list(map(
+                int, f.readline().strip()[:-1].split(" ")))
 
             notes = []
             for line in f:
-                tokens = map(str.strip, line.strip()[:-1].split("|"))
+                tokens = list(map(str.strip, line.strip()[:-1].split("|")))
 
                 midinumber = int(tokens[0])
                 velocity = int(tokens[1])
-                onset_bar, onset_beat, onset_tick = map(
-                    int, tokens[2].split(" "))
-                dur_bar, dur_beat, dur_tick = map(
-                    int, tokens[3].split(" "))
+                onset_bar, onset_beat, onset_tick = list(map(
+                    int, tokens[2].split(" ")))
+                dur_bar, dur_beat, dur_tick = list(map(
+                    int, tokens[3].split(" ")))
                 onset = to_ticks(
                     onset_bar - 1, onset_beat - 1,
                     onset_tick, *timesig)
@@ -96,4 +94,4 @@ def load_song(filename):
             }
 
         except IOError:
-            print "Could not read file '{0}'".format(filename)
+            print("Could not read file '{0}'".format(filename))

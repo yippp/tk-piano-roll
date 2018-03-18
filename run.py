@@ -1,4 +1,4 @@
-from Tkinter import Tk
+from tkinter import Tk
 
 from src.views.piano_roll import PianoRoll
 from src.helper import make_title

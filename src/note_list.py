@@ -1,4 +1,4 @@
-from note import Note
+from .note import Note
 
 
 class NoteList(object):
@@ -13,7 +13,7 @@ class NoteList(object):
     def __contains__(self, arg):
         if isinstance(arg, Note):
             return arg in self.notes
-        elif isinstance(arg, (int, long)):
+        elif isinstance(arg, int):
             return self.from_id(arg) != None
 
     def copy(self):
@@ -33,7 +33,7 @@ class NoteList(object):
             note.selected = False
 
     def selected(self):
-        return filter(lambda note: note.selected, self.notes)
+        return [note for note in self.notes if note.selected]
 
     def ids(self):
         return [note.id for note in self.notes]

@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from include.custom_spinbox import CustomSpinbox
 from sys import maxsize
 

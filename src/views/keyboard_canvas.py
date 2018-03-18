@@ -1,5 +1,5 @@
-from Tkinter import *
-from tkFont import Font
+from tkinter import *
+from tkinter.font import Font
 from ..rect import Rect
 from include.custom_canvas import CustomCanvas
 from .. helper import to_pitchname
@@ -146,7 +146,7 @@ class KeyboardCanvas(CustomCanvas):
 
         keys_in_octaves = [KEYS_IN_LAST_OCTAVE] +[KEYS_IN_OCTAVE] * 10
 
-        for nth_octave, keys_in_octave in zip(range(11), keys_in_octaves):
+        for nth_octave, keys_in_octave in zip(list(range(11)), keys_in_octaves):
             y_offset = sum(keys_in_octaves[:nth_octave + 1]) * cell_height
             y_offset -= 7 if on_octave else cell_height / 2
             for i in range(keys_in_octave):

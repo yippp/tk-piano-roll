@@ -1,5 +1,5 @@
 import math
-from Tkinter import *
+from tkinter import *
 from include.custom_canvas import CustomCanvas
 
 

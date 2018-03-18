@@ -1,5 +1,5 @@
 import math
-from Tkinter import *
+from tkinter import *
 from ..const import ZOOM_VALUES
 
 

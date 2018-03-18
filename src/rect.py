@@ -1,4 +1,4 @@
-from vector2d import Vector2d
+from .vector2d import Vector2d
 
 
 class Rect(object):
@@ -10,12 +10,12 @@ class Rect(object):
                 self.width = args[1].x
                 self.height = args[1].y
         elif (len(args) == 3 and isinstance(args[0], Vector2d) and
-            all(isinstance(arg, (int, long, float)) for arg in args[1:])):
+            all(isinstance(arg, (int, float)) for arg in args[1:])):
             self.coords = args[0].copy()
             self.width = args[1]
             self.height = args[2]
         elif (len(args) == 4 and
-            all(isinstance(arg, (int, long, float)) for arg in args[1:])):
+            all(isinstance(arg, (int, float)) for arg in args[1:])):
             self.coords = Vector2d(args[0], args[1])
             self.width = args[2]
             self.height = args[3]
@@ -26,7 +26,7 @@ class Rect(object):
             self.width = kwargs['width'] if 'width' in kwargs else 1
             self.height = kwargs['height'] if 'height' in kwargs else 1
 
-            for key in kwargs.keys():
+            for key in list(kwargs.keys()):
                 self.__setattr__(key, kwargs[key])
 
     def __eq__(self, rect):
@@ -114,8 +114,8 @@ class Rect(object):
     def move(self, *args):
         if len(args) == 1 and isinstance(args[0], Vector2d):
             coords = self.coords + args[0]
-        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
-            isinstance(args[1], (int, long, float))):
+        elif len(args) == 2 and isinstance(args[0], (int, int, float) and
+            isinstance(args[1], (int, float))):
             x = self.coords.x + args[0]
             y = self.coords.y + args[1]
             coords = Vector2d(x, y)
@@ -127,8 +127,8 @@ class Rect(object):
     def move_ip(self, *args):
         if len(args) == 1 and isinstance(args[0], Vector2d):
             self.coords += args[0]
-        elif len(args) == 2 and isinstance(args[0], (int, long, float) and
-            isinstance(args[1], (int, long, float))):
+        elif len(args) == 2 and isinstance(args[0], (int, int, float) and
+            isinstance(args[1], (int, float))):
             self.left += args[0]
             self.top += args[1]
 
@@ -157,8 +157,8 @@ class Rect(object):
     def collide_point(self, *args):
         if (len(args) == 1 and isinstance(args[0], Vector2d)):
             p1 = args[0]
-        elif(len(args) == 2 and isinstance(args[0], (int, long, float)) and
-            isinstance(args[1], (int, long, float))):
+        elif(len(args) == 2 and isinstance(args[0], (int, float)) and
+            isinstance(args[1], (int, float))):
             p1 = Vector2d(args[0], args[1])
         else:
             raise ValueError

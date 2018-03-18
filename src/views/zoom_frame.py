@@ -1,6 +1,6 @@
-from Tkinter import *
-from zoomx_frame import ZoomXFrame
-from zoomy_frame import ZoomYFrame
+from tkinter import *
+from .zoomx_frame import ZoomXFrame
+from .zoomy_frame import ZoomYFrame
 from ..helper import dummy
 
 class ZoomFrame(Frame):

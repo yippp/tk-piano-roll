@@ -1,6 +1,6 @@
-from rect import Rect
-from helper import dummy
-from const import CELL_HEIGHT_IN_PX
+from .rect import Rect
+from .helper import dummy
+from .const import CELL_HEIGHT_IN_PX
 
 
 class Note(object):
@@ -76,7 +76,7 @@ class Note(object):
             id=self.id, selected=self.selected)
 
     def rect(self):
-        from helper import tick_to_px
+        from .helper import tick_to_px
 
         x = tick_to_px(self.onset)
         y = (128. - self.midinumber - 1) * CELL_HEIGHT_IN_PX

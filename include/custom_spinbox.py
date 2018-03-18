@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from src.helper import dummy, isint
 
 
@@ -79,12 +79,12 @@ class CustomSpinbox(Spinbox):
         self._update()
 
     def set_from(self, from_):
-        if self._curr_value < from_:
+        if int(self._curr_value) < from_:
             self._curr_value = str(from_)
         self.config(from_=from_)
 
     def set_to(self, to):
-        if self._curr_value > to:
+        if int(self._curr_value) > to:
             self._curr_value = str(to)
         self.config(to=to)
 

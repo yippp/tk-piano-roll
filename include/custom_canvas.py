@@ -1,4 +1,4 @@
-from Tkinter import Canvas, ALL
+from tkinter import Canvas, ALL
 
 
 class CustomCanvas(Canvas):
@@ -32,7 +32,7 @@ class CustomCanvas(Canvas):
     def find_withtags(self, *args):
         itrsec = self.find_withtag(ALL)
 
-        if all(isinstance(arg, basestring) for arg in args):
+        if all(isinstance(arg, str) for arg in args):
             for tag in args:
                 matches = self.find_withtag(tag)
                 itrsec = list(set(itrsec).intersection(matches))

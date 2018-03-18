@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 
 class WithBorder(Frame):
 
@@ -12,7 +12,7 @@ class WithBorder(Frame):
         self._init_ui()
         self._bind_event_handlers()
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     def __getattr__(self, name):

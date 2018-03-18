@@ -1,5 +1,5 @@
 import math
-from Tkinter import *
+from tkinter import *
 from include.custom_canvas import CustomCanvas
 from ..note import Note
 from ..note_list import NoteList
@@ -91,9 +91,7 @@ class GridCanvas(CustomCanvas):
         self._draw_vertical_lines()
         self._draw_sharp_rows()
 
-        visible_notes = filter(
-            lambda note: self._is_note_visible(note),
-            self.note_list.notes)
+        visible_notes = [note for note in self.note_list.notes if self._is_note_visible(note)]
         self._update_note_ids(self._draw_notes(*visible_notes))
 
     def _draw_horizontal_lines(self):
@@ -189,7 +187,7 @@ class GridCanvas(CustomCanvas):
             old_ids.append(note.id)
             new_ids.append(new_id)
 
-        return zip(old_ids, new_ids)
+        return list(zip(old_ids, new_ids))
 
     def _draw_selection_region(self, mousex, mousey):
         x1 = self._mouse_state.x
@@ -527,9 +525,7 @@ class GridCanvas(CustomCanvas):
 
         self._draw_horizontal_lines()
         self._draw_vertical_lines()
-        visible_notes = filter(
-            lambda note: self._is_note_visible(note),
-            self.note_list.notes)
+        visible_notes = [note for note in self.note_list.notes if self._is_note_visible(note)]
         self._update_note_ids(self._draw_notes(*visible_notes))
 
     def yview(self, *args):
@@ -540,7 +536,5 @@ class GridCanvas(CustomCanvas):
 
         self._draw_horizontal_lines()
         self._draw_vertical_lines()
-        visible_notes = filter(
-            lambda note: self._is_note_visible(note),
-            self.note_list.notes)
+        visible_notes = [note for note in self.note_list.notes if self._is_note_visible(note)]
         self._update_note_ids(self._draw_notes(*visible_notes))

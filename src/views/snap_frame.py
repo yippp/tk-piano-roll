@@ -1,5 +1,5 @@
-from Tkinter import *
-from ttk import Combobox
+from tkinter import *
+from tkinter.ttk import Combobox
 from ..const import SNAP_DICT
 from ..helper import dummy
 
@@ -20,10 +20,10 @@ class SnapFrame(Frame):
         self._var = StringVar()
 
         self.snap_combobox = Combobox(
-            self, values=SNAP_DICT.keys(),
+            self, values=list(SNAP_DICT.keys()),
             width=5, textvariable=self._var,
             state='readonly')
-        self.snap_combobox.set(SNAP_DICT.keys()[0])
+        self.snap_combobox.set(list(SNAP_DICT.keys())[0])
         self._var.trace('w', self._cb)
 
         self.snap_label = Label(self, text='Snap')

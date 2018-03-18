@@ -1,4 +1,4 @@
-from grid_state import GridState
+from .grid_state import GridState
 
 TMP_LENGTH = (2, 1, 0)
 

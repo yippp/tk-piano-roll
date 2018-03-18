@@ -3,8 +3,8 @@ import math
 class Vector2d:
 
     def __init__(self, x, y):
-        if (isinstance(x, (int, long, float)) and
-            isinstance(y, (int, long, float))):
+        if (isinstance(x, (int, float)) and
+            isinstance(y, (int, float))):
             self.x = x
             self.y = y
         else:

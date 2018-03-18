@@ -1,5 +1,5 @@
-from Tkinter import *
-from ttk import Combobox
+from tkinter import *
+from tkinter.ttk import Combobox
 from include.custom_spinbox import CustomSpinbox
 from ..helper import dummy
 

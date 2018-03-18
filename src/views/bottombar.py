@@ -1,6 +1,6 @@
-from Tkinter import *
-from length_frame import LengthFrame
-from timesig_frame import TimeSigFrame
+from tkinter import *
+from .length_frame import LengthFrame
+from .timesig_frame import TimeSigFrame
 
 
 class BottomBar(Frame):

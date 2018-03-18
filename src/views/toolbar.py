@@ -1,7 +1,7 @@
-from Tkinter import *
-from snap_frame import SnapFrame
-from zoom_frame import ZoomFrame
-from toolbox import Toolbox
+from tkinter import *
+from .snap_frame import SnapFrame
+from .zoom_frame import ZoomFrame
+from .toolbox import Toolbox
 
 
 class Toolbar(Frame):

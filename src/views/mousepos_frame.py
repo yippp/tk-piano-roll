@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 from ..helper import to_pitchname, to_notedur, px_to_tick
 
 

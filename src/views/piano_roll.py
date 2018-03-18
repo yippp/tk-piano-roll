@@ -1,11 +1,11 @@
 import os
-from Tkinter import *
-from tkMessageBox import askyesnocancel
-from tkFileDialog import askopenfilename
-from piano_roll_menu import PianoRollMenu
-from piano_roll_frame import PianoRollFrame
-from toolbar import Toolbar
-from bottombar import BottomBar
+from tkinter import *
+from tkinter.messagebox import askyesnocancel
+from tkinter.filedialog import askopenfilename
+from .piano_roll_menu import PianoRollMenu
+from .piano_roll_frame import PianoRollFrame
+from .toolbar import Toolbar
+from .bottombar import BottomBar
 from ..helper import (make_title,
     save_song, load_song)
 from ..paths import ICON_IMG_PATH
@@ -56,7 +56,7 @@ class PianoRoll(Frame):
             image = PhotoImage(file=ICON_IMG_PATH)
             root.tk.call('wm', 'iconphoto', root._w, image)
         except TclError:
-            print "Couldn't load icon file"
+            print("Couldn't load icon file")
 
         self.toolbar = Toolbar(self, toolbar_cb)
         self.piano_roll_frame = PianoRollFrame(
@@ -130,7 +130,7 @@ class PianoRoll(Frame):
             self.set_dirty(False)
 
     def _save_as_cmd(self):
-        from tkFileDialog import asksaveasfilename
+        from tkinter.filedialog import asksaveasfilename
 
         initial_file = os.path.basename(
             self._filepath or "Untitled")
